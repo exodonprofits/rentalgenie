@@ -1,0 +1,129 @@
+# Rental Genie — working notes for Claude Code
+
+Property management app for independent landlords. Static HTML/CSS/JS pages on Supabase, automated
+with n8n, hosted on Cloudflare. No build step: every page is a self-contained file that runs as-is.
+
+Read this before changing anything. The rules below come from bugs that already cost real debugging
+time.
+
+---
+
+## Hard rules
+
+**Load the Supabase client in `<body>`, never in `<head>.`** In `<head>` it triggers browser
+tracking prevention, which blocks local storage and produces empty auth sessions. This was the root
+cause of a batch of "logged in but no data" bugs across many pages.
+
+**Use `document.createElement`, not template strings, when building HTML.** Template strings cause
+quote-collision bugs in this codebase. Existing pages break this rule in places; don't add more.
+
+**Never use `target="_blank"` on an internal link.** It breaks the iOS home-screen app by forcing an
+in-app browser sheet with the address bar back. External links are fine.
+
+**Never put the Supabase service-role key in a page.** It belongs in n8n and Edge Functions only.
+The anon key in pages is expected; row-level security is what protects the data.
+
+**Strip Cloudflare `cdn-cgi` links after each deploy.** They come back every time and break on
+localhost.
+
+**One self-contained file per page, CDN dependencies only.** No bundler, no framework, no
+node_modules.
+
+---
+
+## Reference pages
+
+- `lease-rent-center.html` — the reference for the auth bootstrap and UI patterns.
+- `dashboard.html` — the reference for mobile and PWA behaviour.
+
+Match these when changing other pages rather than inventing a new approach.
+
+**Auth bootstrap order:** `safeStorage` IIFE with an in-memory fallback → `window._rgClient` reuse
+guard → `waitForClientReady()` polling → async `DOMContentLoaded` boot calling `getUser()` then
+falling back to `getSession()` → CSS class-driven auth state (`body.auth-ready` / `body.auth-guest`)
+plus imperative `style.display` as a backstop → redirect to `login.html?returnTo=` when signed out.
+
+**UI standards:** grids of records collapse to single-column cards on mobile; `body { overflow-x:
+hidden }` everywhere; a 3px fixed top shimmer bar for loading, never a full-screen overlay; six
+canonical nav labels with `withProp()` carrying `?property=`; a two-column `drawer-grid` mobile nav;
+two deliberately separate button systems (pill-shaped navy toolbar buttons at 999px radius, and
+rounded gradient modal/detail buttons at 12px).
+
+---
+
+## Database
+
+**Rent is calculated in the database, not in pages.** Two functions are the single source of truth:
+
+- `rg_rent_schedule(company_id, as_of)` — one row per due date with rent, paid, and balance.
+- `rg_rent_status(company_id, as_of)` — per-property totals built on the schedule.
+
+Pages call these. Do not recompute balances, due dates, or late status in JavaScript. Three separate
+in-page implementations used to disagree with each other and with the ledger; that is what these
+functions replaced.
+
+**Lease states:** `active`; `holdover` (past the end date, still charging, because rent is still
+owed when a tenant stays); `month_to_month`; `ended` (terminated, no rent accrues after the
+termination date).
+
+**Access control:** `rg_company_access(company_id)` and `rg_can_access_property(property_id)` back
+the row-level security policies. Storage buckets are private; pages open files through signed links
+via the `rgFiles` helper, which accepts either a stored path or a legacy public URL.
+
+**Payment inbox:** `rg_ingest_payment_email` (service role only) queues forwarded payment alerts;
+`rg_confirm_incoming_payment` writes them to `rent_log`, splitting across unpaid months oldest-first;
+`rg_dismiss_incoming_payment` handles "not rent". Version 1 never logs a payment automatically.
+
+**Gotchas learned the hard way:**
+- `rent_log` has no `is_late_fee` column. Queries that ask for it fail silently and show empty data.
+- `maintenance_requests` uses `urgency_level`, not `priority`.
+- `companies` uses `owner_user_id`, not `owner_id`.
+- Verify column names against the live schema before writing a query. A wrong column makes the
+  request fail quietly, and the page just looks empty.
+- Row-level security recursion doesn't error at policy creation; it surfaces as infinite recursion
+  at query time. Fix with a `SECURITY DEFINER` function using `SET row_security = off`.
+- Migrations are transactional. Split risky statements so one failure doesn't roll back everything.
+- Use `net.http_post()` (pg_net) to call Edge Functions from triggers. `verify_jwt` must be false
+  for webhook receivers and true for user-facing functions.
+
+---
+
+## Before you call something done
+
+- **Check every query's columns against the live schema.** This class of bug has bitten repeatedly.
+- **Test database changes in a transaction that rolls back,** simulating the roles involved
+  (`SET LOCAL ROLE authenticated` with `request.jwt.claims`), including a user who should see
+  nothing.
+- **Syntax-check inline scripts** (`node --check`) after editing a page. These files are large and a
+  stray bracket is easy to miss.
+- **Check both widths.** Desktop and a ~390px phone, with no sideways scrolling.
+
+---
+
+## Known gaps — don't extend these, fix or retire them
+
+- Online rent payments aren't built. Stripe Connect is scoped, not started.
+- `property-escrow-reconciliation.html` queries `property_escrow_entries` and
+  `property_escrow_requirements`, neither of which exists.
+- Legacy pages still present: `rent-log.html`, `rent-payments.html`, `manage-properties.html`,
+  `lease-center.html`, `rental-tracker.html`, `landing.html`, `dashboard_v920.html`. Some are still
+  linked from current pages. Retire them and repoint the links.
+- Seven pages define a `safe()` helper that returns its input unchanged, so names, notes, and
+  addresses are inserted as raw HTML: property-management, property-overview, hoa-info,
+  property-finance, property-tax, property-insurance, property-escrow-reconciliation.
+- Tenants can edit any column of their own `tenants` row, and can create maintenance requests or
+  messages tagged with any company's ID.
+- No plan limits are enforced anywhere; the pricing on the homepage is marketing copy only.
+- Around 70 tables belonging to the other GenieSphere products still have row-level security off in
+  the same Supabase project. Rental Genie's tables are protected; the others are not.
+
+---
+
+## Conventions
+
+- Keep changes to one page per commit where practical; these files are large and mixed diffs are
+  unreadable.
+- Prefix database work with `db:` in commit messages.
+- Never commit mortgage statements, rent exports, tenant lists, or `.env` files. `.gitignore`
+  covers the known cases, including `import export/` and all CSVs.
+- Ask before deleting a page. Several "unused" files turned out to be linked from live pages.
