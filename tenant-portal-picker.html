@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Select Property – Tenant Portal | Rental Genie</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --navy:       #0c1e3a;
+  --navy-mid:   #1a3a6b;
+  --navy-light: #1e5799;
+  --sky:        #2d8cf0;
+  --sky-soft:   #e8f0fe;
+  --border:     #e2e8f0;
+  --bg:         #f1f4f8;
+  --card:       #ffffff;
+  --text:       #0c1e3a;
+  --muted:      #64748b;
+  --success:    #10b981;
+  --success-bg: #ecfdf5;
+  --success-bdr:#a7f3d0;
+  --warn:       #f59e0b;
+  --warn-bg:    #fffbeb;
+  --warn-bdr:   #fde68a;
+  --warn-text:  #92400e;
+  --danger:     #ef4444;
+  --radius-sm:  8px;
+  --radius-md:  12px;
+  --radius-lg:  16px;
+  --radius-xl:  20px;
+  --shadow-sm:  0 1px 4px rgba(12,30,58,.06);
+  --shadow-md:  0 4px 16px rgba(12,30,58,.09);
+  --shadow-lg:  0 8px 32px rgba(12,30,58,.14);
+  --grad:       linear-gradient(135deg,#0c1e3a 0%,#1a3a6b 55%,#1e5799 100%);
+}
+*,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: 'DM Sans', -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Header ── */
+.header-container {
+  position: sticky; top: 0; z-index: 100;
+  background: var(--grad);
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  box-shadow: 0 2px 20px rgba(12,30,58,.35);
+}
+.navbar {
+  max-width: 1280px; margin: 0 auto; padding: 0 22px;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 64px;
+}
+.brand-area { display: flex; align-items: center; gap: 11px; text-decoration: none; }
+.brand-logo {
+  width: 38px; height: 38px; border-radius: 9px;
+  background: rgba(255,255,255,.12);
+  box-shadow: 0 0 0 1px rgba(255,255,255,.2), 0 2px 8px rgba(0,0,0,.2);
+  object-fit: cover;
+}
+.brand-title { font-size: 1.1rem; font-weight: 700; color: #fff; }
+.brand-badge {
+  display: inline-block; font-size: .65rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .5px;
+  background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.2);
+  color: rgba(255,255,255,.8); border-radius: 999px;
+  padding: 2px 8px; margin-left: 6px;
+}
+.nav-back {
+  display: flex; align-items: center; gap: 6px;
+  text-decoration: none; font-size: .83rem; font-weight: 600;
+  color: rgba(255,255,255,.75); padding: 7px 13px;
+  border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,.2);
+  transition: all .18s;
+}
+.nav-back:hover { color: #fff; background: rgba(255,255,255,.12); }
+
+/* ── Main ── */
+main {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  padding: 40px 20px 60px;
+}
+.picker-wrap {
+  width: 100%; max-width: 680px;
+}
+
+/* ── Hero ── */
+.picker-hero {
+  text-align: center; margin-bottom: 32px;
+  animation: fadeUp .4s ease both;
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.picker-icon {
+  width: 72px; height: 72px; border-radius: 20px;
+  background: var(--grad);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2rem; margin: 0 auto 18px;
+  box-shadow: 0 8px 24px rgba(12,30,58,.2);
+}
+.picker-hero h1 { font-size: 1.7rem; font-weight: 700; color: var(--navy); letter-spacing: -.4px; }
+.picker-hero p  { font-size: .93rem; color: var(--muted); margin-top: 8px; font-weight: 500; }
+
+/* ── Loading / Error ── */
+.state-box {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius-xl); padding: 40px 24px;
+  text-align: center; box-shadow: var(--shadow-sm);
+  animation: fadeUp .4s ease .05s both;
+}
+.state-box .spin {
+  width: 40px; height: 40px; border-radius: 50%;
+  border: 3px solid rgba(12,30,58,.1); border-top-color: var(--sky);
+  animation: spin .7s linear infinite; margin: 0 auto 14px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.state-box p { font-size: .9rem; color: var(--muted); font-weight: 500; }
+.state-box.error p { color: var(--danger); }
+
+/* ── Property cards ── */
+.prop-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+  animation: fadeUp .4s ease .08s both;
+}
+.prop-card {
+  background: var(--card); border: 2px solid var(--border);
+  border-radius: var(--radius-xl); padding: 22px 20px;
+  cursor: pointer; text-decoration: none; color: var(--text);
+  display: flex; flex-direction: column; gap: 12px;
+  transition: all .2s; position: relative; overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+.prop-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: var(--grad); opacity: 0;
+  transition: opacity .2s;
+}
+.prop-card:hover {
+  border-color: var(--sky);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+}
+.prop-card:hover::before { opacity: 1; }
+.prop-card:active { transform: translateY(-1px); }
+
+.prop-card-top {
+  display: flex; align-items: flex-start; gap: 14px;
+}
+.prop-avatar {
+  width: 48px; height: 48px; border-radius: 12px; flex-shrink: 0;
+  background: var(--grad);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.4rem;
+  box-shadow: var(--shadow-sm);
+}
+.prop-info { flex: 1; min-width: 0; }
+.prop-name {
+  font-size: 1rem; font-weight: 700; color: var(--navy);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  margin-bottom: 3px;
+}
+.prop-address {
+  font-size: .78rem; color: var(--muted); font-weight: 500;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.prop-arrow {
+  flex-shrink: 0; font-size: 1.1rem; color: var(--muted);
+  transition: transform .2s, color .2s;
+  align-self: center;
+}
+.prop-card:hover .prop-arrow { transform: translateX(4px); color: var(--sky); }
+
+.prop-meta {
+  display: flex; gap: 8px; flex-wrap: wrap;
+}
+.meta-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 10px; border-radius: 999px;
+  font-size: .72rem; font-weight: 700; white-space: nowrap;
+}
+.meta-chip.active   { background: var(--success-bg); border: 1px solid var(--success-bdr); color: #065f46; }
+.meta-chip.inactive { background: #f8fafc;            border: 1px solid var(--border);       color: var(--muted); }
+.meta-chip.warn     { background: var(--warn-bg);     border: 1px solid var(--warn-bdr);     color: var(--warn-text); }
+.meta-chip.plain    { background: #f8fafc;             border: 1px solid var(--border);       color: var(--text); }
+.chip-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+
+/* ── Empty ── */
+.empty-state {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius-xl); padding: 48px 28px;
+  text-align: center; box-shadow: var(--shadow-sm);
+}
+.empty-icon { font-size: 2.5rem; margin-bottom: 14px; }
+.empty-state h3 { font-size: 1.1rem; font-weight: 700; color: var(--navy); margin-bottom: 8px; }
+.empty-state p  { font-size: .88rem; color: var(--muted); line-height: 1.6; }
+
+/* ── Footer ── */
+.site-footer {
+  background: var(--navy); padding: 18px 24px;
+  border-top: 1px solid rgba(255,255,255,.06);
+}
+.footer-inner {
+  max-width: 1280px; margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; flex-wrap: wrap;
+}
+.footer-inner p { color: rgba(255,255,255,.3); font-size: .8rem; }
+
+@media(max-width: 500px) {
+  .picker-hero h1 { font-size: 1.4rem; }
+  .prop-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ SUPABASE (body-first) ═══ -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function(){
+  try {
+    var mem=new Map(), ls=null;
+    try{ ls=window.localStorage; }catch(e){}
+    var safe={
+      getItem:    function(k){ try{ return (ls&&ls.getItem(k))||mem.get(k)||null; }catch(e){ return mem.get(k)||null; } },
+      setItem:    function(k,v){ try{ ls&&ls.setItem(k,v); }catch(e){} mem.set(k,v); },
+      removeItem: function(k){ try{ ls&&ls.removeItem(k); }catch(e){} mem.delete(k); }
+    };
+    window._rgClient = window._rgClient || window.supabase.createClient(
+      'https://pbojacnagutipfhcxltj.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBib2phY25hZ3V0aXBmaGN4bHRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgwMDkwODAsImV4cCI6MjA2MzU4NTA4MH0.ZLCcAzTYljoZycpBGwMtthP5VyAJ4schuIvt4HibGc0',
+      { auth: { persistSession:true, autoRefreshToken:true, detectSessionInUrl:true, lock:undefined, storage:safe } }
+    );
+    window.sb = window._rgClient;
+  } catch(e){ console.error('RG bootstrap failed:', e); }
+})();
+</script>
+<!-- ══════════════════════════════ -->
+
+<header class="header-container">
+  <div class="navbar">
+    <a class="brand-area" href="dashboard.html">
+      <img class="brand-logo" src="images/rg-logo.png" alt="Rental Genie" onerror="this.style.display='none'"/>
+      <div>
+        <span class="brand-title">Rental Genie</span>
+        <span class="brand-badge">Landlord</span>
+      </div>
+    </a>
+    <a class="nav-back" href="dashboard.html">← Back to Dashboard</a>
+  </div>
+</header>
+
+<main>
+  <div class="picker-wrap">
+
+    <div class="picker-hero">
+      <div class="picker-icon">🏠</div>
+      <h1>Select a Property</h1>
+      <p>Choose which property's tenant portal you'd like to view.</p>
+    </div>
+
+    <!-- Loading state -->
+    <div class="state-box" id="stateLoading">
+      <div class="spin"></div>
+      <p>Loading your properties…</p>
+    </div>
+
+    <!-- Error state -->
+    <div class="state-box error" id="stateError" style="display:none">
+      <p id="errMsg">Something went wrong loading properties.</p>
+    </div>
+
+    <!-- Empty state -->
+    <div class="empty-state" id="stateEmpty" style="display:none">
+      <div class="empty-icon">🏘️</div>
+      <h3>No Properties Found</h3>
+      <p>You don't have any active properties yet.<br>Add a property first to access the tenant portal.</p>
+    </div>
+
+    <!-- Property grid -->
+    <div class="prop-grid" id="propGrid" style="display:none"></div>
+
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <p>© <span id="footerYear"></span> Rental Genie</p>
+  </div>
+</footer>
+
+<script>
+(function(){
+  document.getElementById('footerYear').textContent = new Date().getFullYear();
+
+  var sb = window._rgClient;
+
+  function show(id) {
+    ['stateLoading','stateError','stateEmpty','propGrid'].forEach(function(s){
+      document.getElementById(s).style.display = (s === id) ? (id === 'propGrid' ? 'grid' : 'flex') : 'none';
+    });
+  }
+
+  // Emoji avatar based on property name initial
+  function propEmoji(name) {
+    var emojis = ['🏠','🏡','🏢','🏣','🏤','🏥','🏦','🏨','🏩','🏪'];
+    var code = (name||'').split('').reduce(function(a,c){ return a + c.charCodeAt(0); }, 0);
+    return emojis[code % emojis.length];
+  }
+
+  function statusChip(status) {
+    var s = (status||'').toLowerCase();
+    if (s === 'active' || s === 'occupied')
+      return '<span class="meta-chip active"><span class="chip-dot"></span> Active</span>';
+    if (s === 'vacant' || s === 'inactive')
+      return '<span class="meta-chip inactive">Vacant</span>';
+    if (s === 'pending')
+      return '<span class="meta-chip warn">Pending</span>';
+    return '<span class="meta-chip plain">' + (status || 'Unknown') + '</span>';
+  }
+
+  function renderProperties(props) {
+    if (!props.length) { show('stateEmpty'); return; }
+
+    var grid = document.getElementById('propGrid');
+    grid.innerHTML = props.map(function(p) {
+      var name    = p.property_name || 'Unnamed Property';
+      var address = '';  // not in leases table
+      var status  = p.status || '';
+      var tenant  = p.tenant_name ? '👤 ' + p.tenant_name : '';
+      var rent    = p.rent_amount ? '💵 $' + Number(p.rent_amount).toLocaleString() + '/mo' : '';
+      // Lease date range as sub-label
+      if (p.lease_start || p.lease_end) {
+        var ls = p.lease_start ? p.lease_start.slice(0,10) : '?';
+        var le = p.lease_end   ? p.lease_end.slice(0,10)   : 'ongoing';
+        address = '📅 ' + ls + ' → ' + le;
+      }
+      var url     = 'tenant-portal.html?property=' + encodeURIComponent(name);
+
+      return '<a class="prop-card" href="' + url + '">' +
+        '<div class="prop-card-top">' +
+          '<div class="prop-avatar">' + propEmoji(name) + '</div>' +
+          '<div class="prop-info">' +
+            '<div class="prop-name">' + escHtml(name) + '</div>' +
+            (address ? '<div class="prop-address">📍 ' + escHtml(address) + '</div>' : '') +
+          '</div>' +
+          '<span class="prop-arrow">›</span>' +
+        '</div>' +
+        '<div class="prop-meta">' +
+          (status ? statusChip(status) : '') +
+          (tenant ? '<span class="meta-chip plain">' + escHtml(tenant) + '</span>' : '') +
+          (rent   ? '<span class="meta-chip plain">' + escHtml(rent)   + '</span>' : '') +
+        '</div>' +
+      '</a>';
+    }).join('');
+
+    show('propGrid');
+  }
+
+  function escHtml(s) {
+    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  async function init() {
+    // Auth check
+    var user = null;
+    for (var i = 0; i < 3; i++) {
+      var r = await sb.auth.getUser();
+      if (r.data && r.data.user) { user = r.data.user; break; }
+      var r2 = await sb.auth.getSession();
+      if (r2.data && r2.data.session) { user = r2.data.session.user; break; }
+      await new Promise(function(res){ setTimeout(res, 180); });
+    }
+    if (!user) { location.href = 'login.html'; return; }
+
+    // Try to get company_id
+    var companyId = null;
+    try {
+      var stored = localStorage.getItem('rg_company_id');
+      if (stored) companyId = stored;
+    } catch(e){}
+
+    if (!companyId) {
+      try {
+        var cm = await sb.from('company_members').select('company_id').eq('user_id', user.id).single();
+        if (cm.data) companyId = cm.data.company_id;
+      } catch(e){}
+    }
+    if (!companyId) {
+      try {
+        var co = await sb.from('companies').select('id').eq('owner_user_id', user.id).single();
+        if (co.data) companyId = co.data.id;
+      } catch(e){}
+    }
+
+    // Query distinct properties from leases (no separate properties table)
+    try {
+      var q = sb.from('leases')
+        .select('property_name, tenant_name, tenant_email, rent_amount, status, lease_start, lease_end')
+        .order('property_name', { ascending: true });
+
+      if (companyId) q = q.eq('company_id', companyId);
+
+      var res = await q;
+      if (res.error) throw res.error;
+
+      // Deduplicate by property_name — keep the best lease per property
+      var seen = new Map();
+      (res.data || []).forEach(function(row) {
+        var key = (row.property_name || '').trim();
+        if (!key) return;
+        if (!seen.has(key)) { seen.set(key, row); return; }
+        var existing    = seen.get(key);
+        var existActive = (existing.status||'').toLowerCase() === 'active';
+        var rowActive   = (row.status||'').toLowerCase() === 'active';
+        if (!existActive && rowActive) { seen.set(key, row); }
+        else if (existActive === rowActive && (row.lease_start||'') > (existing.lease_start||'')) {
+          seen.set(key, row);
+        }
+      });
+
+      renderProperties(Array.from(seen.values()));
+    } catch(err) {
+      document.getElementById('errMsg').textContent = err.message || 'Failed to load properties.';
+      show('stateError');
+    }
+  }
+
+  init();
+})();
+</script>
+
+</body>
+</html>

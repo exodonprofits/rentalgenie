@@ -1,0 +1,1475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>View Lease – Rental Genie</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap">
+
+<style>
+/* ── Design Tokens ──────────────────────────────────────────── */
+:root {
+  --navy:        #0c1e3a;
+  --navy-mid:    #1a3a6b;
+  --navy-light:  #1e5799;
+  --sky:         #2d8cf0;
+  --sky-soft:    #e8f0fe;
+  --border:      #e2e8f0;
+  --bg:          #f1f4f8;
+  --card:        #ffffff;
+  --text:        #0c1e3a;
+  --muted:       #64748b;
+  --success:     #10b981;
+  --success-bg:  #ecfdf5;
+  --success-bdr: #a7f3d0;
+  --warn-bg:     #fffbeb;
+  --warn-bdr:    #fde68a;
+  --warn-text:   #92400e;
+  --danger-bg:   #fef2f2;
+  --danger-bdr:  #fecaca;
+  --danger-text: #7f1d1d;
+  --info-bg:     #eff6ff;
+  --info-bdr:    #bfdbfe;
+  --info-text:   #1e40af;
+  --radius-sm:   8px;
+  --radius-md:   12px;
+  --radius-lg:   16px;
+  --radius-xl:   20px;
+  --shadow-sm:   0 1px 4px rgba(12,30,58,.06);
+  --shadow-md:   0 4px 16px rgba(12,30,58,.09);
+  --shadow-lg:   0 8px 32px rgba(12,30,58,.14);
+  --header-grad: linear-gradient(135deg,#0c1e3a 0%,#1a3a6b 55%,#1e5799 100%);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: 'DM Sans', -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Auth Overlay ───────────────────────────────────────────── */
+#authOverlay {
+  position: fixed; inset: 0; z-index: 9999;
+  background: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column; gap: 16px;
+  transition: opacity .35s;
+}
+#authOverlay.hidden { opacity: 0; pointer-events: none; }
+.spinner-ring {
+  width: 44px; height: 44px; border-radius: 50%;
+  border: 3px solid rgba(12,30,58,.1);
+  border-top-color: var(--sky);
+  animation: spin .75s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+#authOverlay p { font-size: .88rem; color: var(--muted); font-weight: 500; }
+
+/* ── Header ─────────────────────────────────────────────────── */
+.header-container {
+  position: sticky; top: 0; z-index: 1000;
+  background: var(--header-grad);
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  box-shadow: 0 2px 20px rgba(12,30,58,.35);
+}
+.navbar {
+  max-width: 1440px; margin: 0 auto; padding: 0 22px;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 64px; gap: 12px;
+}
+.brand-area { display: flex; align-items: center; gap: 11px; text-decoration: none; flex-shrink: 0; }
+.brand-logo {
+  width: 38px; height: 38px; border-radius: 9px;
+  background: rgba(255,255,255,.12);
+  box-shadow: 0 0 0 1px rgba(255,255,255,.2), 0 2px 8px rgba(0,0,0,.2);
+  object-fit: cover; flex-shrink: 0;
+}
+.brand-title { font-size: 1.15rem; font-weight: 700; color: #fff; letter-spacing: -.2px; }
+
+.nav-links { display: flex; gap: 2px; align-items: center; }
+.nav-links a {
+  display: flex; align-items: center; gap: 5px;
+  text-decoration: none; font-size: .8rem; font-weight: 600;
+  padding: 6px 10px; color: rgba(255,255,255,.72);
+  border-radius: var(--radius-sm); transition: all .18s; white-space: nowrap;
+}
+.nav-links a:hover  { color: #fff; background: rgba(255,255,255,.1); }
+.nav-links a.nav-active { color: #fff; background: rgba(255,255,255,.15); }
+
+/* UMD user menu */
+.nav-right-group { display: flex; align-items: center; gap: 8px; }
+.umd-wrap { position: relative; }
+.nav-bell{display:inline-flex;align-items:center;justify-content:center;font-size:1.1rem;text-decoration:none;margin-right:8px;cursor:pointer;}
+.nav-bell:hover{opacity:.75;}
+.umd-toggle {
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.22);
+  border-radius: 999px; padding: 5px 12px 5px 5px;
+  cursor: pointer; transition: background .18s;
+}
+.umd-toggle:hover { background: rgba(255,255,255,.18); }
+.umd-avatar {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--sky), var(--navy-mid));
+  display: flex; align-items: center; justify-content: center;
+  font-size: .68rem; font-weight: 700; color: #fff; flex-shrink: 0;
+}
+.umd-name { font-size: .8rem; color: #fff; font-weight: 600; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.umd-caret { font-size: .6rem; color: rgba(255,255,255,.7); }
+.umd-dropdown {
+  display: none; position: absolute; right: 0; top: calc(100% + 8px);
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); box-shadow: var(--shadow-lg);
+  min-width: 220px; overflow: hidden; z-index: 200;
+}
+.umd-dropdown.open { display: block; }
+.umd-user-row {
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--border);
+}
+.umd-user-name { font-size: .88rem; font-weight: 700; color: var(--navy); }
+.umd-user-email { font-size: .75rem; color: var(--muted); margin-top: 2px; }
+.umd-section { display: flex; flex-direction: column; padding: 6px; border-bottom: 1px solid var(--border); }
+.umd-section:last-child { border-bottom: none; }
+.umd-link {
+  display: flex; align-items: center; gap: 9px;
+  padding: 9px 10px; border-radius: var(--radius-sm);
+  font-size: .84rem; font-weight: 600; color: var(--text);
+  text-decoration: none; background: none; border: none;
+  cursor: pointer; width: 100%; font-family: 'DM Sans', sans-serif;
+  transition: background .15s;
+}
+.umd-link:hover { background: var(--bg); }
+.umd-link.danger { color: #ef4444; }
+.umd-link.danger:hover { background: var(--danger-bg); }
+
+/* Hamburger */
+.hamburger {
+  display: none; padding: 7px 10px;
+  border: 1px solid rgba(255,255,255,.25); border-radius: var(--radius-sm);
+  background: rgba(255,255,255,.1); cursor: pointer;
+  color: #fff; font-size: 1rem; transition: background .18s;
+}
+.hamburger:hover { background: rgba(255,255,255,.2); }
+@media(max-width:900px) {
+  .nav-links { display: none; }
+  .hamburger { display: block; }
+}
+
+.drawer {
+  display: none; position: fixed;
+  top: 72px; left: 12px; right: 12px;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 8px;
+  z-index: 999; box-shadow: var(--shadow-lg);
+}
+.drawer a, .drawer button {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 14px; border-radius: var(--radius-sm);
+  font-weight: 600; font-size: .88rem;
+  text-decoration: none; color: var(--text);
+  background: none; border: none; cursor: pointer;
+  width: 100%; font-family: 'DM Sans', sans-serif;
+  transition: background .15s;
+}
+.drawer a:hover, .drawer button:hover { background: var(--bg); }
+.drawer a.nav-active { background: var(--sky-soft); color: var(--navy-mid); }
+.drawer-divider { height: 1px; background: var(--border); margin: 4px 0; }
+.drawer-signout { color: #ef4444 !important; }
+
+/* ── Main layout ────────────────────────────────────────────── */
+main {
+  flex: 1; max-width: 1440px; width: 100%;
+  margin: 0 auto; padding: 28px 22px 56px;
+}
+
+/* ── Page header ────────────────────────────────────────────── */
+.page-header {
+  display: flex; align-items: flex-start;
+  justify-content: space-between; gap: 16px;
+  flex-wrap: wrap; margin-bottom: 24px;
+  animation: fadeUp .4s ease both;
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.page-title { font-size: 1.65rem; font-weight: 700; color: var(--navy); letter-spacing: -.4px; line-height: 1.2; }
+.page-sub   { font-size: .88rem; color: var(--muted); margin-top: 4px; font-weight: 500; }
+.page-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+
+/* ── Alert ──────────────────────────────────────────────────── */
+.alert-banner {
+  display: none; padding: 13px 16px;
+  border-radius: var(--radius-md); font-size: .88rem; font-weight: 600;
+  line-height: 1.45; margin-bottom: 20px; border: 1px solid transparent;
+  animation: fadeUp .3s ease both;
+}
+.alert-banner.danger { background: var(--danger-bg); border-color: var(--danger-bdr); color: var(--danger-text); display: block; }
+.alert-banner.info   { background: var(--info-bg);   border-color: var(--info-bdr);   color: var(--info-text);   display: block; }
+.alert-banner.warn   { background: var(--warn-bg);   border-color: var(--warn-bdr);   color: var(--warn-text);   display: block; }
+
+/* ── Lease hero panel ───────────────────────────────────────── */
+.lease-hero {
+  background: var(--header-grad);
+  border-radius: var(--radius-xl);
+  padding: 28px 32px 26px;
+  margin-bottom: 22px;
+  position: relative; overflow: hidden;
+  animation: fadeUp .4s ease .05s both;
+}
+.lease-hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(45,140,240,.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(45,140,240,.07) 1px, transparent 1px);
+  background-size: 36px 36px;
+  pointer-events: none;
+}
+.lease-hero::after {
+  content: '📜';
+  position: absolute; right: 32px; top: 50%; transform: translateY(-50%);
+  font-size: 4.5rem; opacity: .1; pointer-events: none;
+}
+.lease-hero-inner { position: relative; z-index: 1; }
+.lease-hero-top {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap; margin-bottom: 22px;
+}
+.lease-hero-property { font-size: 1.4rem; font-weight: 700; color: #fff; letter-spacing: -.3px; margin-bottom: 5px; }
+.lease-hero-tenant   { font-size: .9rem; color: rgba(255,255,255,.65); font-weight: 500; }
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 7px 16px; border-radius: 999px;
+  font-size: .78rem; font-weight: 700; flex-shrink: 0;
+}
+.hero-badge.active     { background: rgba(16,185,129,.2); border: 1px solid rgba(16,185,129,.4); color: #6ee7b7; }
+.hero-badge.upcoming   { background: rgba(245,158,11,.2); border: 1px solid rgba(245,158,11,.4); color: #fcd34d; }
+.hero-badge.expired    { background: rgba(239,68,68,.18); border: 1px solid rgba(239,68,68,.35);  color: #fca5a5; }
+.hero-badge.terminated { background: rgba(239,68,68,.18); border: 1px solid rgba(239,68,68,.35);  color: #fca5a5; }
+.hero-badge.draft      { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); color: rgba(255,255,255,.7); }
+.hero-badge-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+
+.lease-hero-stats {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
+}
+@media(max-width:720px) { .lease-hero-stats { grid-template-columns: repeat(2, 1fr); } }
+.hero-stat-label { font-size: .67rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: rgba(255,255,255,.45); margin-bottom: 4px; }
+.hero-stat-value { font-size: 1rem; font-weight: 700; color: #fff; font-family: 'DM Mono', monospace; }
+.hero-stat-value.text-val { font-family: 'DM Sans', sans-serif; font-size: .92rem; }
+
+/* ── Two-column grid ────────────────────────────────────────── */
+.lease-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr);
+  gap: 20px;
+  align-items: start;
+}
+@media(max-width:900px) { .lease-grid { grid-template-columns: 1fr; } }
+
+.right-col { display: flex; flex-direction: column; gap: 20px; }
+
+/* ── Section cards ──────────────────────────────────────────── */
+.section-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius-xl); box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  animation: fadeUp .4s ease .1s both;
+}
+.section-card + .section-card { animation-delay: .15s; }
+
+.card-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; flex-wrap: wrap; padding: 18px 22px 0;
+}
+.card-head-left { display: flex; flex-direction: column; }
+.card-title { font-size: 1rem; font-weight: 700; color: var(--navy); display: flex; align-items: center; gap: 8px; }
+.card-sub   { font-size: .8rem; color: var(--muted); margin-top: 3px; font-weight: 500; }
+.card-body  { padding: 16px 22px 22px; }
+
+/* ── Detail grid ────────────────────────────────────────────── */
+.detail-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+}
+@media(max-width:480px) { .detail-grid { grid-template-columns: 1fr; } }
+
+.detail-cell {
+  background: #f8fafc; border: 1px solid var(--border);
+  border-radius: var(--radius-md); padding: 12px 14px;
+  transition: border-color .15s;
+}
+.detail-cell:hover { border-color: #cbd5e1; }
+.detail-cell.full  { grid-column: 1 / -1; }
+.detail-label {
+  font-size: .67rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .4px; color: var(--muted); margin-bottom: 4px;
+}
+.detail-value {
+  font-size: .9rem; font-weight: 600; color: var(--navy); line-height: 1.4;
+  word-break: break-word;
+}
+.detail-value.mono { font-family: 'DM Mono', monospace; font-size: .85rem; }
+.detail-value.muted { color: var(--muted); font-weight: 500; }
+
+/* Terms/Notes pre block */
+.terms-pre {
+  background: #f8fafc; border: 1px solid var(--border);
+  border-radius: var(--radius-md); padding: 14px;
+  font-family: 'DM Mono', monospace; font-size: .8rem;
+  color: var(--muted); line-height: 1.7; white-space: pre-wrap;
+  word-break: break-word; max-height: 200px; overflow-y: auto;
+  margin: 0;
+}
+
+/* Divider */
+.detail-divider {
+  grid-column: 1 / -1; height: 1px; background: var(--border);
+  margin: 4px 0;
+}
+
+/* ── Timeline ───────────────────────────────────────────────── */
+.timeline-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.timeline-item {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 12px 14px; background: #f8fafc;
+  border: 1px solid var(--border); border-radius: var(--radius-md);
+  transition: border-color .15s; cursor: pointer;
+}
+.timeline-item:hover { border-color: var(--sky); background: var(--sky-soft); }
+.timeline-item.active-item { border-color: var(--success); background: var(--success-bg); }
+.timeline-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  flex-shrink: 0; margin-top: 4px;
+  background: var(--border);
+}
+.timeline-dot.current { background: var(--success); box-shadow: 0 0 0 3px rgba(16,185,129,.2); }
+.timeline-dot.past    { background: var(--muted); }
+.timeline-dot.future  { background: var(--sky); box-shadow: 0 0 0 3px rgba(45,140,240,.2); }
+.timeline-body { flex: 1; min-width: 0; }
+.timeline-name  { font-size: .88rem; font-weight: 700; color: var(--navy); margin-bottom: 2px; }
+.timeline-dates { font-size: .75rem; color: var(--muted); font-family: 'DM Mono', monospace; }
+.timeline-rent  { font-size: .78rem; font-weight: 600; color: var(--muted); margin-top: 2px; }
+
+/* ── History table ──────────────────────────────────────────── */
+.table-wrap {
+  overflow: auto; border: 1px solid var(--border);
+  border-radius: var(--radius-lg); background: var(--card);
+}
+table { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 480px; }
+thead th {
+  padding: 11px 14px; background: #f8fafc;
+  font-size: .7rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .4px; color: var(--muted); text-align: left;
+  border-bottom: 1px solid var(--border); position: sticky; top: 0;
+}
+tbody td {
+  padding: 12px 14px; font-size: .87rem; color: var(--text);
+  border-bottom: 1px solid var(--border); vertical-align: middle;
+}
+tbody tr:last-child td { border-bottom: none; }
+tbody tr { transition: background .15s; }
+tbody tr:hover { background: #f8fafc; }
+
+/* ── Status chips ───────────────────────────────────────────── */
+.chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 10px; border-radius: 999px;
+  font-weight: 700; font-size: .74rem;
+  border: 1px solid var(--border); background: #f8fafc; color: var(--text);
+  white-space: nowrap;
+}
+.chip.active     { background: var(--success-bg); border-color: var(--success-bdr); color: #065f46; }
+.chip.upcoming   { background: var(--warn-bg);    border-color: var(--warn-bdr);    color: var(--warn-text); }
+.chip.expired    { background: var(--danger-bg);  border-color: var(--danger-bdr);  color: var(--danger-text); }
+.chip.terminated { background: var(--danger-bg);  border-color: var(--danger-bdr);  color: var(--danger-text); }
+.chip.draft      { background: #f1f5f9;            border-color: #cbd5e1;            color: var(--muted); }
+.chip.info       { background: var(--info-bg);     border-color: var(--info-bdr);    color: var(--info-text); }
+.chip.good       { background: var(--success-bg);  border-color: var(--success-bdr); color: #065f46; }
+.chip.warn       { background: var(--warn-bg);     border-color: var(--warn-bdr);    color: var(--warn-text); }
+.chip.plain      { background: #f8fafc;            border-color: var(--border);      color: var(--text); }
+
+/* ── Action buttons in table ────────────────────────────────── */
+.tbl-btn {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 5px 10px; border-radius: var(--radius-sm);
+  font-size: .76rem; font-weight: 600; cursor: pointer;
+  border: 1px solid var(--border); background: #f8fafc;
+  color: var(--text); font-family: 'DM Sans', sans-serif;
+  transition: all .15s; margin-right: 4px;
+}
+.tbl-btn:hover { background: var(--sky-soft); border-color: var(--sky); color: var(--navy); }
+.tbl-btn.del:hover { background: var(--danger-bg); border-color: var(--danger-bdr); color: var(--danger-text); }
+
+/* ── Buttons ────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 9px 16px; border-radius: var(--radius-md);
+  border: 1.5px solid var(--border); background: var(--card);
+  color: var(--navy); font-family: 'DM Sans', sans-serif;
+  font-size: .85rem; font-weight: 600; text-decoration: none; cursor: pointer;
+  transition: all .16s; white-space: nowrap;
+}
+.btn:hover { background: var(--bg); border-color: #cbd5e1; transform: translateY(-1px); }
+.btn.primary {
+  background: var(--header-grad); border-color: transparent; color: #fff;
+  box-shadow: 0 2px 10px rgba(12,30,58,.2);
+}
+.btn.primary:hover { filter: brightness(1.1); box-shadow: 0 4px 16px rgba(12,30,58,.28); }
+.btn.slate {
+  background: #475569; border-color: #475569; color: #fff;
+}
+.btn.slate:hover { background: #334155; border-color: #334155; }
+.btn.danger-btn { border-color: var(--danger-bdr); color: var(--danger-text); }
+.btn.danger-btn:hover { background: var(--danger-bg); }
+
+/* ── Documents ──────────────────────────────────────────────── */
+.doc-form-field { margin-bottom: 10px; }
+.doc-form-field label {
+  font-size: .72rem; font-weight: 700; color: var(--muted);
+  display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: .3px;
+}
+.doc-form-field input[type="text"],
+.doc-form-field select {
+  width: 100%; padding: 8px 10px; border: 1px solid var(--border);
+  border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif;
+  font-size: .85rem; color: var(--text); background: var(--card);
+}
+.doc-form-field input[type="file"] { width: 100%; font-size: .82rem; }
+.doc-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 11px 12px; background: #f8fafc; border: 1px solid var(--border);
+  border-radius: var(--radius-md); margin-bottom: 8px;
+}
+.doc-row:last-child { margin-bottom: 0; }
+.doc-row-icon { font-size: 1.3rem; flex-shrink: 0; }
+.doc-row-body { flex: 1; min-width: 0; }
+.doc-row-title { font-size: .87rem; font-weight: 700; color: var(--navy); word-break: break-word; }
+.doc-row-meta { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+.doc-row-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+/* ── Empty state ────────────────────────────────────────────── */
+.empty-state { text-align: center; padding: 40px 20px; }
+.empty-state-icon { font-size: 2.2rem; margin-bottom: 10px; }
+.empty-state p { font-size: .88rem; color: var(--muted); font-weight: 500; }
+
+/* ── Lease ID badge ─────────────────────────────────────────── */
+.lease-id-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: 'DM Mono', monospace; font-size: .72rem;
+  color: var(--muted); background: #f8fafc;
+  border: 1px solid var(--border); border-radius: 6px;
+  padding: 3px 8px; cursor: pointer; transition: background .15s;
+}
+.lease-id-badge:hover { background: var(--sky-soft); border-color: var(--sky); color: var(--navy); }
+
+/* ── Footer ─────────────────────────────────────────────────── */
+.site-footer {
+  background: var(--navy); padding: 20px 24px;
+  border-top: 1px solid rgba(255,255,255,.06);
+}
+.footer-inner {
+  max-width: 1440px; margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; flex-wrap: wrap;
+}
+.footer-inner p { color: rgba(255,255,255,.3); font-size: .8rem; }
+.footer-links { display: flex; gap: 20px; flex-wrap: wrap; }
+.footer-links a { color: rgba(255,255,255,.3); font-size: .8rem; text-decoration: none; transition: color .15s; }
+.footer-links a:hover { color: rgba(255,255,255,.65); }
+
+.hidden { display: none !important; }
+
+@media(max-width:600px) {
+  main { padding: 20px 14px 40px; }
+  .page-title { font-size: 1.35rem; }
+  .lease-hero { padding: 20px; }
+  .lease-hero::after { display: none; }
+  .card-head { padding: 16px 16px 0; }
+  .card-body { padding: 14px 16px 20px; }
+}
+</style>
+</head>
+<body>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/* ── rgFiles ────────────────────────────────────────────────────────────────
+   Turns a stored file reference into a short-lived signed link, so pages keep
+   working when the storage buckets are switched from public to private.
+   Accepts a storage path or a stored public URL.
+   Markup:  <a href="#" ${rgFiles.attr('bucket', pathOrUrl)}>Open</a>
+   Then:    rgFiles.hydrate(client, containerEl)  // after markup is in the DOM
+--------------------------------------------------------------------------- */
+window.rgFiles = (function () {
+  function parse(value) {
+    var m = String(value).match(/\/object\/(?:public|sign|authenticated)\/([^/]+)\/([^?]+)/);
+    return m ? { bucket: m[1], path: decodeURIComponent(m[2]) } : null;
+  }
+  function resolve(client, bucket, value, seconds) {
+    if (!value) return Promise.resolve(null);
+    var v = String(value), b = bucket, p = v, wasUrl = false;
+    if (/^(blob:|data:)/i.test(v)) return Promise.resolve(v);
+    if (/^https?:\/\//i.test(v)) {
+      wasUrl = true;
+      var hit = parse(v);
+      if (!hit) return Promise.resolve(v);          // a link someone typed in
+      b = hit.bucket; p = hit.path;
+    }
+    if (!client || !client.storage) return Promise.resolve(wasUrl ? v : null);
+    return client.storage.from(b).createSignedUrl(p, seconds || 3600)
+      .then(function (r) {
+        if (r && r.data && r.data.signedUrl) return r.data.signedUrl;
+        return wasUrl ? v : null;
+      })
+      .catch(function () { return wasUrl ? v : null; });
+  }
+  function attr(bucket, value) {
+    return value ? ' data-rg-file="' + bucket + '|' + encodeURIComponent(value) + '"' : '';
+  }
+  function hydrate(client, root) {
+    var nodes = (root || document).querySelectorAll('[data-rg-file]');
+    Array.prototype.forEach.call(nodes, function (el) {
+      var raw = el.getAttribute('data-rg-file') || '';
+      var i = raw.indexOf('|');
+      if (i < 0) return;
+      el.removeAttribute('data-rg-file');
+      resolve(client, raw.slice(0, i), decodeURIComponent(raw.slice(i + 1))).then(function (url) {
+        if (!url) { el.removeAttribute('href'); el.title = 'File unavailable'; return; }
+        if (el.tagName === 'IMG') el.src = url; else el.href = url;
+      });
+    });
+  }
+  return { resolve: resolve, hydrate: hydrate, attr: attr };
+})();
+</script>
+
+
+<!-- ── Loading overlay ───────────────────────────────────────── -->
+<div id="authOverlay">
+  <div class="spinner-ring"></div>
+  <p>Loading lease…</p>
+</div>
+
+<!-- ── Header ────────────────────────────────────────────────── -->
+<header class="header-container">
+  <div class="navbar">
+    <a class="brand-area" href="index.html">
+      <img src="images/rg-logo.png" class="brand-logo" alt="Rental Genie"
+           onerror="this.style.display='none'" />
+      <span class="brand-title">Rental Genie</span>
+    </a>
+
+    <nav class="nav-links" aria-label="Main navigation">
+      <a href="dashboard.html">📊 Dashboard</a>
+      <a href="property-management.html">🏘️ Properties</a>
+      <a href="lease-rent-center.html" class="nav-active">💰 Lease &amp; Rent</a>
+      <a href="expense-tracking.html">💸 Expenses</a>
+      <a href="maintenance-requests.html">🛠 Maintenance</a>
+      <a href="reports-analytics.html">📈 Reports</a>
+    </nav>
+
+    <!-- UMD user menu -->
+    <div class="nav-right-group">
+      <a class="nav-bell" id="navBell" href="tenant-messages.html" title="Messages" aria-label="Messages" style="display:none">🔔</a>
+      <div class="umd-wrap" id="userMenu" style="display:none">
+        <button class="umd-toggle" id="umdToggle" aria-haspopup="true" aria-expanded="false">
+          <div class="umd-avatar" id="umdAvatar">?</div>
+          <span class="umd-name" id="umdName">User</span>
+          <span class="umd-caret">▾</span>
+        </button>
+        <div class="umd-dropdown" id="umdDropdown">
+          <div class="umd-user-row">
+            <div class="umd-user-name" id="umdFullName">—</div>
+            <div class="umd-user-email" id="umdEmail">—</div>
+          </div>
+          <div class="umd-section">
+            <a class="umd-link" href="dashboard.html">📊 Dashboard</a>
+            <a class="umd-link" href="account.html">⚙️ Account Settings</a>
+          </div>
+          <div class="umd-section">
+            <button class="umd-link danger" id="logoutBtn">🚪 Sign Out</button>
+          </div>
+        </div>
+      </div>
+
+      <a id="nav-login" href="login.html" class="btn" style="font-size:.82rem;padding:7px 14px;color:#fff;border-color:rgba(255,255,255,.3);background:rgba(255,255,255,.1)">Log in</a>
+    </div>
+
+    <button class="hamburger" id="hamburgerBtn" aria-label="Open menu">☰</button>
+  </div>
+</header>
+
+<!-- Mobile drawer -->
+<div class="drawer" id="mobileDrawer">
+  <a href="dashboard.html">📊 Dashboard</a>
+  <a href="property-management.html">🏘️ Properties</a>
+  <a href="lease-rent-center.html" class="nav-active">💰 Lease &amp; Rent</a>
+  <a href="expense-tracking.html">💸 Expenses</a>
+  <a href="maintenance-requests.html">🛠 Maintenance</a>
+  <a href="tenant-messages.html">💬 Messages</a>
+  <a href="reports-analytics.html">📈 Reports</a>
+  <div class="drawer-divider"></div>
+  <a href="account.html">⚙️ Account Settings</a>
+  <button class="drawer-signout" id="mobileLogoutBtn">🚪 Sign Out</button>
+</div>
+
+<!-- ── Main ──────────────────────────────────────────────────── -->
+<main>
+
+  <!-- Page header -->
+  <div class="page-header">
+    <div>
+      <div class="page-title" id="pageTitle">📜 View Lease</div>
+      <div class="page-sub" id="pageSub">Loading lease details…</div>
+    </div>
+    <div class="page-actions">
+      <a class="btn" id="backToLeaseCenter" href="lease-rent-center.html">← Back to Lease Center</a>
+      <button class="btn slate" id="editLeaseBtn">✏️ Edit Lease</button>
+      <button class="btn primary" id="renewLeaseBtn">🔄 Renew Lease</button>
+    </div>
+  </div>
+
+  <!-- Alert -->
+  <div class="alert-banner" id="alertBox" role="alert"></div>
+
+  <!-- ── Lease hero panel ─────────────────────────────────── -->
+  <div class="lease-hero" id="leaseHero">
+    <div class="lease-hero-inner">
+      <div class="lease-hero-top">
+        <div>
+          <div class="lease-hero-property" id="heroProperty">Loading…</div>
+          <div class="lease-hero-tenant"   id="heroTenant">—</div>
+        </div>
+        <div class="hero-badge draft" id="heroBadge">
+          <span class="hero-badge-dot"></span>
+          <span id="heroStatus">—</span>
+        </div>
+      </div>
+      <div class="lease-hero-stats">
+        <div>
+          <div class="hero-stat-label">Monthly Rent</div>
+          <div class="hero-stat-value" id="heroRent">—</div>
+        </div>
+        <div>
+          <div class="hero-stat-label">Due Day</div>
+          <div class="hero-stat-value text-val" id="heroDueDay">—</div>
+        </div>
+        <div>
+          <div class="hero-stat-label">Lease Start</div>
+          <div class="hero-stat-value text-val" id="heroStart">—</div>
+        </div>
+        <div>
+          <div class="hero-stat-label">Lease End</div>
+          <div class="hero-stat-value text-val" id="heroEnd">—</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Two-column grid ───────────────────────────────────── -->
+  <div class="lease-grid">
+
+    <!-- LEFT: Full lease details -->
+    <div class="section-card">
+      <div class="card-head">
+        <div class="card-head-left">
+          <div class="card-title">📋 Lease Details</div>
+          <div class="card-sub">Complete terms and contact information</div>
+        </div>
+        <span class="lease-id-badge" id="leaseIdBadge" title="Click to copy lease ID">🔑 —</span>
+      </div>
+      <div class="card-body">
+        <div class="detail-grid">
+
+          <!-- Tenant info -->
+          <div class="detail-cell">
+            <div class="detail-label">Tenant Name</div>
+            <div class="detail-value" id="tenantName">—</div>
+          </div>
+          <div class="detail-cell">
+            <div class="detail-label">Tenant Phone</div>
+            <div class="detail-value mono" id="tenantPhone">—</div>
+          </div>
+
+          <!-- Lease dates -->
+          <div class="detail-cell">
+            <div class="detail-label">Lease Start</div>
+            <div class="detail-value mono" id="leaseStart">—</div>
+          </div>
+          <div class="detail-cell">
+            <div class="detail-label">Lease End</div>
+            <div class="detail-value mono" id="leaseEnd">—</div>
+          </div>
+
+          <!-- Financial -->
+          <div class="detail-cell">
+            <div class="detail-label">Monthly Rent</div>
+            <div class="detail-value mono" id="rentAmount">—</div>
+          </div>
+          <div class="detail-cell">
+            <div class="detail-label">Rent Due Day</div>
+            <div class="detail-value" id="dueDay">—</div>
+          </div>
+          <div class="detail-cell">
+            <div class="detail-label">Late Fee</div>
+            <div class="detail-value mono" id="lateFee">—</div>
+          </div>
+          <div class="detail-cell">
+            <div class="detail-label">Grace Period</div>
+            <div class="detail-value" id="gracePeriod">—</div>
+          </div>
+
+          <!-- Divider -->
+          <div class="detail-divider"></div>
+
+          <!-- Management -->
+          <div class="detail-cell">
+            <div class="detail-label">Management Type</div>
+            <div class="detail-value" id="managementTypeDisplay">—</div>
+          </div>
+          <div class="detail-cell">
+            <div class="detail-label">Management Fee</div>
+            <div class="detail-value mono" id="managementFeeDisplay">—</div>
+          </div>
+          <div class="detail-cell full">
+            <div class="detail-label">Management Company</div>
+            <div class="detail-value" id="managementCompanyDisplay">—</div>
+          </div>
+          <div class="detail-cell full">
+            <div class="detail-label">Rent Collection Method</div>
+            <div class="detail-value" id="rentCollectionDisplay">—</div>
+          </div>
+
+          <!-- Divider -->
+          <div class="detail-divider"></div>
+
+          <!-- Status + Notes -->
+          <div class="detail-cell">
+            <div class="detail-label">Lease Status</div>
+            <div class="detail-value" id="statusDisplay">—</div>
+          </div>
+          <div class="detail-cell">
+            <div class="detail-label">Lease ID</div>
+            <div class="detail-value mono muted" id="leaseIdFull">—</div>
+          </div>
+          <div class="detail-cell full">
+            <div class="detail-label">Notes</div>
+            <div class="detail-value muted" id="leaseNotes">—</div>
+          </div>
+
+          <!-- Terms -->
+          <div class="detail-cell full">
+            <div class="detail-label" style="margin-bottom:8px">Terms &amp; Conditions</div>
+            <pre class="terms-pre" id="terms">—</pre>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Timeline + History + Documents stacked -->
+    <div class="right-col">
+
+      <!-- Timeline -->
+      <div class="section-card">
+        <div class="card-head">
+          <div class="card-head-left">
+            <div class="card-title">🕰 Lease Timeline</div>
+            <div class="card-sub">All tenants at this property over time</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <ul class="timeline-list" id="timelineList">
+            <li style="color:var(--muted);font-size:.88rem;padding:8px 0">Loading timeline…</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- History table -->
+      <div class="section-card">
+        <div class="card-head">
+          <div class="card-head-left">
+            <div class="card-title">📜 Lease History</div>
+            <div class="card-sub">Click 🔍 to load a past lease into view</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Period</th>
+                  <th>Tenant</th>
+                  <th>Rent</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="historyList">
+                <tr><td colspan="5" style="text-align:center;padding:24px;color:var(--muted)">Loading history…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Documents -->
+      <div class="section-card" id="docsCard">
+        <div class="card-head">
+          <div class="card-head-left">
+            <div class="card-title">📁 Documents</div>
+            <div class="card-sub" id="docsCardSub">Signed lease, notices &amp; files shared with this tenant</div>
+          </div>
+          <button class="btn primary" id="uploadDocBtn" type="button">⬆ Upload</button>
+        </div>
+        <div class="card-body">
+
+          <div id="docUploadForm" class="hidden" style="margin-bottom:16px;padding:14px;background:#f8fafc;border:1px solid var(--border);border-radius:var(--radius-md);">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <div class="doc-form-field">
+                <label for="docType">Type</label>
+                <select id="docType">
+                  <option value="lease">📄 Lease</option>
+                  <option value="notice">📣 Notice</option>
+                  <option value="receipt">🧾 Receipt</option>
+                  <option value="other">📁 Other</option>
+                </select>
+              </div>
+              <div class="doc-form-field">
+                <label for="docTitle">Title</label>
+                <input id="docTitle" type="text" placeholder="e.g., Signed Lease Agreement" />
+              </div>
+            </div>
+            <div class="doc-form-field">
+              <label for="docFile">File</label>
+              <input id="docFile" type="file" accept="application/pdf,image/*,.doc,.docx" />
+              <div id="docUploadStatus" style="font-size:.78rem;color:var(--muted);margin-top:4px;"></div>
+            </div>
+            <div class="doc-form-field">
+              <label for="docNote">Note (optional)</label>
+              <input id="docNote" type="text" placeholder="Optional note for your records" />
+            </div>
+            <div style="display:flex;gap:8px;">
+              <button class="btn primary" id="saveDocBtn" type="button">💾 Save Document</button>
+              <button class="btn" id="cancelDocBtn" type="button">Cancel</button>
+            </div>
+          </div>
+
+          <div id="docsList">
+            <div style="color:var(--muted);font-size:.88rem;padding:8px 0;">Loading documents…</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</main>
+
+<!-- ── Footer ────────────────────────────────────────────────── -->
+<footer class="site-footer">
+  <div class="footer-inner">
+    <p>© <span id="footerYear"></span> Rental Genie. All rights reserved.</p>
+    <div class="footer-links">
+      <a href="lease-rent-center.html">Lease Center</a>
+      <a href="contact-us.html">Contact Us</a>
+      <a href="terms.html">Terms</a>
+      <a href="privacy.html">Privacy</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function () {
+  /* ── safeStorage bootstrap ──────────────────────────────── */
+  var mem = new Map();
+  var wrap = function (s) {
+    return {
+      getItem:    function (k) { try { return (s && s.getItem(k)) || mem.get(k) || null; } catch (e) { return mem.get(k) || null; } },
+      setItem:    function (k, v) { try { s && s.setItem(k, v); } catch (e) {} mem.set(k, v); },
+      removeItem: function (k) { try { s && s.removeItem(k); } catch (e) {} mem.delete(k); }
+    };
+  };
+  var ls = null; try { ls = window.localStorage; } catch (e) {}
+
+  var client = window.supabase.createClient(
+    'https://pbojacnagutipfhcxltj.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBib2phY25hZ3V0aXBmaGN4bHRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgwMDkwODAsImV4cCI6MjA2MzU4NTA4MH0.ZLCcAzTYljoZycpBGwMtthP5VyAJ4schuIvt4HibGc0',
+    { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, lock: undefined, storage: wrap(ls) } }
+  );
+
+  /* ── State ──────────────────────────────────────────────── */
+  var currentProperty = '';
+  var leasesCache     = [];
+  var pageParams      = new URLSearchParams(location.search);
+  var companyId       = pageParams.get('company_id') || pageParams.get('company') || pageParams.get('workspace_id') || '';
+  var currentUser      = null;
+  var activeTenantEmail = '';
+  var activeTenantId    = null;
+  var activeCompanyId   = '';
+  var docsCache         = [];
+
+  /* ── Helpers ────────────────────────────────────────────── */
+  function $(id) { return document.getElementById(id); }
+  function setText(id, val) { var e = $(id); if (e) e.textContent = val ?? '—'; }
+  function escapeHtml(s) {
+    return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function fmtMoney(v) {
+    var n = Number(v);
+    return isNaN(n) ? '—' : '$' + n.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+  }
+  function fmtDate(iso) {
+    if (!iso) return '—';
+    var d = new Date(iso);
+    return isNaN(d.getTime()) ? String(iso) : d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: '2-digit' });
+  }
+  function fmtDateTime(iso) {
+    if (!iso) return '—';
+    var d = new Date(iso);
+    return isNaN(d.getTime()) ? String(iso) : d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: '2-digit' });
+  }
+
+  function hideOverlay() {
+    var o = $('authOverlay');
+    if (o) { o.classList.add('hidden'); setTimeout(function () { o.style.display = 'none'; }, 380); }
+  }
+  function setAlert(type, msg) {
+    var el = $('alertBox'); if (!el) return;
+    if (!msg) { el.style.display = 'none'; el.className = 'alert-banner'; el.textContent = ''; return; }
+    el.className = 'alert-banner ' + (type || 'info');
+    el.textContent = msg;
+  }
+
+  /* ── Lease status logic ─────────────────────────────────── */
+  function getLeaseStatus(start, end) {
+    var today = new Date().toISOString().split('T')[0];
+    if (end < today)   return 'expired';
+    if (start > today) return 'upcoming';
+    return 'active';
+  }
+
+  function resolveStatus(L) {
+    var db = (L.status || '').toLowerCase();
+    if (db === 'draft')      return { label: 'Draft',      cls: 'draft' };
+    if (db === 'terminated') return { label: 'Terminated', cls: 'terminated' };
+    if (db === 'signed' || db === 'active') {
+      var t = getLeaseStatus(L.lease_start, L.lease_end);
+      var map = { active: 'Active', upcoming: 'Upcoming', expired: 'Expired' };
+      return { label: map[t], cls: t };
+    }
+    if (db) return { label: db.charAt(0).toUpperCase() + db.slice(1), cls: 'draft' };
+    var t2 = getLeaseStatus(L.lease_start, L.lease_end);
+    var map2 = { active: 'Active', upcoming: 'Upcoming', expired: 'Expired' };
+    return { label: map2[t2], cls: t2 };
+  }
+
+  /* ── Build nav URLs with company_id ─────────────────────── */
+  function withCompany(url) {
+    if (!companyId) return url;
+    return url + (url.includes('?') ? '&' : '?') + 'company_id=' + encodeURIComponent(companyId);
+  }
+
+  /* ── Auth setup ─────────────────────────────────────────── */
+  function setupAuth() {
+    return client.auth.getUser().then(function (res) {
+      var user = res.data && res.data.user;
+      currentUser = user || null;
+      var loginBtn  = $('nav-login');
+      var userMenu  = $('userMenu');
+      var navBell   = $('navBell');
+
+      if (user) {
+        var username = (user.user_metadata && user.user_metadata.full_name)
+          || user.email.split('@')[0];
+        var initials = username.substring(0, 2).toUpperCase();
+
+        if (loginBtn)  loginBtn.style.display = 'none';
+        if (userMenu)  userMenu.style.display  = 'block';
+        if (navBell)   navBell.style.display   = 'inline-flex';
+        setText('umdAvatar',   initials);
+        setText('umdName',     username);
+        setText('umdFullName', username);
+        setText('umdEmail',    user.email || '');
+      }
+      return user;
+    }).catch(function () { return null; });
+  }
+
+  /* ── UMD dropdown wiring ────────────────────────────────── */
+  function wireUMD() {
+    var toggle = $('umdToggle');
+    var drop   = $('umdDropdown');
+    if (toggle && drop && !toggle.__wired) {
+      toggle.__wired = true;
+      toggle.addEventListener('click', function (e) {
+        e.stopPropagation();
+        drop.classList.toggle('open');
+        toggle.setAttribute('aria-expanded', drop.classList.contains('open'));
+      });
+      document.addEventListener('click', function () { drop.classList.remove('open'); });
+    }
+  }
+
+  /* ── Hamburger ──────────────────────────────────────────── */
+  function wireHamburger() {
+    var btn    = $('hamburgerBtn');
+    var drawer = $('mobileDrawer');
+    if (btn && drawer && !btn.__wired) {
+      btn.__wired = true;
+      btn.addEventListener('click', function () {
+        drawer.style.display = (drawer.style.display === 'block') ? 'none' : 'block';
+      });
+      document.addEventListener('click', function (e) {
+        if (drawer.style.display === 'block' && !drawer.contains(e.target) && e.target !== btn)
+          drawer.style.display = 'none';
+      });
+    }
+  }
+
+  /* ── Sign out ───────────────────────────────────────────── */
+  function doSignOut() {
+    client.auth.signOut().catch(function () {}).then(function () {
+      location.href = 'login.html';
+    });
+  }
+  function wireSignOut() {
+    var lb = $('logoutBtn');       if (lb) lb.addEventListener('click', doSignOut);
+    var mb = $('mobileLogoutBtn'); if (mb) mb.addEventListener('click', doSignOut);
+  }
+
+  /* ── Documents ──────────────────────────────────────────── */
+  function docTypeMeta(t) {
+    var v = (t || '').toLowerCase();
+    if (v === 'lease')   return { icon: '📄', label: 'Lease',   cls: 'info' };
+    if (v === 'receipt') return { icon: '🧾', label: 'Receipt', cls: 'good' };
+    if (v === 'notice')  return { icon: '📣', label: 'Notice',  cls: 'warn' };
+    return { icon: '📁', label: 'Document', cls: 'plain' };
+  }
+
+  function renderDocs() {
+    var list = $('docsList');
+    if (!list) return;
+    if (!docsCache.length) {
+      list.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📁</div><p>No documents shared with this tenant yet.</p></div>';
+      return;
+    }
+    list.innerHTML = docsCache.map(function (d) {
+      var meta = docTypeMeta(d.doc_type);
+      var fileRef = d.file_path || (/^https?:\/\//i.test(d.file_url || '') ? d.file_url : '');
+      return '<div class="doc-row">'
+        + '<div class="doc-row-icon">' + meta.icon + '</div>'
+        + '<div class="doc-row-body">'
+        +   '<div class="doc-row-title">' + escapeHtml(d.title || 'Untitled') + ' <span class="chip ' + meta.cls + '" style="margin-left:6px;vertical-align:middle;">' + meta.label + '</span></div>'
+        +   '<div class="doc-row-meta">' + fmtDateTime(d.uploaded_at) + (d.note ? ' · ' + escapeHtml(d.note) : '') + '</div>'
+        + '</div>'
+        + '<div class="doc-row-actions">'
+        +   (fileRef ? '<a class="tbl-btn" href="#"' + rgFiles.attr('tenant-documents', fileRef) + ' target="_blank" rel="noopener noreferrer">↗ Open</a>' : '')
+        +   '<button class="tbl-btn del" onclick="window._deleteDoc(' + d.id + ')">🗑️</button>'
+        + '</div>'
+        + '</div>';
+    }).join('');
+    rgFiles.hydrate(client, list);
+  }
+
+  function loadDocuments() {
+    if (!currentProperty || !activeTenantEmail) {
+      docsCache = [];
+      renderDocs();
+      return Promise.resolve();
+    }
+    return client.from('tenant_documents')
+      .select('*')
+      .eq('property_name', currentProperty)
+      .eq('tenant_email', activeTenantEmail)
+      .order('uploaded_at', { ascending: false })
+      .then(function (res) {
+        if (res.error) { console.error('Documents load error:', res.error); docsCache = []; }
+        else { docsCache = res.data || []; }
+        renderDocs();
+      });
+  }
+
+  window._deleteDoc = function (id) {
+    if (!confirm('Remove this document? The tenant will no longer see it in their portal.')) return;
+    client.from('tenant_documents').delete().eq('id', id).then(function (res) {
+      if (res.error) { alert('Failed to delete: ' + res.error.message); return; }
+      loadDocuments();
+    });
+  };
+
+  function slugify(s) {
+    return String(s || 'property').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'property';
+  }
+
+  function wireDocumentsForm() {
+    var uploadBtn = $('uploadDocBtn');
+    var form      = $('docUploadForm');
+    var cancelBtn = $('cancelDocBtn');
+    var saveBtn   = $('saveDocBtn');
+
+    if (uploadBtn) uploadBtn.addEventListener('click', function () {
+      if (!activeTenantEmail) { setAlert('warn', 'Select a lease with a tenant on file before uploading a document.'); return; }
+      form.classList.remove('hidden');
+    });
+    if (cancelBtn) cancelBtn.addEventListener('click', function () {
+      form.classList.add('hidden');
+      $('docTitle').value = '';
+      $('docNote').value = '';
+      $('docFile').value = '';
+      $('docUploadStatus').textContent = '';
+    });
+
+    if (saveBtn) saveBtn.addEventListener('click', function () {
+      var title = ($('docTitle').value || '').trim();
+      var docType = $('docType').value;
+      var note = ($('docNote').value || '').trim();
+      var fileInput = $('docFile');
+      var file = fileInput.files && fileInput.files[0];
+      var statusEl = $('docUploadStatus');
+
+      if (!title) { statusEl.textContent = '⚠️ Please enter a title.'; statusEl.style.color = '#b91c1c'; return; }
+      if (!file)  { statusEl.textContent = '⚠️ Please choose a file.'; statusEl.style.color = '#b91c1c'; return; }
+      if (!activeTenantEmail || !activeCompanyId) { statusEl.textContent = '⚠️ No tenant/company resolved for this lease.'; statusEl.style.color = '#b91c1c'; return; }
+
+      saveBtn.disabled = true;
+      statusEl.style.color = 'var(--muted)';
+      statusEl.textContent = '⏳ Uploading…';
+
+      var safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+      var path = activeCompanyId + '/' + slugify(currentProperty) + '/' + Date.now() + '_' + safeName;
+
+      client.storage.from('tenant-documents').upload(path, file, { upsert: false, contentType: file.type }).then(function (upRes) {
+        if (upRes.error) { throw upRes.error; }
+        var pub = client.storage.from('tenant-documents').getPublicUrl(path);
+        var fileUrl = pub && pub.data ? pub.data.publicUrl : '';
+        if (!fileUrl) throw new Error('Could not resolve file URL.');
+
+        return client.from('tenant_documents').insert([{
+          company_id: activeCompanyId,
+          property_name: currentProperty,
+          tenant_email: activeTenantEmail,
+          tenant_id: activeTenantId,
+          doc_type: docType,
+          title: title,
+          file_url: fileUrl,
+          file_path: path,
+          note: note || null,
+          uploaded_by: currentUser ? currentUser.id : null
+        }]);
+      }).then(function (insRes) {
+        if (insRes && insRes.error) throw insRes.error;
+        statusEl.textContent = '✅ Uploaded!';
+        statusEl.style.color = '#065f46';
+        $('docTitle').value = '';
+        $('docNote').value = '';
+        $('docFile').value = '';
+        setTimeout(function () {
+          form.classList.add('hidden');
+          statusEl.textContent = '';
+        }, 700);
+        loadDocuments();
+      }).catch(function (err) {
+        console.error('Document upload failed:', err);
+        statusEl.textContent = '❌ ' + (err && err.message ? err.message : 'Upload failed.');
+        statusEl.style.color = '#b91c1c';
+      }).finally(function () {
+        saveBtn.disabled = false;
+      });
+    });
+  }
+
+  /* ── Load lease info into view ──────────────────────────── */
+  function loadLeaseInfo(L) {
+    /* Hero panel */
+    setText('heroProperty', L.property_name || currentProperty || '—');
+    setText('heroTenant',   'Tenant: ' + (L.tenant_name || '—'));
+
+    var status = resolveStatus(L);
+    setText('heroStatus', status.label);
+    var badge = $('heroBadge');
+    if (badge) {
+      badge.className = 'hero-badge ' + status.cls;
+    }
+
+    var rentAmt = (L.rent_amount !== null && L.rent_amount !== undefined && L.rent_amount !== '') ? Number(L.rent_amount) : null;
+    var dueDay  = L.rent_due_day || L.due_day || '';
+    setText('heroRent',   rentAmt !== null ? fmtMoney(rentAmt) : '—');
+    setText('heroDueDay', dueDay  ? 'Day ' + dueDay : '—');
+    setText('heroStart',  fmtDate(L.lease_start));
+    setText('heroEnd',    fmtDate(L.lease_end));
+
+    /* Lease ID badge */
+    var badge2 = $('leaseIdBadge');
+    if (badge2 && L.id) {
+      badge2.textContent = '🔑 ' + L.id.substring(0, 8) + '…';
+      badge2.title = 'Click to copy: ' + L.id;
+      badge2.onclick = function () {
+        navigator.clipboard && navigator.clipboard.writeText(L.id).then(function () {
+          badge2.textContent = '✅ Copied!';
+          setTimeout(function () { badge2.textContent = '🔑 ' + L.id.substring(0, 8) + '…'; }, 1800);
+        });
+      };
+    }
+
+    /* Detail cells */
+    setText('tenantName',    L.tenant_name || '—');
+    setText('tenantPhone',   L.tenant_phone || '—');
+    setText('leaseStart',    fmtDate(L.lease_start));
+    setText('leaseEnd',      fmtDate(L.lease_end));
+    setText('rentAmount',    rentAmt !== null ? fmtMoney(rentAmt) + ' / month' : '—');
+    setText('dueDay',        dueDay ? 'Day ' + dueDay + ' of each month' : '—');
+
+    var lfVal = L.late_fee_amount !== null && L.late_fee_amount !== undefined ? L.late_fee_amount : (L.late_fee !== null && L.late_fee !== undefined ? L.late_fee : null);
+    setText('lateFee', lfVal !== null && lfVal !== '' ? fmtMoney(lfVal) : '—');
+
+    var gpVal = L.late_fee_grace_days !== null && L.late_fee_grace_days !== undefined ? L.late_fee_grace_days : (L.grace_period !== null ? L.grace_period : null);
+    setText('gracePeriod', gpVal !== null && gpVal !== '' ? Number(gpVal) + ' days' : '—');
+
+    /* Management */
+    var mgmt = (L.management_type || 'self').toLowerCase();
+    setText('managementTypeDisplay', mgmt === 'pm' ? 'Property Manager' : 'Self-managed');
+
+    if (mgmt === 'pm') {
+      var parts = [L.management_company_name];
+      if (L.management_company_phone) parts.push(L.management_company_phone);
+      if (L.management_company_email) parts.push(L.management_company_email);
+      setText('managementCompanyDisplay', parts.filter(Boolean).join(' · ') || '—');
+
+      var feeText = '—';
+      if (L.management_fee_type && L.management_fee_value !== null && L.management_fee_value !== undefined && L.management_fee_value !== '') {
+        feeText = String(L.management_fee_type).toLowerCase() === 'percent'
+          ? Number(L.management_fee_value) + '%'
+          : fmtMoney(L.management_fee_value) + '/mo';
+      }
+      setText('managementFeeDisplay', feeText);
+
+      var rcm = (L.rent_collection_method || '').toLowerCase();
+      var rcmMap = { property_manager: 'Tenant pays Property Manager', landlord: 'Tenant pays Landlord', other: 'Other' };
+      setText('rentCollectionDisplay', rcmMap[rcm] || '—');
+    } else {
+      setText('managementCompanyDisplay', '—');
+      setText('managementFeeDisplay',     '—');
+      setText('rentCollectionDisplay',    '—');
+    }
+
+    /* Status + IDs */
+    setText('statusDisplay', status.label);
+    setText('leaseIdFull',   L.id || '—');
+    setText('leaseNotes',    L.notes || '—');
+    var termsEl = $('terms');
+    if (termsEl) termsEl.textContent = L.terms || '—';
+
+    /* Documents: scope to this lease's tenant + company */
+    activeTenantEmail = (L.tenant_email || '').trim();
+    activeTenantId    = L.tenant_id || null;
+    activeCompanyId   = L.company_id || companyId || '';
+    var docsSub = $('docsCardSub');
+    if (docsSub) docsSub.textContent = activeTenantEmail
+      ? 'Signed lease, notices & files shared with ' + (L.tenant_name || activeTenantEmail)
+      : 'No tenant email on file for this lease — add one to enable document sharing.';
+    $('docUploadForm').classList.add('hidden');
+    loadDocuments();
+
+    /* Renew / Edit buttons */
+    var renewBtn = $('renewLeaseBtn');
+    var editBtn  = $('editLeaseBtn');
+    if (renewBtn) renewBtn.onclick = function () {
+      location.href = 'lease-form.html?property=' + encodeURIComponent(currentProperty)
+        + (companyId ? '&company_id=' + encodeURIComponent(companyId) : '')
+        + '&mode=renew&id=' + L.id;
+    };
+    if (editBtn) editBtn.onclick = function () {
+      location.href = 'lease-form.html?property=' + encodeURIComponent(currentProperty)
+        + (companyId ? '&company_id=' + encodeURIComponent(companyId) : '')
+        + '&mode=edit&id=' + L.id;
+    };
+  }
+
+  /* ── Timeline item ──────────────────────────────────────── */
+  function timelineItemHtml(L, isActive) {
+    var today = new Date().toISOString().split('T')[0];
+    var dotCls = L.lease_end < today ? 'past' : (L.lease_start > today ? 'future' : 'current');
+    return '<li class="timeline-item' + (isActive ? ' active-item' : '') + '" onclick="window._selectLease(\'' + L.id + '\')">'
+      + '<div class="timeline-dot ' + dotCls + '"></div>'
+      + '<div class="timeline-body">'
+      +   '<div class="timeline-name">' + escapeHtml(L.tenant_name || '—') + '</div>'
+      +   '<div class="timeline-dates">' + escapeHtml(L.lease_start || '—') + ' → ' + escapeHtml(L.lease_end || '—') + '</div>'
+      +   '<div class="timeline-rent">' + (L.rent_amount ? fmtMoney(L.rent_amount) + '/mo' : '') + '</div>'
+      + '</div>'
+      + '</li>';
+  }
+
+  /* ── History table row ──────────────────────────────────── */
+  function historyRowHtml(L, isActive) {
+    var status = resolveStatus(L);
+    var period = escapeHtml(fmtDate(L.lease_start) + ' → ' + fmtDate(L.lease_end));
+    var rowStyle = isActive ? 'background:var(--sky-soft)' : '';
+    return '<tr style="' + rowStyle + '">'
+      + '<td style="font-family:\'DM Mono\',monospace;font-size:.8rem">' + period + '</td>'
+      + '<td style="font-weight:600">' + escapeHtml(L.tenant_name || '—') + '</td>'
+      + '<td style="font-family:\'DM Mono\',monospace;font-weight:600">' + escapeHtml(L.rent_amount ? fmtMoney(L.rent_amount) : '—') + '</td>'
+      + '<td><span class="chip ' + status.cls + '">' + escapeHtml(status.label) + '</span></td>'
+      + '<td>'
+      +   '<button class="tbl-btn" onclick="window._selectLease(\'' + L.id + '\')">🔍 View</button>'
+      +   '<button class="tbl-btn" onclick="window._editLease(\'' + L.id + '\')">✏️</button>'
+      +   '<button class="tbl-btn del" onclick="window._deleteLease(\'' + L.id + '\')">🗑️</button>'
+      + '</td>'
+      + '</tr>';
+  }
+
+  /* ── Load lease history for property ────────────────────── */
+  function loadLeaseHistory(propertyName, activeLeaseId) {
+    currentProperty = propertyName;
+
+    return client.from('leases')
+      .select('*')
+      .eq('property_name', propertyName)
+      .order('lease_start', { ascending: false })
+      .then(function (res) {
+        if (res.error) { console.error('History load error:', res.error); return; }
+        var data = res.data || [];
+        leasesCache = data;
+
+        if (!data.length) {
+          $('timelineList').innerHTML = '<li style="color:var(--muted);font-size:.88rem;padding:8px">No lease records found for this property.</li>';
+          $('historyList').innerHTML  = '<tr><td colspan="5"><div class="empty-state"><div class="empty-state-icon">📭</div><p>No lease history found.</p></div></td></tr>';
+          return;
+        }
+
+        /* Use the provided activeLeaseId or default to first record */
+        var activeLease = data.find(function (L) { return L.id === activeLeaseId; }) || data[0];
+        loadLeaseInfo(activeLease);
+
+        /* Populate timeline */
+        $('timelineList').innerHTML = data.map(function (L) {
+          return timelineItemHtml(L, L.id === activeLease.id);
+        }).join('');
+
+        /* Populate history table */
+        $('historyList').innerHTML = data.map(function (L) {
+          return historyRowHtml(L, L.id === activeLease.id);
+        }).join('');
+
+      }).catch(function (err) {
+        console.error('History load error:', err);
+      });
+  }
+
+  /* ── Global helpers for inline onclick ─────────────────── */
+  window._selectLease = function (id) {
+    var found = leasesCache.find(function (L) { return L.id === id; });
+    if (!found) return;
+    loadLeaseInfo(found);
+    /* Re-render to highlight selected */
+    $('timelineList').innerHTML = leasesCache.map(function (L) { return timelineItemHtml(L, L.id === id); }).join('');
+    $('historyList').innerHTML  = leasesCache.map(function (L) { return historyRowHtml(L, L.id === id); }).join('');
+    /* Update page title */
+    setText('pageTitle', '📜 Lease for ' + (found.property_name || currentProperty));
+  };
+  window._editLease = function (id) {
+    if (!currentProperty) return;
+    location.href = 'lease-form.html?property=' + encodeURIComponent(currentProperty)
+      + (companyId ? '&company_id=' + encodeURIComponent(companyId) : '')
+      + '&mode=edit&id=' + id;
+  };
+  window._deleteLease = function (id) {
+    if (!confirm('Are you sure you want to delete this lease record? This cannot be undone.')) return;
+    client.from('leases').delete().eq('id', id).then(function (res) {
+      if (res.error) {
+        setAlert('danger', 'Failed to delete lease: ' + res.error.message);
+      } else {
+        setAlert('info', 'Lease deleted successfully.');
+        if (currentProperty) loadLeaseHistory(currentProperty, null);
+      }
+    });
+  };
+
+  /* ── INIT ───────────────────────────────────────────────── */
+  document.addEventListener('DOMContentLoaded', function () {
+    wireUMD();
+    wireHamburger();
+    wireSignOut();
+    wireDocumentsForm();
+    setText('footerYear', new Date().getFullYear());
+    setTimeout(hideOverlay, 5000);
+
+    setupAuth().then(function (user) {
+      if (!user) {
+        hideOverlay();
+        location.href = 'login.html?returnTo=' + encodeURIComponent(location.href);
+        return;
+      }
+
+      hideOverlay();
+
+      var leaseIdParam  = pageParams.get('id');
+      var propertyParam = (pageParams.get('property') || '').trim();
+
+      /* Update back button */
+      var backBtn = $('backToLeaseCenter');
+      if (backBtn) {
+        var backUrl = propertyParam
+          ? 'lease-rent-center.html?property=' + encodeURIComponent(propertyParam) + (companyId ? '&company_id=' + encodeURIComponent(companyId) : '')
+          : 'lease-rent-center.html' + (companyId ? '?company_id=' + encodeURIComponent(companyId) : '');
+        backBtn.href = backUrl;
+      }
+
+      /* Priority 1: load by lease ID */
+      if (leaseIdParam) {
+        client.from('leases').select('*').eq('id', leaseIdParam).single()
+          .then(function (res) {
+            if (res.error || !res.data) {
+              setAlert('danger', 'Could not load that lease — it may have been deleted or you may not have access.');
+              setText('pageTitle', '📜 View Lease');
+              setText('pageSub', propertyParam || '');
+              return;
+            }
+            var lease = res.data;
+            currentProperty = lease.property_name || '';
+            setText('pageTitle', '📜 View Lease' + (currentProperty ? ' — ' + currentProperty : ''));
+            setText('pageSub',   currentProperty ? 'Property: ' + currentProperty : 'Lease details');
+            if (currentProperty) {
+              loadLeaseHistory(currentProperty, lease.id);
+            } else {
+              loadLeaseInfo(lease);
+            }
+          });
+      }
+      /* Priority 2: load by property name */
+      else if (propertyParam) {
+        currentProperty = propertyParam;
+        setText('pageTitle', '📜 View Lease — ' + propertyParam);
+        setText('pageSub',   'Property: ' + propertyParam);
+        loadLeaseHistory(propertyParam, null);
+      }
+      else {
+        setText('pageTitle', '📜 View Lease');
+        setText('pageSub',   'No lease or property specified in URL');
+        setAlert('warn', 'No lease ID or property name provided. Use ?id=... or ?property=... in the URL.');
+      }
+
+    }).catch(function (err) {
+      console.error('Auth error:', err);
+      hideOverlay();
+      location.href = 'login.html';
+    });
+
+    /* Auth state listener */
+    client.auth.onAuthStateChange(function (event) {
+      if (event === 'SIGNED_OUT') location.href = 'login.html';
+    });
+  });
+
+}());
+</script>
+</body>
+</html>

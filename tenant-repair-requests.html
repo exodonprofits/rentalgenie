@@ -1,0 +1,1281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>🛠 Repair Requests – Rental Genie</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap">
+<style>
+
+  /* ── Design Tokens ─────────────────────────────────────────── */
+  :root {
+    --navy:        #0c1e3a;
+    --navy-mid:    #1a3a6b;
+    --navy-light:  #1e5799;
+    --sky:         #2d8cf0;
+    --sky-soft:    #e8f0fe;
+    --teal:        #0ea5e9;
+    --border:      #e2e8f0;
+    --bg:          #f1f4f8;
+    --card:        #ffffff;
+    --text:        #0c1e3a;
+    --muted:       #64748b;
+    --success:     #10b981;
+    --success-bg:  #ecfdf5;
+    --success-bdr: #a7f3d0;
+    --warn:        #f59e0b;
+    --warn-bg:     #fffbeb;
+    --warn-bdr:    #fde68a;
+    --warn-text:   #92400e;
+    --danger:      #ef4444;
+    --danger-bg:   #fef2f2;
+    --danger-bdr:  #fecaca;
+    --danger-text: #7f1d1d;
+    --info-bg:     #eff6ff;
+    --info-bdr:    #bfdbfe;
+    --info-text:   #1e40af;
+    --radius-sm:   8px;
+    --radius-md:   12px;
+    --radius-lg:   16px;
+    --radius-xl:   20px;
+    --shadow-sm:   0 1px 4px rgba(12,30,58,.06);
+    --shadow-md:   0 4px 16px rgba(12,30,58,.09);
+    --shadow-lg:   0 8px 32px rgba(12,30,58,.14);
+    --header-grad: linear-gradient(135deg,#0c1e3a 0%,#1a3a6b 55%,#1e5799 100%);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: 'DM Sans', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── Auth Loading Overlay ───────────────────────────────────── */
+  #authOverlay {
+    position: fixed; inset: 0; z-index: 9999;
+    background: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column; gap: 16px;
+    transition: opacity .35s;
+  }
+  #authOverlay.hidden { opacity: 0; pointer-events: none; }
+  .spinner-ring {
+    width: 44px; height: 44px; border-radius: 50%;
+    border: 3px solid rgba(12,30,58,.1);
+    border-top-color: var(--sky);
+    animation: spin .75s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #authOverlay p { font-size: .88rem; color: var(--muted); font-weight: 500; }
+
+  /* ── Header ─────────────────────────────────────────────────── */
+  .header-container {
+    position: sticky; top: 0; z-index: 1000;
+    background: var(--header-grad);
+    border-bottom: 1px solid rgba(255,255,255,.08);
+    box-shadow: 0 2px 20px rgba(12,30,58,.35);
+  }
+  .navbar {
+    max-width: 1280px; margin: 0 auto; padding: 0 22px;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 64px; gap: 12px;
+  }
+  .brand-area { display: flex; align-items: center; gap: 11px; text-decoration: none; flex-shrink: 0; }
+  .brand-logo {
+    width: 38px; height: 38px; border-radius: 9px;
+    background: rgba(255,255,255,.12);
+    box-shadow: 0 0 0 1px rgba(255,255,255,.2), 0 2px 8px rgba(0,0,0,.2);
+    object-fit: cover; flex-shrink: 0;
+  }
+  .brand-title { font-size: 1.1rem; font-weight: 700; color: #fff; letter-spacing: -.2px; }
+  .brand-badge {
+    display: inline-block; font-size: .65rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .5px;
+    background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.2);
+    color: rgba(255,255,255,.8); border-radius: 999px;
+    padding: 2px 8px; margin-left: 2px;
+  }
+
+  .nav-links { display: flex; gap: 2px; align-items: center; }
+  .nav-links a {
+    display: flex; align-items: center; gap: 5px;
+    text-decoration: none; font-size: .82rem; font-weight: 600;
+    padding: 7px 11px; color: rgba(255,255,255,.75);
+    border-radius: var(--radius-sm); transition: all .18s;
+    white-space: nowrap;
+  }
+  .nav-links a:hover { color: #fff; background: rgba(255,255,255,.1); }
+  .nav-links a.nav-active { color: #fff; background: rgba(255,255,255,.15); }
+
+  /* User menu dropdown */
+  .nav-right-group { display: flex; align-items: center; gap: 8px; }
+  .umd-wrap { position: relative; flex-shrink: 0; }
+  .umd-toggle {
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.18);
+    border-radius: 999px; padding: 5px 12px 5px 5px;
+    cursor: pointer; color: #fff; font-family: inherit; font-size: .82rem; font-weight: 600;
+    transition: background .18s;
+  }
+  .umd-toggle:hover { background: rgba(255,255,255,.18); }
+  .umd-avatar {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--sky), var(--navy-mid));
+    display: flex; align-items: center; justify-content: center;
+    font-size: .68rem; font-weight: 700; color: #fff; flex-shrink: 0;
+  }
+  .umd-name { font-size: .78rem; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: rgba(255,255,255,.9); }
+  .umd-caret { font-size: .7rem; opacity: .7; margin-left: 2px; color: rgba(255,255,255,.7); }
+  .umd-dropdown {
+    display: none; position: absolute; top: calc(100% + 10px); right: 0;
+    background: #fff; border: 1px solid #e2e8f0;
+    border-radius: 16px; min-width: 220px;
+    box-shadow: 0 8px 32px rgba(12,30,58,.18);
+    z-index: 1001; overflow: hidden; padding: 6px;
+  }
+  .umd-dropdown.open { display: block; animation: umdFadeIn .15s ease; }
+  @keyframes umdFadeIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
+  .umd-user-row { padding: 10px 12px 8px; border-bottom: 1px solid #e2e8f0; margin-bottom: 4px; }
+  .umd-user-name { font-weight: 700; font-size: .9rem; color: #0c1e3a; }
+  .umd-user-email { font-size: .78rem; color: #64748b; margin-top: 2px; }
+  .umd-section { padding: 4px 0; border-bottom: 1px solid #f1f4f8; margin-bottom: 2px; }
+  .umd-section:last-child { border-bottom: none; margin-bottom: 0; }
+  .umd-link {
+    display: flex; align-items: center; gap: 9px;
+    width: 100%; padding: 9px 12px; border-radius: 10px;
+    font-size: .85rem; font-weight: 600; color: #0c1e3a;
+    text-decoration: none; background: none; border: none;
+    cursor: pointer; font-family: inherit; text-align: left;
+  }
+  .umd-link:hover { background: #f1f4f8; }
+  .umd-link.danger { color: #ef4444; }
+  .umd-link.danger:hover { background: #fef2f2; }
+
+  .nav-bell {
+    display: flex; align-items: center; justify-content: center;
+    width: 34px; height: 34px; border-radius: 999px; flex-shrink: 0;
+    background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.22);
+    color: #fff; font-size: 1rem; text-decoration: none; margin-right: 8px;
+    transition: background .18s;
+  }
+  .nav-bell:hover { background: rgba(255,255,255,.18); }
+
+  /* User chip in header */
+  .hamburger {
+    display: none; padding: 7px 10px;
+    border: 1px solid rgba(255,255,255,.25); border-radius: var(--radius-sm);
+    background: rgba(255,255,255,.1); cursor: pointer;
+    color: #fff; font-size: 1rem; font-weight: 700;
+    transition: background .18s;
+  }
+  .hamburger:hover { background: rgba(255,255,255,.2); }
+
+  @media(max-width:880px) {
+    .nav-links { display: none; }
+    .umd-wrap { display: none; }
+    .nav-bell { display: none; }
+    .hamburger { display: block; }
+  }
+
+  /* Mobile drawer */
+  .drawer {
+    display: none; position: fixed;
+    top: 72px; left: 12px; right: 12px;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 8px;
+    z-index: 999; box-shadow: var(--shadow-lg);
+  }
+  .drawer a {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 14px; border-radius: var(--radius-sm);
+    font-weight: 600; font-size: .9rem;
+    text-decoration: none; color: var(--text);
+    transition: background .15s;
+  }
+  .drawer a:hover { background: var(--bg); }
+  .drawer a.nav-active { background: var(--sky-soft); color: var(--navy-mid); }
+  .drawer-signout { color: var(--danger) !important; }
+  .drawer-divider { height: 1px; background: var(--border); margin: 4px 0; }
+
+  /* ── Auth gate ──────────────────────────────────────────────── */
+  .auth-gate {
+    max-width: 520px; margin: 60px auto; padding: 0 20px;
+    text-align: center;
+  }
+  .auth-gate-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius-xl); padding: 40px 32px;
+    box-shadow: var(--shadow-md);
+  }
+  .auth-gate-icon { font-size: 2.5rem; margin-bottom: 16px; }
+  .auth-gate-card h2 { font-size: 1.3rem; font-weight: 700; color: var(--navy); margin-bottom: 8px; }
+  .auth-gate-card p { font-size: .9rem; color: var(--muted); margin-bottom: 24px; line-height: 1.5; }
+  .hidden { display: none !important; }
+
+  /* ── Main layout ────────────────────────────────────────────── */
+  main {
+    flex: 1; max-width: 1280px; width: 100%;
+    margin: 0 auto; padding: 28px 22px 48px;
+  }
+
+  /* ── Page header bar ────────────────────────────────────────── */
+  .page-header {
+    display: flex; align-items: flex-start;
+    justify-content: space-between; gap: 16px;
+    flex-wrap: wrap; margin-bottom: 24px;
+    animation: fadeUp .4s ease both;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .page-title { font-size: 1.65rem; font-weight: 700; color: var(--navy); letter-spacing: -.4px; line-height: 1.2; }
+  .page-sub { font-size: .88rem; color: var(--muted); margin-top: 4px; font-weight: 500; }
+  .page-header-right { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+
+  /* ── Alert banner ───────────────────────────────────────────── */
+  .alert-banner {
+    display: none; padding: 13px 16px;
+    border-radius: var(--radius-md); font-size: .88rem; font-weight: 600;
+    line-height: 1.45; margin-bottom: 20px;
+    border: 1px solid transparent;
+    animation: fadeUp .3s ease both;
+  }
+  .alert-banner.danger { background: var(--danger-bg); border-color: var(--danger-bdr); color: var(--danger-text); display: flex; }
+  .alert-banner.info   { background: var(--info-bg);   border-color: var(--info-bdr);   color: var(--info-text);   display: flex; }
+
+  /* ── Attention banner ───────────────────────────────────────── */
+  .attention-banner {
+    display: none;
+    background: var(--warn-bg); border: 1px solid var(--warn-bdr);
+    border-radius: var(--radius-md); padding: 14px 18px;
+    margin-bottom: 20px;
+    animation: fadeUp .35s ease both;
+  }
+  .attention-banner-head {
+    display: flex; align-items: center; gap: 8px;
+    font-weight: 700; color: var(--warn-text); font-size: .9rem;
+    margin-bottom: 8px;
+  }
+  .attention-banner-items { font-size: .83rem; color: var(--warn-text); line-height: 1.7; }
+
+  /* ── Hero stats row ─────────────────────────────────────────── */
+  .hero-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px; margin-bottom: 20px;
+    animation: fadeUp .4s ease .05s both;
+  }
+  @media(max-width:720px) { .hero-stats { grid-template-columns: 1fr 1fr; } }
+  @media(max-width:480px) { .hero-stats { grid-template-columns: 1fr; } }
+
+  .hero-stat {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 20px 18px;
+    box-shadow: var(--shadow-sm);
+    position: relative; overflow: hidden;
+    transition: transform .18s, box-shadow .18s;
+  }
+  .hero-stat:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+  .hero-stat::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: var(--header-grad);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  }
+  .hero-stat.warn-stat::before { background: linear-gradient(90deg, var(--warn), #fbbf24); }
+  .hero-stat.good-stat::before { background: linear-gradient(90deg, var(--success), #34d399); }
+  .hero-stat.danger-stat::before { background: linear-gradient(90deg, var(--danger), #f87171); }
+  .stat-label {
+    font-size: .7rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .5px; color: var(--muted); margin-bottom: 8px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .stat-value {
+    font-size: 1.55rem; font-weight: 700; color: var(--navy);
+    letter-spacing: -.5px; line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat-value.mono { font-family: 'DM Mono', monospace; font-size: 1.3rem; }
+  .stat-sub { font-size: .75rem; color: var(--muted); margin-top: 5px; font-weight: 500; }
+
+  /* ── Section cards ──────────────────────────────────────────── */
+  .section-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius-xl); box-shadow: var(--shadow-sm);
+    margin-bottom: 20px; overflow: hidden;
+    animation: fadeUp .4s ease .1s both;
+  }
+  .section-card + .section-card { animation-delay: .15s; }
+  .section-card:nth-child(3) { animation-delay: .2s; }
+
+  .card-head {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; flex-wrap: wrap;
+    padding: 18px 22px 0;
+  }
+  .card-head-left { display: flex; flex-direction: column; }
+  .card-title {
+    font-size: 1rem; font-weight: 700; color: var(--navy);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .card-sub { font-size: .8rem; color: var(--muted); margin-top: 3px; font-weight: 500; }
+  .card-body { padding: 16px 22px 22px; }
+
+  /* ── Info grid (lease details) ──────────────────────────────── */
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+  @media(max-width:720px) { .info-grid { grid-template-columns: 1fr 1fr; } }
+  @media(max-width:480px) { .info-grid { grid-template-columns: 1fr; } }
+
+  .info-cell {
+    background: #f8fafc; border: 1px solid var(--border);
+    border-radius: var(--radius-md); padding: 13px 14px;
+    transition: border-color .15s;
+  }
+  .info-cell:hover { border-color: #cbd5e1; }
+  .info-cell-label {
+    font-size: .68rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .4px; color: var(--muted); margin-bottom: 5px;
+  }
+  .info-cell-value {
+    font-size: .92rem; font-weight: 600; color: var(--navy); line-height: 1.3;
+  }
+
+  /* ── Action grid ────────────────────────────────────────────── */
+  .action-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+  }
+  @media(max-width:860px) { .action-grid { grid-template-columns: repeat(3, 1fr); } }
+  @media(max-width:500px) { .action-grid { grid-template-columns: repeat(2, 1fr); } }
+
+  .action-card {
+    display: flex; flex-direction: column; align-items: center;
+    text-align: center; text-decoration: none; color: var(--text);
+    background: #f8fafc; border: 1.5px solid var(--border);
+    border-radius: var(--radius-lg); padding: 20px 12px 16px;
+    transition: all .18s; cursor: pointer;
+    gap: 10px;
+  }
+  .action-card:hover {
+    border-color: var(--sky); background: var(--sky-soft);
+    transform: translateY(-3px); box-shadow: var(--shadow-md);
+  }
+  .action-icon {
+    width: 48px; height: 48px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem;
+    background: var(--card); border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+    transition: transform .18s;
+  }
+  .action-card:hover .action-icon { transform: scale(1.1); }
+  .action-label { font-size: .83rem; font-weight: 700; color: var(--navy); }
+  .action-hint { font-size: .72rem; color: var(--muted); font-weight: 500; line-height: 1.35; }
+
+  /* ── Repairs snapshot ───────────────────────────────────────── */
+  .repairs-row {
+    display: flex; align-items: center; gap: 14px;
+    padding: 13px 14px; border-radius: var(--radius-md);
+    background: #f8fafc; border: 1px solid var(--border);
+    transition: border-color .15s;
+  }
+  .repairs-row + .repairs-row { margin-top: 8px; }
+  .repairs-row:hover { border-color: #cbd5e1; }
+  .repairs-dot {
+    width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+    background: var(--warn);
+  }
+  .repairs-dot.open  { background: var(--warn); }
+  .repairs-dot.done  { background: var(--success); }
+  .repairs-issue { font-size: .88rem; font-weight: 600; color: var(--navy); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .repairs-status { font-size: .75rem; color: var(--muted); font-weight: 500; flex-shrink: 0; }
+
+  /* ── Chips ──────────────────────────────────────────────────── */
+  .chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 11px; border-radius: 999px;
+    font-weight: 700; font-size: .75rem;
+    border: 1px solid var(--border); background: #f8fafc; color: var(--text);
+    white-space: nowrap;
+  }
+  .chip.good    { background: var(--success-bg); border-color: var(--success-bdr); color: #065f46; }
+  .chip.warn    { background: var(--warn-bg);    border-color: var(--warn-bdr);    color: var(--warn-text); }
+  .chip.danger  { background: var(--danger-bg);  border-color: var(--danger-bdr);  color: var(--danger-text); }
+  .chip.info    { background: var(--info-bg);    border-color: var(--info-bdr);    color: var(--info-text); }
+  .chip-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+  /* ── Buttons ────────────────────────────────────────────────── */
+  .btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 9px 16px; border-radius: var(--radius-md);
+    border: 1.5px solid var(--border); background: var(--card);
+    color: var(--navy); font-family: 'DM Sans', sans-serif;
+    font-size: .83rem; font-weight: 600;
+    text-decoration: none; cursor: pointer;
+    transition: all .16s; white-space: nowrap;
+  }
+  .btn:hover { background: var(--bg); border-color: #cbd5e1; transform: translateY(-1px); }
+  .btn.primary {
+    background: var(--header-grad); border-color: transparent; color: #fff;
+    box-shadow: 0 2px 10px rgba(12,30,58,.2);
+  }
+  .btn.primary:hover { filter: brightness(1.1); box-shadow: 0 4px 16px rgba(12,30,58,.28); }
+  .btn.sm { padding: 6px 12px; font-size: .76rem; }
+
+  /* ── Footer ─────────────────────────────────────────────────── */
+  .site-footer {
+    background: var(--navy); padding: 20px 24px;
+    border-top: 1px solid rgba(255,255,255,.06);
+  }
+  .footer-inner {
+    max-width: 1280px; margin: 0 auto;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; flex-wrap: wrap;
+  }
+  .footer-inner p { color: rgba(255,255,255,.3); font-size: .8rem; }
+  .footer-user {
+    display: flex; align-items: center; gap: 8px;
+    font-size: .78rem; color: rgba(255,255,255,.4); font-weight: 500;
+  }
+  .footer-user-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--success); flex-shrink: 0;
+  }
+
+  /* ── Skeleton loader ────────────────────────────────────────── */
+  .skel {
+    background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s infinite;
+    border-radius: 6px;
+    display: inline-block;
+  }
+  @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+  @media(max-width:600px) {
+    main { padding: 20px 14px 40px; }
+    .page-title { font-size: 1.35rem; }
+  }
+
+  /* ── Page-specific: Repair Requests ── */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+  @media(max-width:600px) { .form-grid { grid-template-columns: 1fr; } }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group label { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); }
+  .form-input { padding: 10px 12px; border: 1.5px solid var(--border); border-radius: var(--radius-md); font-size: .88rem; font-family: 'DM Sans', sans-serif; color: var(--text); background: #fff; transition: border-color .15s, box-shadow .15s; }
+  .form-input:focus { outline: none; border-color: var(--sky); box-shadow: 0 0 0 3px rgba(45,140,240,.12); }
+  .form-input::placeholder { color: #94a3b8; }
+  textarea.form-input { resize: vertical; min-height: 100px; }
+  .submit-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 4px; }
+  .status-msg { font-size: .84rem; font-weight: 600; padding: 10px 14px; border-radius: var(--radius-md); display: none; }
+  .status-msg.ok  { display: block; background: var(--success-bg); border: 1px solid var(--success-bdr); color: #065f46; }
+  .status-msg.err { display: block; background: var(--danger-bg);  border: 1px solid var(--danger-bdr);  color: var(--danger-text); }
+  /* Table */
+  .table-wrap { overflow-x: auto; margin-top: 14px; border-radius: var(--radius-md); border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; font-size: .84rem; }
+  th { background: #f8fafc; padding: 11px 14px; text-align: left; font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); border-bottom: 1px solid var(--border); white-space: nowrap; }
+  td { padding: 12px 14px; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #f8fafc; }
+  .chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 999px; font-size: .73rem; font-weight: 700; white-space: nowrap; }
+  .chip.good   { background: var(--success-bg); border: 1px solid var(--success-bdr); color: #065f46; }
+  .chip.warn   { background: var(--warn-bg);    border: 1px solid var(--warn-bdr);    color: var(--warn-text); }
+  .chip.bad    { background: var(--danger-bg);  border: 1px solid var(--danger-bdr);  color: var(--danger-text); }
+  .chip.info   { background: var(--info-bg);    border: 1px solid var(--info-bdr);    color: var(--info-text); }
+  /* Search row */
+  .search-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }
+  .search-input { flex: 1; min-width: 200px; padding: 9px 12px; border: 1.5px solid var(--border); border-radius: var(--radius-md); font-size: .85rem; font-family: 'DM Sans', sans-serif; }
+  .search-input:focus { outline: none; border-color: var(--sky); }
+  /* Urgency select pills */
+  .urgency-pills { display: flex; gap: 8px; flex-wrap: wrap; }
+  .urgency-pill { padding: 8px 16px; border-radius: 999px; border: 1.5px solid var(--border); background: #f8fafc; font-size: .82rem; font-weight: 700; cursor: pointer; transition: all .15s; font-family: 'DM Sans', sans-serif; }
+  .urgency-pill:hover { border-color: var(--sky); background: var(--sky-soft); }
+  .urgency-pill.selected { border-color: var(--sky); background: var(--sky-soft); color: var(--navy-mid); }
+  .urgency-pill.selected.high { border-color: var(--warn); background: var(--warn-bg); color: var(--warn-text); }
+  .urgency-pill.selected.emergency { border-color: var(--danger); background: var(--danger-bg); color: var(--danger-text); }
+
+  .photo-preview-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 10px; margin-top: 12px; }
+  .photo-thumb { position: relative; width: 100%; aspect-ratio: 1/1; border-radius: 10px; overflow: hidden; border: 1.5px solid var(--border); background: #f1f5f9; }
+  .photo-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .photo-thumb .rm-btn {
+    position: absolute; top: 4px; right: 4px; width: 22px; height: 22px; border-radius: 50%;
+    background: rgba(15,23,42,.7); color: #fff; border: none; font-size: .75rem; font-weight: 700;
+    cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1;
+  }
+  .photo-thumb .rm-btn:hover { background: var(--danger); }
+  .photo-thumb .up-status {
+    position: absolute; inset: 0; background: rgba(12,30,58,.55); color: #fff;
+    display: none; align-items: center; justify-content: center; font-size: .68rem; font-weight: 700; text-align: center; padding: 4px;
+  }
+  .photo-thumb.uploading .up-status { display: flex; }
+  .photo-thumb.upload-failed { border-color: var(--danger); }
+  .photo-count-badge {
+    display: inline-flex; align-items: center; gap: 4px; font-size: .72rem; font-weight: 700;
+    color: var(--muted); background: #f1f5f9; border-radius: 999px; padding: 2px 9px; margin-left: 6px;
+  }
+  /* Skeleton */
+  .skel { background: linear-gradient(90deg,#e2e8f0 25%,#f1f5f9 50%,#e2e8f0 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 6px; display: inline-block; }
+  @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+  .empty-state { text-align: center; padding: 48px 20px; }
+  .empty-icon { font-size: 2.5rem; margin-bottom: 12px; }
+  .empty-state p { font-size: .9rem; color: var(--muted); font-weight: 500; line-height: 1.6; }
+
+  /* ── Reimbursement modal ── */
+  .modal-overlay { display:none; position:fixed; inset:0; z-index:2000; background:rgba(12,30,58,.5); align-items:center; justify-content:center; padding:20px; }
+  .modal-overlay.open { display:flex; }
+  .modal-card { background:#fff; border-radius:var(--radius-xl); max-width:480px; width:100%; padding:24px; box-shadow:var(--shadow-lg); max-height:90vh; overflow-y:auto; }
+  .modal-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+  .modal-title { font-size:1.05rem; font-weight:700; color:var(--navy); }
+  .modal-close { background:none; border:none; font-size:1.2rem; cursor:pointer; color:var(--muted); line-height:1; padding:2px; }
+  .reimb-btn { display:inline-flex; align-items:center; gap:5px; padding:5px 12px; border-radius:var(--radius-sm); border:1.5px solid var(--sky); background:var(--sky-soft); color:var(--navy-mid); font-size:.76rem; font-weight:700; cursor:pointer; font-family:'DM Sans',sans-serif; transition:all .15s; white-space:nowrap; }
+  .reimb-btn:hover { background:var(--info-bdr); }
+</style>
+</head>
+<body>
+
+<!-- ═══ SUPABASE (body-first) ═══ -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/* ── rgFiles ────────────────────────────────────────────────────────────────
+   Turns a stored file reference into a short-lived signed link, so pages keep
+   working when the storage buckets are switched from public to private.
+   Accepts a storage path or a stored public URL.
+   Markup:  <a href="#" ${rgFiles.attr('bucket', pathOrUrl)}>Open</a>
+   Then:    rgFiles.hydrate(client, containerEl)  // after markup is in the DOM
+--------------------------------------------------------------------------- */
+window.rgFiles = (function () {
+  function parse(value) {
+    var m = String(value).match(/\/object\/(?:public|sign|authenticated)\/([^/]+)\/([^?]+)/);
+    return m ? { bucket: m[1], path: decodeURIComponent(m[2]) } : null;
+  }
+  function resolve(client, bucket, value, seconds) {
+    if (!value) return Promise.resolve(null);
+    var v = String(value), b = bucket, p = v, wasUrl = false;
+    if (/^(blob:|data:)/i.test(v)) return Promise.resolve(v);
+    if (/^https?:\/\//i.test(v)) {
+      wasUrl = true;
+      var hit = parse(v);
+      if (!hit) return Promise.resolve(v);          // a link someone typed in
+      b = hit.bucket; p = hit.path;
+    }
+    if (!client || !client.storage) return Promise.resolve(wasUrl ? v : null);
+    return client.storage.from(b).createSignedUrl(p, seconds || 3600)
+      .then(function (r) {
+        if (r && r.data && r.data.signedUrl) return r.data.signedUrl;
+        return wasUrl ? v : null;
+      })
+      .catch(function () { return wasUrl ? v : null; });
+  }
+  function attr(bucket, value) {
+    return value ? ' data-rg-file="' + bucket + '|' + encodeURIComponent(value) + '"' : '';
+  }
+  function hydrate(client, root) {
+    var nodes = (root || document).querySelectorAll('[data-rg-file]');
+    Array.prototype.forEach.call(nodes, function (el) {
+      var raw = el.getAttribute('data-rg-file') || '';
+      var i = raw.indexOf('|');
+      if (i < 0) return;
+      el.removeAttribute('data-rg-file');
+      resolve(client, raw.slice(0, i), decodeURIComponent(raw.slice(i + 1))).then(function (url) {
+        if (!url) { el.removeAttribute('href'); el.title = 'File unavailable'; return; }
+        if (el.tagName === 'IMG') el.src = url; else el.href = url;
+      });
+    });
+  }
+  return { resolve: resolve, hydrate: hydrate, attr: attr };
+})();
+</script>
+
+<script>
+(function(){
+  try{
+    var _m=new Map(),_l=null;try{_l=window.localStorage;}catch(e){}
+    var _s={getItem:function(k){try{return(_l&&_l.getItem(k))||_m.get(k)||null;}catch(e){return _m.get(k)||null;}},setItem:function(k,v){try{_l&&_l.setItem(k,v);}catch(e){}_m.set(k,v);},removeItem:function(k){try{_l&&_l.removeItem(k);}catch(e){}_m.delete(k);}};
+    window._rgClient=window._rgClient||window.supabase.createClient('https://pbojacnagutipfhcxltj.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBib2phY25hZ3V0aXBmaGN4bHRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgwMDkwODAsImV4cCI6MjA2MzU4NTA4MH0.ZLCcAzTYljoZycpBGwMtthP5VyAJ4schuIvt4HibGc0',{auth:{lock:undefined,persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storage:_s}});
+    window.sb=window.client=window._rgClient;
+  }catch(e){console.error('RG bootstrap failed:',e);}
+})();
+</script>
+<!-- ══════════════════════════════ -->
+
+<!-- Auth Overlay -->
+<div id="authOverlay" style="position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;transition:opacity .35s;">
+  <div class="spinner-ring"></div>
+  <p>Loading your portal…</p>
+</div>
+
+<header class="header-container">
+  <div class="navbar">
+    <a class="brand-area" href="tenant-portal.html">
+      <img class="brand-logo" src="images/rg-logo.png" alt="Rental Genie"
+           onerror="this.style.display='none'" />
+      <div>
+        <span class="brand-title">Rental Genie</span>
+        <span class="brand-badge">Tenant</span>
+      </div>
+    </a>
+
+    <nav class="nav-links" aria-label="Tenant navigation">
+      <a id="navHome"     href="tenant-portal.html">🏠 Home</a>
+      <a id="navLease"    href="tenant-lease.html">📄 Lease</a>
+      <a id="navPayments" href="tenant-payments.html">💵 Payments</a>
+      <a id="navRepairs"  href="tenant-repair-requests.html" class="nav-active">🛠️ Repairs</a>
+      <a id="navDocs"     href="tenant-documents.html">📁 Docs</a>
+    </nav>
+
+    <div class="nav-right-group">
+      <a class="nav-bell" id="navBell" href="tenant-contact.html" title="Contact" aria-label="Contact" style="display:none">🔔</a>
+
+      <div class="umd-wrap" id="userChip" style="display:none">
+        <button class="umd-toggle" id="umdToggle" aria-haspopup="true" aria-expanded="false">
+          <div class="umd-avatar" id="userAvatar">?</div>
+          <span class="umd-name" id="userEmail">—</span>
+          <span class="umd-caret">▾</span>
+        </button>
+        <div class="umd-dropdown" id="umdDropdown">
+          <div class="umd-user-row">
+            <div class="umd-user-name" id="umdFullName">Tenant</div>
+            <div class="umd-user-email" id="umdEmail">—</div>
+          </div>
+          <div class="umd-section">
+            <a class="umd-link" href="tenant-account.html">👤 My Account</a>
+          </div>
+          <div class="umd-section">
+            <button class="umd-link danger" id="navSignOut">🚪 Sign Out</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <button class="hamburger" id="hamburgerBtn" aria-label="Toggle menu">☰</button>
+  </div>
+</header>
+<div class="drawer" id="mobileDrawer">
+  <a id="drawerHome"     href="tenant-portal.html"          class="nav-active">🏠 Portal Home</a>
+  <a id="drawerLease"    href="tenant-lease.html">📄 My Lease</a>
+  <a id="drawerPayments" href="tenant-payments.html">💵 Payments</a>
+  <a id="drawerRepairs"  href="tenant-repair-requests.html">🛠️ Repairs</a>
+  <a id="drawerDocs"     href="tenant-documents.html">📁 Documents</a>
+  <a id="drawerContact"  href="tenant-contact.html">💬 Contact</a>
+  <a id="drawerAccount" href="tenant-account.html">👤 My Account</a>
+
+  <div class="drawer-divider"></div>
+
+  <a id="drawerSignOut" href="#" class="drawer-signout">🚪 Sign Out</a>
+</div>
+
+<section id="authGate" class="auth-gate hidden">
+  <div class="auth-gate-card">
+    <div class="auth-gate-icon">🔐</div>
+    <h2>Session Required</h2>
+    <p>Your session has expired or you're not logged in. Please sign in to access your tenant portal.</p>
+    <a id="loginLink" class="btn primary" href="tenant-login.html">Go to Login →</a>
+  </div>
+</section>
+<!-- ── Main ── -->
+<main id="app" class="hidden">
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">🛠 Repair Requests</h1>
+      <p class="page-sub">Submit and track maintenance issues for your rental.</p>
+    </div>
+    <div class="page-header-right">
+      <span id="who" class="chip info">—</span>
+      <button class="btn" id="btnRefresh" type="button">🔄 Refresh</button>
+    </div>
+  </div>
+
+  <!-- Stats row -->
+  <div class="hero-stats" style="grid-template-columns:repeat(3,1fr);margin-bottom:20px;">
+    <div class="hero-stat">
+      <div class="stat-label">📨 Total Requests</div>
+      <div class="stat-value" id="kpiTotal">—</div>
+    </div>
+    <div class="hero-stat warn-stat">
+      <div class="stat-label">⏳ Open</div>
+      <div class="stat-value" id="kpiOpen">—</div>
+    </div>
+    <div class="hero-stat good-stat">
+      <div class="stat-label">✅ Resolved</div>
+      <div class="stat-value" id="kpiDone">—</div>
+    </div>
+  </div>
+
+  <!-- Submit Form -->
+  <div class="section-card" style="margin-bottom:20px;">
+    <div class="card-head">
+      <div class="card-head-left">
+        <div class="card-title">➕ Submit a New Request</div>
+        <div class="card-sub">Provide details so your landlord can respond quickly.</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="form-grid">
+        <div class="form-group" style="grid-column:1/-1;">
+          <label>🏠 Property</label>
+          <input id="property" class="form-input" placeholder="Auto-filled from your lease" readonly style="background:#f8fafc;cursor:default;"/>
+        </div>
+        <div class="form-group" style="grid-column:1/-1;">
+          <label>🧾 Issue Description *</label>
+          <textarea id="issue" class="form-input" placeholder="Describe the problem in detail — e.g. 'Kitchen faucet dripping, cold water side only'…"></textarea>
+        </div>
+        <div class="form-group" style="grid-column:1/-1;">
+          <label>⚡ Urgency Level</label>
+          <div class="urgency-pills">
+            <button class="urgency-pill selected" data-val="Normal" type="button">✅ Normal</button>
+            <button class="urgency-pill high" data-val="High" type="button">⚡ High</button>
+            <button class="urgency-pill emergency" data-val="Emergency" type="button">🚨 Emergency</button>
+          </div>
+        </div>
+        <div class="form-group" style="grid-column:1/-1;">
+          <label>📷 Photos <span style="font-weight:400;text-transform:none;font-size:.8rem;">(optional, up to 6)</span></label>
+          <input id="photoInput" type="file" accept="image/*" multiple style="display:none;" />
+          <button type="button" class="btn" id="photoPickBtn" style="width:auto;">📷 Add Photos</button>
+          <div id="photoPreviewGrid" class="photo-preview-grid" style="display:none;"></div>
+        </div>
+      </div>
+      <div class="submit-row">
+        <button class="btn primary" id="btnSubmit" type="button">📨 Submit Request</button>
+        <div class="status-msg" id="statusMsg"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Request List -->
+  <div class="section-card">
+    <div class="card-head">
+      <div class="card-head-left">
+        <div class="card-title">📋 My Requests</div>
+        <div class="card-sub">Newest first. Request reimbursement for a repair you paid for out of pocket.</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="search-row">
+        <input id="search" class="search-input" placeholder="🔍 Search issue, status, property…" type="search"/>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Property</th>
+              <th>Issue</th>
+              <th>Urgency</th>
+              <th>Status</th>
+              <th>Reimbursement</th>
+            </tr>
+          </thead>
+          <tbody id="reqBody">
+            <tr><td colspan="6"><span class="skel" style="width:60%;height:16px;"></span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reimbursement Requests -->
+  <div class="section-card">
+    <div class="card-head">
+      <div class="card-head-left">
+        <div class="card-title">💰 My Reimbursement Requests</div>
+        <div class="card-sub">Receipts you've submitted for repairs paid out of pocket.</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Related Repair</th>
+              <th>Amount</th>
+              <th>Status</th>
+              <th>Receipt</th>
+            </tr>
+          </thead>
+          <tbody id="reimbBody">
+            <tr><td colspan="5"><div class="empty-state"><div class="empty-icon">💰</div><p>No reimbursement requests yet.</p></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- Reimbursement Modal -->
+<div class="modal-overlay" id="reimbModal">
+  <div class="modal-card">
+    <div class="modal-head">
+      <div class="modal-title">💰 Request Reimbursement</div>
+      <button class="modal-close" id="reimbCloseBtn" type="button">✕</button>
+    </div>
+    <div class="card-sub" id="reimbSub" style="margin-bottom:14px;">For the repair: —</div>
+    <div class="form-group" style="margin-bottom:12px;">
+      <label>💵 Amount *</label>
+      <input id="reimbAmount" class="form-input" type="number" step="0.01" min="0.01" placeholder="e.g., 85.00" />
+    </div>
+    <div class="form-group" style="margin-bottom:12px;">
+      <label>🧾 Receipt *</label>
+      <input id="reimbFile" class="form-input" type="file" accept="image/*,application/pdf" />
+    </div>
+    <div class="form-group" style="margin-bottom:14px;">
+      <label>📝 Note (optional)</label>
+      <input id="reimbNote" class="form-input" type="text" placeholder="e.g., Landlord approved calling a plumber directly." />
+    </div>
+    <div class="submit-row">
+      <button class="btn primary" id="reimbSubmitBtn" type="button">📨 Submit Request</button>
+      <button class="btn" id="reimbCancelBtn" type="button">Cancel</button>
+    </div>
+    <div class="status-msg" id="reimbStatusMsg" style="margin-top:10px;"></div>
+  </div>
+</div>
+
+<!-- Footer -->
+<footer class="site-footer">
+  <div class="footer-inner">
+    <p>© <span id="footerYear"></span> Rental Genie</p>
+    <div class="footer-user">
+      <div class="footer-user-dot"></div>
+      <span id="whoami">Tenant</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  const sb = window._rgClient;
+  const params = new URLSearchParams(location.search);
+  const propertyFromUrl = (params.get('property') || '').trim();
+  let selectedUrgency = 'Normal';
+  let user = null;
+  let requests = [];
+  let reimbursements = [];
+  let selectedPhotos = []; // { file, objectUrl }
+  const MAX_PHOTOS = 6;
+  const MAX_PHOTO_MB = 8;
+  let reimbRequestId = null; // maintenance_request id currently targeted by the modal
+  let reimbFileSel = null;
+
+  function $(id){ return document.getElementById(id); }
+  function safe(v){ return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+  function fmtDate(d){
+    if(!d) return '—';
+    const dt = new Date(d);
+    return isNaN(dt.getTime()) ? String(d) : dt.toLocaleDateString(undefined,{year:'numeric',month:'short',day:'2-digit'});
+  }
+  function money(n){ return Number(n||0).toLocaleString(undefined,{style:'currency',currency:'USD'}); }
+  function withProp(url){
+    if(!propertyFromUrl) return url;
+    return url + (url.includes('?')?'&':'?') + 'property=' + encodeURIComponent(propertyFromUrl);
+  }
+  function urgencyChip(u){
+    const v = (u||'').toLowerCase();
+    if(v.includes('emerg')) return '<span class="chip bad">🚨 Emergency</span>';
+    if(v.includes('high'))  return '<span class="chip warn">⚡ High</span>';
+    return '<span class="chip good">✅ Normal</span>';
+  }
+  function statusChip(s){
+    const v = (s||'submitted').toLowerCase();
+    if(v.includes('complet')||v.includes('done')||v.includes('resolv')) return '<span class="chip good">✅ Resolved</span>';
+    if(v.includes('progress')) return '<span class="chip info">🔧 In Progress</span>';
+    return '<span class="chip warn">📨 Submitted</span>';
+  }
+  function reimbChip(s){
+    const v = (s||'pending').toLowerCase();
+    if(v === 'approved') return '<span class="chip good">✅ Approved</span>';
+    if(v === 'denied')   return '<span class="chip bad">❌ Denied</span>';
+    return '<span class="chip warn">⏳ Pending</span>';
+  }
+  function setMsg(text,type){
+    const el=$('statusMsg'); el.className='status-msg '+(type||''); el.textContent=text||'';
+  }
+
+  // ── Photo picker ──────────────────────────────────────────
+  function renderPhotoPreviews(){
+    const grid = $('photoPreviewGrid');
+    if(!selectedPhotos.length){ grid.style.display='none'; grid.innerHTML=''; return; }
+    grid.style.display='grid';
+    grid.innerHTML = selectedPhotos.map((p,i)=>`
+      <div class="photo-thumb" data-idx="${i}">
+        <img src="${p.objectUrl}" alt="Photo ${i+1}" />
+        <button type="button" class="rm-btn" data-remove="${i}" title="Remove">✕</button>
+        <div class="up-status">Uploading…</div>
+      </div>`).join('');
+    grid.querySelectorAll('[data-remove]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const idx = Number(btn.dataset.remove);
+        URL.revokeObjectURL(selectedPhotos[idx].objectUrl);
+        selectedPhotos.splice(idx,1);
+        renderPhotoPreviews();
+      });
+    });
+  }
+
+  function addPhotoFiles(fileList){
+    const incoming = Array.from(fileList || []);
+    let rejected = 0;
+    for(const file of incoming){
+      if(selectedPhotos.length >= MAX_PHOTOS){ rejected++; continue; }
+      if(!file.type.startsWith('image/')){ rejected++; continue; }
+      if(file.size > MAX_PHOTO_MB*1024*1024){ rejected++; continue; }
+      selectedPhotos.push({ file, objectUrl: URL.createObjectURL(file) });
+    }
+    renderPhotoPreviews();
+    if(rejected){
+      setMsg(`⚠️ ${rejected} photo${rejected>1?'s':''} skipped (max ${MAX_PHOTOS} photos, ${MAX_PHOTO_MB}MB each, images only).`,'err');
+    }
+  }
+
+  function resetPhotoPicker(){
+    selectedPhotos.forEach(p=>URL.revokeObjectURL(p.objectUrl));
+    selectedPhotos = [];
+    renderPhotoPreviews();
+    const input = $('photoInput'); if(input) input.value = '';
+  }
+
+  async function uploadSelectedPhotos(){
+    if(!selectedPhotos.length) return { urls: [], paths: [] };
+    const urls = [];
+    const paths = [];
+    const thumbs = $('photoPreviewGrid').querySelectorAll('.photo-thumb');
+    for(let i=0;i<selectedPhotos.length;i++){
+      const { file } = selectedPhotos[i];
+      const thumbEl = thumbs[i];
+      if(thumbEl) thumbEl.classList.add('uploading');
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+      const path = `${user.id}/${Date.now()}-${i}-${safeName}`;
+      const { error: upErr } = await sb.storage.from('maintenance-photos').upload(path, file, { upsert:false });
+      if(thumbEl) thumbEl.classList.remove('uploading');
+      if(upErr){
+        console.error('Photo upload failed:', upErr);
+        if(thumbEl) thumbEl.classList.add('upload-failed');
+        continue;
+      }
+      const { data: pub } = sb.storage.from('maintenance-photos').getPublicUrl(path);
+      if(pub && pub.publicUrl){ urls.push(pub.publicUrl); paths.push(path); }
+    }
+    return { urls: urls, paths: paths };
+  }
+
+  // Nav context
+  [['navHome','tenant-portal.html'],['navLease','tenant-lease.html'],['navPayments','tenant-payments.html'],
+   ['navRepairs','tenant-repair-requests.html'],['navDocs','tenant-documents.html'],['navBell','tenant-contact.html'],
+   ['mHome','tenant-portal.html'],['mLease','tenant-lease.html'],['mPayments','tenant-payments.html'],
+   ['mRepairs','tenant-repair-requests.html'],['mDocs','tenant-documents.html'],['mContact','tenant-contact.html']
+  ].forEach(([id,base])=>{ const el=$(id); if(el) el.href=withProp(base); });
+
+  // Hamburger
+  const ham=$('hamburgerBtn'), drw=$('mobileDrawer');
+  if(ham&&drw){
+    ham.addEventListener('click',()=>{ drw.style.display=drw.style.display==='block'?'none':'block'; });
+    document.addEventListener('click',e=>{ if(drw.style.display==='block'&&!drw.contains(e.target)&&e.target!==ham) drw.style.display='none'; });
+  }
+
+  // Sign out
+  async function doSignOut(){ try{ await sb.auth.signOut(); }catch(e){} location.href='tenant-login.html'; }
+  const nso=$('navSignOut'), dso=$('drawerSignOut');
+  if(nso) nso.addEventListener('click',e=>{e.preventDefault();doSignOut();});
+  if(dso) dso.addEventListener('click',e=>{e.preventDefault();doSignOut();});
+  var umdBtn=$('umdToggle'), umdDrop=$('umdDropdown');
+  if(umdBtn && umdDrop){
+    umdBtn.addEventListener('click', function(e){
+      e.stopPropagation();
+      umdDrop.classList.toggle('open');
+      umdBtn.setAttribute('aria-expanded', umdDrop.classList.contains('open'));
+    });
+    document.addEventListener('click', function(){ umdDrop.classList.remove('open'); });
+  }
+
+  // Urgency pills
+  document.querySelectorAll('.urgency-pill').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      document.querySelectorAll('.urgency-pill').forEach(b=>b.classList.remove('selected'));
+      btn.classList.add('selected');
+      selectedUrgency = btn.dataset.val;
+    });
+  });
+
+  // Auth
+  async function requireAuth(){
+    for(let i=0;i<3;i++){
+      const {data:u} = await sb.auth.getUser();
+      if(u?.user) return u.user;
+      const {data:s} = await sb.auth.getSession();
+      if(s?.session?.user) return s.session.user;
+      await new Promise(r=>setTimeout(r,180));
+    }
+    $('authGate').classList.remove('hidden');
+    $('app').classList.add('hidden');
+    const link=$('loginLink');
+    if(link) link.href='tenant-login.html?redirect='+encodeURIComponent(location.href);
+    return null;
+  }
+
+  /* Resolve tenant identity via auth_user_id (not email) */
+  let tenant=null;
+  async function resolveTenant(u){
+    try{
+      const r1=await sb.from('tenants').select('id, auth_user_id, email, tenant_name, phone').eq('auth_user_id',u.id).maybeSingle();
+      if(r1.data){ if(r1.data.email!==u.email){ sb.from('tenants').update({email:u.email}).eq('id',r1.data.id).then(()=>{},()=>{}); } return r1.data; }
+      const r2=await sb.from('tenants').select('id, auth_user_id, email, tenant_name, phone').ilike('email',u.email).maybeSingle();
+      if(r2.data && !r2.data.auth_user_id){
+        sb.from('tenants').update({auth_user_id:u.id}).eq('id',r2.data.id).then(()=>{},()=>{});
+      }
+      return r2.data||null;
+    }catch(e){ return null; }
+  }
+
+  function updateKpis(){
+    const open = requests.filter(r=>{ const s=(r.status||'').toLowerCase(); return !s.includes('complet')&&!s.includes('done')&&!s.includes('resolv'); }).length;
+    const done = requests.length - open;
+    $('kpiTotal').textContent = requests.length || '0';
+    $('kpiOpen').textContent  = open || '0';
+    $('kpiDone').textContent  = done || '0';
+  }
+
+  function photoCount(r){
+    const p = r.photo_urls;
+    if(Array.isArray(p)) return p.length;
+    if(typeof p === 'string' && p.trim()) return 1;
+    return 0;
+  }
+
+  function reimbForRequest(requestId){
+    return reimbursements.find(r=>r.maintenance_request_id===requestId) || null;
+  }
+
+  function render(){
+    const q = ($('search').value||'').trim().toLowerCase();
+    const filtered = q ? requests.filter(r=>(safe(r.issue_description)+safe(r.issue_summary)+safe(r.issue)+safe(r.status)+safe(r.property_name)).toLowerCase().includes(q)) : requests;
+    const body = $('reqBody');
+    if(!filtered.length){
+      body.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="empty-icon">🛠</div><p>No requests yet.<br>Submit your first one above.</p></div></td></tr>';
+      return;
+    }
+    body.innerHTML = filtered.map(r=>{
+      const pc = photoCount(r);
+      const existing = reimbForRequest(r.id);
+      const reimbCell = existing
+        ? reimbChip(existing.status)
+        : `<button type="button" class="reimb-btn" onclick="window._openReimb(${r.id})">💰 Request</button>`;
+      return `
+      <tr>
+        <td style="white-space:nowrap">${fmtDate(r.created_at||r.inserted_at||r.date_submitted)}</td>
+        <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${safe(r.property_name)||'—'}</td>
+        <td style="max-width:220px">${safe(r.issue_description||r.issue_summary||r.issue||r.description)||'—'}${pc?`<span class="photo-count-badge">📷 ${pc}</span>`:''}</td>
+        <td>${urgencyChip(r.urgency_level||r.urgency||r.priority)}</td>
+        <td>${statusChip(r.status)}</td>
+        <td>${reimbCell}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  function renderReimbursements(){
+    const body = $('reimbBody');
+    if(!reimbursements.length){
+      body.innerHTML = '<tr><td colspan="5"><div class="empty-state"><div class="empty-icon">💰</div><p>No reimbursement requests yet.</p></div></td></tr>';
+      return;
+    }
+    body.innerHTML = reimbursements.map(r=>{
+      const related = requests.find(req=>req.id===r.maintenance_request_id);
+      const relatedLabel = related ? safe(related.issue_description||related.issue_summary||related.issue||'Repair') : (r.description ? safe(r.description) : '—');
+      return `
+      <tr>
+        <td style="white-space:nowrap">${fmtDate(r.requested_at)}</td>
+        <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${relatedLabel}</td>
+        <td>${money(r.amount)}</td>
+        <td>${reimbChip(r.status)}</td>
+        <td>${(r.receipt_path || r.receipt_url) ? `<a class="btn sm" href="#"${rgFiles.attr('receipts', r.receipt_path || r.receipt_url)} target="_blank" rel="noopener noreferrer">🧾 View</a>` : '—'}</td>
+      </tr>`;
+    }).join('');
+    rgFiles.hydrate(sb, body);
+  }
+
+  async function loadData(){
+    $('reqBody').innerHTML='<tr><td colspan="6"><span class="skel" style="width:60%;height:16px;"></span></td></tr>';
+    const {data,error} = tenant
+      ? await sb.from('maintenance_requests').select('*').eq('tenant_id',tenant.id).order('created_at',{ascending:false})
+      : await sb.from('maintenance_requests').select('*').eq('tenant_email',user.email).order('created_at',{ascending:false});
+    if(error){ $('reqBody').innerHTML=`<tr><td colspan="6" style="color:var(--danger)">${safe(error.message)}</td></tr>`; return; }
+    requests = data||[];
+    updateKpis();
+
+    // Reimbursement requests (tenant-scoped)
+    const rr = tenant
+      ? await sb.from('reimbursement_requests').select('*').eq('tenant_id',tenant.id).order('requested_at',{ascending:false})
+      : await sb.from('reimbursement_requests').select('*').eq('tenant_email',user.email).order('requested_at',{ascending:false});
+    reimbursements = (!rr.error && rr.data) ? rr.data : [];
+
+    render();
+    renderReimbursements();
+    // Auto-fill property
+    if(!$('property').value){
+      const {data:ld} = tenant
+        ? await sb.from('leases').select('property_name').eq('tenant_id',tenant.id).order('lease_start',{ascending:false}).limit(1)
+        : await sb.from('leases').select('property_name').eq('tenant_email',user.email).order('lease_start',{ascending:false}).limit(1);
+      if(ld?.[0]?.property_name) $('property').value = ld[0].property_name;
+    }
+  }
+
+  async function submitRequest(){
+    setMsg('','');
+    const property_name=$('property').value.trim();
+    const issue_description=$('issue').value.trim();
+    if(!property_name||!issue_description){ setMsg('Please enter property and issue description.','err'); return; }
+    const btn=$('btnSubmit'); btn.disabled=true; btn.textContent='Submitting…';
+
+    // Resolve company_id and property_id from the tenant's lease
+    const {data:leaseData,error:leaseErr} = tenant
+      ? await sb.from('leases').select('company_id,property_id').eq('tenant_id',tenant.id).eq('property_name',property_name).order('lease_start',{ascending:false}).limit(1)
+      : await sb.from('leases').select('company_id,property_id').eq('tenant_email',user.email).eq('property_name',property_name).order('lease_start',{ascending:false}).limit(1);
+    if(leaseErr || !leaseData || leaseData.length === 0){
+      setMsg('❌ Could not resolve your property. Please refresh and try again.','err');
+      btn.disabled=false; btn.textContent='📨 Submit Request'; return;
+    }
+    const company_id = leaseData[0].company_id;
+    const property_id = leaseData[0].property_id;
+
+    // Upload any selected photos first
+    const totalPhotos = selectedPhotos.length;
+    if(totalPhotos) btn.textContent = `Uploading photos (0/${totalPhotos})…`;
+    const uploaded = await uploadSelectedPhotos();
+    const photo_urls = uploaded.urls;
+    const photo_paths = uploaded.paths;
+    const failedCount = totalPhotos - photo_urls.length;
+
+    const {error} = await sb.from('maintenance_requests').insert([{property_name,property_id,tenant_email:user.email,tenant_id:tenant?tenant.id:null,company_id,urgency_level:selectedUrgency,issue_description,photo_urls,photo_paths,status:'Open'}]);
+    if(error){ setMsg('Error: '+safe(error.message),'err'); btn.disabled=false; btn.textContent='📨 Submit Request'; return; }
+    setMsg(failedCount ? `✅ Request submitted — but ${failedCount} photo${failedCount>1?'s':''} failed to upload.` : '✅ Request submitted successfully!', failedCount ? 'err' : 'ok');
+    $('issue').value='';
+    resetPhotoPicker();
+    btn.disabled=false; btn.textContent='📨 Submit Request';
+    await loadData();
+  }
+
+  // ── Reimbursement modal ──────────────────────────────────────
+  window._openReimb = function(requestId){
+    const req = requests.find(r=>r.id===requestId);
+    if(!req) return;
+    reimbRequestId = requestId;
+    reimbFileSel = null;
+    $('reimbSub').textContent = 'For the repair: ' + (req.issue_description||req.issue_summary||req.issue||'Repair request');
+    $('reimbAmount').value = '';
+    $('reimbFile').value = '';
+    $('reimbNote').value = '';
+    $('reimbStatusMsg').className = 'status-msg';
+    $('reimbStatusMsg').textContent = '';
+    $('reimbModal').classList.add('open');
+  };
+  function closeReimbModal(){ $('reimbModal').classList.remove('open'); reimbRequestId = null; }
+  $('reimbCloseBtn').addEventListener('click', closeReimbModal);
+  $('reimbCancelBtn').addEventListener('click', closeReimbModal);
+  $('reimbModal').addEventListener('click', function(e){ if(e.target === $('reimbModal')) closeReimbModal(); });
+
+  async function submitReimbursement(){
+    const msgEl = $('reimbStatusMsg');
+    function setReimbMsg(text,type){ msgEl.className='status-msg '+(type||''); msgEl.textContent=text||''; }
+
+    const req = requests.find(r=>r.id===reimbRequestId);
+    if(!req){ setReimbMsg('❌ Could not find the related repair request.','err'); return; }
+    const amount = Number($('reimbAmount').value || 0);
+    const file = $('reimbFile').files && $('reimbFile').files[0];
+    const note = $('reimbNote').value.trim();
+
+    if(!amount || amount <= 0){ setReimbMsg('Please enter a valid amount.','err'); return; }
+    if(!file){ setReimbMsg('Please attach a receipt.','err'); return; }
+    if(!req.company_id || !req.property_name){ setReimbMsg('❌ Missing property/company info on this request.','err'); return; }
+
+    const btn = $('reimbSubmitBtn');
+    btn.disabled = true; btn.textContent = 'Uploading…';
+
+    try{
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+      const path = `${user.id}/reimbursements/${Date.now()}_${safeName}`;
+      const { error: upErr } = await sb.storage.from('receipts').upload(path, file, { cacheControl:'3600', upsert:false, contentType:file.type });
+      if(upErr) throw upErr;
+      const { data: pub } = sb.storage.from('receipts').getPublicUrl(path);
+      const receipt_url = pub && pub.publicUrl;
+      const receipt_path = path;
+      if(!receipt_url) throw new Error('Could not resolve receipt URL.');
+
+      const { error: insErr } = await sb.from('reimbursement_requests').insert([{
+        company_id: req.company_id,
+        property_id: req.property_id || null,
+        property_name: req.property_name,
+        tenant_id: tenant ? tenant.id : null,
+        tenant_email: user.email,
+        maintenance_request_id: req.id,
+        amount: amount,
+        description: note || null,
+        receipt_url: receipt_url,
+        receipt_path: receipt_path,
+        status: 'Pending'
+      }]);
+      if(insErr) throw insErr;
+
+      setReimbMsg('✅ Reimbursement request submitted.','ok');
+      btn.disabled = false; btn.textContent = '📨 Submit Request';
+      await loadData();
+      setTimeout(closeReimbModal, 800);
+    }catch(err){
+      console.error('Reimbursement submit error:', err);
+      setReimbMsg('❌ ' + (err.message || 'Submission failed.'), 'err');
+      btn.disabled = false; btn.textContent = '📨 Submit Request';
+    }
+  }
+  $('reimbSubmitBtn').addEventListener('click', submitReimbursement);
+
+  // Wire buttons
+  $('btnSubmit').addEventListener('click', submitRequest);
+  $('btnRefresh').addEventListener('click', loadData);
+  $('search').addEventListener('input', render);
+  $('photoPickBtn').addEventListener('click', ()=> $('photoInput').click());
+  $('photoInput').addEventListener('change', function(){ addPhotoFiles(this.files); this.value=''; });
+
+  // Init
+  async function init(){
+    $('footerYear').textContent = new Date().getFullYear();
+    if(propertyFromUrl) $('property').value = decodeURIComponent(propertyFromUrl);
+    user = await requireAuth();
+    if(!user) return;
+    $('authGate').classList.add('hidden');
+    $('app').classList.remove('hidden');
+    document.getElementById('authOverlay').style.opacity='0';
+    setTimeout(()=>{document.getElementById('authOverlay').style.display='none';},380);
+    $('who').textContent = '👤 '+user.email;
+    $('whoami').textContent = 'Signed in as: '+user.email;
+    $('userAvatar').textContent = user.email.slice(0,2).toUpperCase();
+    $('userEmail').textContent = user.email; var _umdFN=document.getElementById('umdFullName'); if(_umdFN) _umdFN.textContent=user.email||'Tenant'; var _umdEM=document.getElementById('umdEmail'); if(_umdEM) _umdEM.textContent=user.email||'';
+    $('userChip').style.display = 'flex';
+    var _bell = $('navBell'); if(_bell) _bell.style.display = 'flex';
+    tenant = await resolveTenant(user);
+    if (tenant && tenant.tenant_name) {
+      var _parts = tenant.tenant_name.trim().split(/\s+/).filter(Boolean);
+      var _init = _parts.length >= 2 ? (_parts[0][0] + _parts[_parts.length-1][0]).toUpperCase() : (_parts[0] ? _parts[0].slice(0,2).toUpperCase() : '');
+      var _av = document.getElementById('userAvatar'); if (_av && _init) _av.textContent = _init;
+      var _em = document.getElementById('userEmail'); if (_em) _em.textContent = _parts[0];
+      var _fn = document.getElementById('umdFullName'); if (_fn) _fn.textContent = tenant.tenant_name;
+    }
+    await loadData();
+  }
+
+  init();
+}());
+</script>
+</body>
+</html>

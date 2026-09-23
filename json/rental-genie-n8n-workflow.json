@@ -1,0 +1,87 @@
+{
+  "name": "Rental Genie - Phase 1 (Read Only)",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "rental-genie-chat",
+        "method": "POST"
+      },
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        200,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o-mini",
+        "messages": [
+          {
+            "role": "system",
+            "content": "You are Rental Genie, an AI assistant for landlords. Classify intent only. Allowed intents: rent_overdue, rent_summary, maintenance_open, lease_status, expense_summary, cashflow_summary. Output JSON only."
+          },
+          {
+            "role": "user",
+            "content": "User message: {{$json.message}}"
+          }
+        ]
+      },
+      "name": "Intent Classifier",
+      "type": "n8n-nodes-base.openai",
+      "typeVersion": 1,
+      "position": [
+        420,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "property": "intent",
+        "rules": [
+          {
+            "value": "rent_overdue"
+          },
+          {
+            "value": "maintenance_open"
+          },
+          {
+            "value": "lease_status"
+          }
+        ]
+      },
+      "name": "Intent Router",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [
+        640,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Intent Classifier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Intent Classifier": {
+      "main": [
+        [
+          {
+            "node": "Intent Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

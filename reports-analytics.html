@@ -1,0 +1,2068 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Reports & Analytics – Rental Genie</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap">
+<link rel="dns-prefetch" href="https://pbojacnagutipfhcxltj.supabase.co">
+
+
+
+<style>
+/* ── Design tokens ──────────────────────────────────────────── */
+:root {
+  --navy:        #0c1e3a;
+  --navy-mid:    #1a3a6b;
+  --navy-light:  #1e5799;
+  --sky:         #2d8cf0;
+  --sky-soft:    #e8f0fe;
+  --border:      #e2e8f0;
+  --bg:          #f1f4f8;
+  --card:        #ffffff;
+  --text:        #0c1e3a;
+  --muted:       #64748b;
+  --success:     #10b981;
+  --success-bg:  #ecfdf5;
+  --success-bdr: #a7f3d0;
+  --warn-bg:     #fffbeb;
+  --warn-bdr:    #fde68a;
+  --warn-text:   #92400e;
+  --danger:      #ef4444;
+  --danger-bg:   #fef2f2;
+  --danger-bdr:  #fecaca;
+  --danger-text: #7f1d1d;
+  --info-bg:     #eff6ff;
+  --info-bdr:    #bfdbfe;
+  --info-text:   #1e40af;
+  --radius-sm:   8px;
+  --radius-md:   12px;
+  --radius-lg:   16px;
+  --radius-xl:   20px;
+  --shadow-sm:   0 1px 4px rgba(12,30,58,.06);
+  --shadow-md:   0 4px 16px rgba(12,30,58,.09);
+  --shadow-lg:   0 8px 32px rgba(12,30,58,.14);
+  --header-grad: linear-gradient(135deg,#0c1e3a 0%,#1a3a6b 55%,#1e5799 100%);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: 'DM Sans', -apple-system, sans-serif;
+  background: var(--bg); color: var(--text);
+  min-height: 100vh; display: flex; flex-direction: column;
+}
+@keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+
+/* ── Canonical 3px top shimmer progress bar ──────────────────── */
+#authOverlay {
+  position: fixed; top: 0; left: 0; right: 0;
+  height: 3px; z-index: 9999; pointer-events: none;
+  background: rgba(255,255,255,0);
+  transition: opacity .3s ease;
+}
+.ao-bar-fill {
+  height: 100%; width: 0%;
+  background: linear-gradient(90deg, #2d8cf0, #38bdf8, #2d8cf0);
+  background-size: 200% 100%;
+  transition: width .4s cubic-bezier(.4,0,.2,1);
+  animation: aoShimmer 1.6s linear infinite;
+  box-shadow: 0 0 8px rgba(56,189,248,.5);
+}
+@keyframes aoShimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ── Header ─────────────────────────────────────────────────── */
+.header-container {
+  position: sticky; top: 0; z-index: 1000;
+  background: var(--header-grad);
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  box-shadow: 0 2px 20px rgba(12,30,58,.35);
+}
+.navbar {
+  max-width: 1440px; margin: 0 auto; padding: 0 22px;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 64px; gap: 12px;
+}
+.brand-area { display:flex; align-items:center; gap:11px; text-decoration:none; flex-shrink:0; }
+.brand-logo {
+  width:38px; height:38px; border-radius:9px;
+  background:rgba(255,255,255,.12);
+  box-shadow:0 0 0 1px rgba(255,255,255,.2), 0 2px 8px rgba(0,0,0,.2);
+  object-fit:cover; flex-shrink:0;
+}
+.brand-title { font-size:1.15rem; font-weight:700; color:#fff; letter-spacing:-.2px; }
+.nav-links { display:flex; gap:2px; align-items:center; }
+.nav-links a {
+  display:flex; align-items:center; gap:5px;
+  text-decoration:none; font-size:.8rem; font-weight:600;
+  padding:6px 10px; color:rgba(255,255,255,.72);
+  border-radius:var(--radius-sm); transition:all .18s; white-space:nowrap;
+}
+.nav-links a:hover { color:#fff; background:rgba(255,255,255,.1); }
+.nav-links a.nav-active { color:#fff; background:rgba(255,255,255,.15); }
+
+/* UMD */
+.nav-right-group { display: flex; align-items: center; gap: 8px; }
+.nav-bell {
+  display: flex; align-items: center; justify-content: center;
+  width: 34px; height: 34px; border-radius: 999px; flex-shrink: 0;
+  background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.22);
+  color: #fff; font-size: 1rem; text-decoration: none;
+  transition: background .18s;
+}
+.nav-bell:hover { background: rgba(255,255,255,.18); }
+.umd-wrap { position:relative; }
+.umd-toggle {
+  display:flex; align-items:center; gap:8px;
+  background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.22);
+  border-radius:999px; padding:5px 12px 5px 5px;
+  cursor:pointer; transition:background .18s;
+}
+.umd-toggle:hover { background:rgba(255,255,255,.18); }
+.umd-avatar {
+  width:28px; height:28px; border-radius:50%;
+  background:linear-gradient(135deg,var(--sky),var(--navy-mid));
+  display:flex; align-items:center; justify-content:center;
+  font-size:.68rem; font-weight:700; color:#fff; flex-shrink:0;
+}
+.umd-name  { font-size:.8rem; color:#fff; font-weight:600; max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.umd-caret { font-size:.6rem; color:rgba(255,255,255,.7); }
+.umd-dropdown {
+  display:none; position:absolute; right:0; top:calc(100% + 8px);
+  background:var(--card); border:1px solid var(--border);
+  border-radius:var(--radius-lg); box-shadow:var(--shadow-lg);
+  min-width:220px; overflow:hidden; z-index:200;
+}
+.umd-dropdown.open { display:block; animation:fadeUp .15s ease both; }
+.umd-user-row { padding:14px 16px 10px; border-bottom:1px solid var(--border); }
+.umd-user-name  { font-size:.88rem; font-weight:700; color:var(--navy); }
+.umd-user-email { font-size:.75rem; color:var(--muted); margin-top:2px; }
+.umd-section { display:flex; flex-direction:column; padding:6px; border-bottom:1px solid var(--border); }
+.umd-section:last-child { border-bottom:none; }
+.umd-link {
+  display:flex; align-items:center; gap:9px;
+  padding:9px 10px; border-radius:var(--radius-sm);
+  font-size:.84rem; font-weight:600; color:var(--text);
+  text-decoration:none; background:none; border:none;
+  cursor:pointer; width:100%; font-family:'DM Sans',sans-serif; transition:background .15s;
+}
+.umd-link:hover { background:var(--bg); }
+.umd-link.danger { color:var(--danger); }
+.umd-link.danger:hover { background:var(--danger-bg); }
+
+#nav-login {
+  background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.25);
+  color:#fff; padding:7px 14px; border-radius:999px;
+  font-weight:600; text-decoration:none; font-size:.82rem;
+}
+.hamburger {
+  display:none; padding:7px 10px;
+  border:1px solid rgba(255,255,255,.25); border-radius:var(--radius-sm);
+  background:rgba(255,255,255,.1); cursor:pointer; color:#fff; font-size:1rem;
+}
+@media(max-width:900px){ .nav-links{display:none;} .hamburger{display:block;} #userMenu{display:none!important;} #navBell{display:none!important;} #nav-login{display:none!important;} }
+
+.drawer {
+  display:none; position:fixed;
+  top:72px; left:12px; right:12px;
+  background:var(--card); border:1px solid var(--border);
+  border-radius:var(--radius-lg); padding:8px;
+  z-index:1300; box-shadow:var(--shadow-lg);
+}
+.drawer a, .drawer button {
+  display:flex; align-items:center; gap:10px;
+  padding:11px 14px; border-radius:var(--radius-sm);
+  font-weight:600; font-size:.88rem;
+  text-decoration:none; color:var(--text);
+  background:none; border:none; cursor:pointer;
+  width:100%; font-family:'DM Sans',sans-serif; transition:background .15s;
+}
+.drawer a:hover, .drawer button:hover { background:var(--bg); }
+.drawer a.nav-active { background:var(--sky-soft); color:var(--navy-mid); }
+.drawer-divider { height:1px; background:var(--border); margin:4px 0; }
+.drawer-signout { color:var(--danger) !important; }
+
+/* ── Nav badges ─────────────────────────────────────────────── */
+
+/* ── Layout ─────────────────────────────────────────────────── */
+main {
+  flex:1; max-width:1440px; width:100%;
+  margin:0 auto; padding:28px 22px 64px;
+  animation:fadeUp .4s ease both;
+}
+
+/* ── Page header ────────────────────────────────────────────── */
+.page-header { margin-bottom:22px; }
+.page-title  { font-size:1.65rem; font-weight:700; color:var(--navy); letter-spacing:-.4px; display:flex; align-items:center; gap:10px; }
+.page-sub    { font-size:.88rem; color:var(--muted); margin-top:4px; }
+
+/* ── Filter card ────────────────────────────────────────────── */
+.filter-card {
+  background:var(--card); border:1px solid var(--border);
+  border-radius:var(--radius-lg); padding:16px 20px;
+  box-shadow:var(--shadow-sm); margin-bottom:22px;
+  display:flex; gap:14px; flex-wrap:wrap; align-items:flex-end;
+}
+.filter-group { display:flex; flex-direction:column; gap:5px; flex:1; min-width:180px; }
+.filter-label { font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.45px; color:var(--muted); }
+.filter-select {
+  padding:9px 13px; border:1.5px solid var(--border);
+  border-radius:var(--radius-md); font-family:'DM Sans',sans-serif;
+  font-size:.88rem; font-weight:600; color:var(--text);
+  background:#f8fafc; outline:none; cursor:pointer;
+  transition:border-color .15s, box-shadow .15s;
+  appearance:none; -webkit-appearance:none;
+}
+.filter-select:focus { border-color:var(--sky); background:#fff; box-shadow:0 0 0 3px rgba(45,140,240,.1); }
+.filter-select:disabled { opacity:.5; cursor:default; }
+
+/* ── Quick-peek strip ───────────────────────────────────────── */
+.qp-strip {
+  display:grid; grid-template-columns:repeat(3,1fr);
+  gap:12px; margin-bottom:22px;
+}
+@media(max-width:720px){ .qp-strip{grid-template-columns:1fr;} }
+
+.qp-card {
+  background:var(--card); border:1px solid var(--border);
+  border-radius:var(--radius-lg); padding:14px 16px;
+  box-shadow:var(--shadow-sm);
+}
+.qp-label { font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:.4px; color:var(--muted); margin-bottom:6px; }
+.qp-main  { font-size:.95rem; font-weight:700; color:var(--navy); margin-bottom:3px; }
+.qp-meta  { font-size:.78rem; color:var(--muted); }
+.qp-pill  {
+  display:none; margin-top:7px;
+  padding:2px 9px; border-radius:999px;
+  font-size:.72rem; font-weight:700;
+  background:var(--info-bg); border:1px solid var(--info-bdr); color:var(--info-text);
+}
+
+/* ── Section titles ─────────────────────────────────────────── */
+.section-heading {
+  font-size:1rem; font-weight:700; color:var(--navy);
+  margin:28px 0 14px; display:flex; align-items:center; gap:8px;
+}
+
+/* ── Snapshot grid ──────────────────────────────────────────── */
+.snap-grid {
+  display:grid; grid-template-columns:repeat(3,1fr);
+  gap:12px; margin-bottom:22px;
+}
+@media(max-width:900px){ .snap-grid{grid-template-columns:1fr 1fr;} }
+@media(max-width:500px){ .snap-grid{grid-template-columns:1fr;} }
+
+.snap-card {
+  background:var(--card); border:1px solid var(--border);
+  border-radius:var(--radius-lg); padding:16px 16px 14px;
+  box-shadow:var(--shadow-sm); position:relative; overflow:hidden;
+}
+.snap-card::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:3px;
+  border-radius:var(--radius-lg) var(--radius-lg) 0 0;
+  background:var(--header-grad);
+}
+.snap-card.good::before  { background:linear-gradient(90deg,var(--success),#34d399); }
+.snap-card.warn::before  { background:linear-gradient(90deg,#f59e0b,#fbbf24); }
+.snap-card.danger::before{ background:linear-gradient(90deg,var(--danger),#f87171); }
+.snap-label { font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:.4px; color:var(--muted); margin-bottom:7px; }
+.snap-value { font-family:'DM Mono',monospace; font-size:1.35rem; font-weight:700; color:var(--navy); letter-spacing:-.3px; }
+.snap-value.positive { color:var(--success); }
+.snap-value.negative  { color:var(--danger); }
+.snap-sub   { font-size:.72rem; color:var(--muted); margin-top:5px; line-height:1.4; }
+
+/* ── Trend chart card ───────────────────────────────────────── */
+.chart-card {
+  background:var(--card); border:1px solid var(--border);
+  border-radius:var(--radius-xl); box-shadow:var(--shadow-sm);
+  overflow:hidden; margin-bottom:28px;
+}
+.chart-head {
+  display:flex; align-items:center; justify-content:space-between;
+  gap:12px; flex-wrap:wrap; padding:18px 22px 0;
+}
+.chart-title { font-size:.95rem; font-weight:700; color:var(--navy); display:flex; align-items:center; gap:8px; }
+.chart-meta  { font-size:.78rem; color:var(--muted); }
+.chart-body  { padding:14px 22px 22px; }
+.chart-wrap  { position:relative; height:300px; }
+.chart-wrap canvas { width:100%!important; height:100%!important; }
+
+/* Trend mode toggle */
+.trend-toggle {
+  display:flex; gap:4px;
+  background:rgba(12,30,58,.06); border:1px solid var(--border);
+  border-radius:999px; padding:3px;
+}
+.trend-btn {
+  border:none; background:transparent;
+  padding:5px 12px; border-radius:999px;
+  cursor:pointer; font-weight:700; font-size:.78rem;
+  color:var(--muted); font-family:'DM Sans',sans-serif;
+  transition:all .15s; white-space:nowrap;
+}
+.trend-btn:hover { color:var(--navy); }
+.trend-btn.active { background:var(--card); color:var(--navy); border:1px solid var(--border); box-shadow:var(--shadow-sm); }
+
+/* ── Report cards grid ──────────────────────────────────────── */
+.report-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(150px,1fr));
+  gap:12px; margin-bottom:28px;
+}
+
+.report-card {
+  display:flex; flex-direction:column; align-items:center; text-align:center;
+  gap:10px; padding:20px 12px 16px;
+  background:var(--card); border:1.5px solid var(--border);
+  border-radius:var(--radius-lg); text-decoration:none;
+  color:var(--text); cursor:pointer;
+  transition:all .18s; position:relative;
+}
+.report-card:hover {
+  border-color:var(--sky); background:var(--sky-soft);
+  transform:translateY(-3px); box-shadow:var(--shadow-md);
+}
+.report-card.disabled {
+  opacity:.45; pointer-events:none; cursor:default;
+}
+.report-icon {
+  width:48px; height:48px; border-radius:12px;
+  background:var(--card); border:1px solid var(--border);
+  box-shadow:var(--shadow-sm);
+  display:flex; align-items:center; justify-content:center;
+  font-size:1.5rem; transition:transform .18s;
+}
+.report-card:hover .report-icon { transform:scale(1.1); }
+.report-label {
+  font-size:.82rem; font-weight:700; color:var(--navy); line-height:1.3;
+}
+.coming-soon-badge {
+  position:absolute; top:8px; right:8px;
+  padding:1px 7px; border-radius:999px;
+  font-size:.62rem; font-weight:700; text-transform:uppercase; letter-spacing:.4px;
+  background:var(--warn-bg); border:1px solid var(--warn-bdr); color:var(--warn-text);
+}
+
+/* ── Empty state ────────────────────────────────────────────── */
+.empty-state {
+  text-align:center; padding:48px 20px; color:var(--muted);
+  background:var(--card); border:1px dashed var(--border);
+  border-radius:var(--radius-xl); margin-bottom:22px; display:none;
+}
+.empty-state-icon { font-size:2.5rem; margin-bottom:14px; }
+.empty-state h3 { font-size:1rem; font-weight:700; color:var(--navy); margin-bottom:8px; }
+.empty-state p  { font-size:.88rem; line-height:1.6; }
+
+/* ── Mobile bottom nav ──────────────────────────────────────── */
+.mobile-nav {
+  position:fixed; left:0; right:0; bottom:0; display:none; z-index:1200;
+  padding:10px 12px calc(10px + env(safe-area-inset-bottom));
+  background:var(--header-grad);
+  border-top:1px solid rgba(255,255,255,.08);
+  box-shadow:0 -4px 20px rgba(12,30,58,.25);
+}
+.mobile-nav-inner { max-width:1440px; margin:0 auto; display:grid; grid-template-columns:repeat(6,1fr); gap:5px; }
+.mnav {
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:4px; padding:10px 8px; border-radius:8px;
+  border:1px solid rgba(255,255,255,.1); background:rgba(255,255,255,.07);
+  color:rgba(255,255,255,.6); font-size:11px; font-weight:700;
+  text-decoration:none; text-align:center;
+}
+.mnav .ico { font-size:22px; line-height:1; }
+.mnav.active { background:rgba(255,255,255,.18); color:#fff; border-color:rgba(255,255,255,.25); }
+.mobile-pad { display:none; height:86px; }
+@media(max-width:860px){ .mobile-nav{display:block;} .mobile-pad{display:block;} main{padding-bottom:110px;} }
+
+/* ── Footer ─────────────────────────────────────────────────── */
+.site-footer { background:var(--navy); padding:28px 20px 20px; margin-top:40px; }
+.footer-content {
+  max-width:1440px; margin:0 auto;
+  display:grid; grid-template-columns:1.4fr repeat(3,1fr);
+  gap:28px; padding-bottom:18px;
+}
+@media(max-width:860px){ .footer-content{grid-template-columns:1fr 1fr;} }
+@media(max-width:520px){ .footer-content{grid-template-columns:1fr;} }
+.footer-brand { display:flex; flex-direction:column; gap:6px; }
+.footer-brand-row { display:flex; align-items:center; gap:9px; margin-bottom:4px; }
+.footer-brand-logo { width:30px; height:30px; border-radius:7px; background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.2); object-fit:cover; }
+.footer-brand-name { font-size:1rem; font-weight:700; color:#fff; }
+.footer-brand p { font-size:.82rem; color:rgba(255,255,255,.45); line-height:1.55; max-width:220px; margin:0; }
+.footer-section h4 { font-size:.72rem; font-weight:700; color:rgba(255,255,255,.55); text-transform:uppercase; letter-spacing:.8px; margin:0 0 12px; }
+.footer-section a  { display:block; color:rgba(255,255,255,.4); text-decoration:none; margin-bottom:8px; font-size:.82rem; transition:color .15s; }
+.footer-section a:hover { color:rgba(255,255,255,.85); }
+.footer-bottom { text-align:center; padding-top:14px; border-top:1px solid rgba(255,255,255,.08); color:rgba(255,255,255,.28); font-size:.82rem; }
+@media(max-width:600px){ .site-footer{display:none;} }
+
+::-webkit-scrollbar { width:5px; height:5px; }
+::-webkit-scrollbar-track { background:var(--bg); }
+::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:999px; }
+
+/* ── COMBINED BEST-OF-BOTH DRAWER ────────────────────────────── */
+.drawer {
+  display: none;
+  position: fixed;
+  top: 70px; left: 12px; right: 12px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  padding: 0;
+  z-index: 1300;
+  box-shadow: 0 16px 48px rgba(12,30,58,.2);
+  max-height: calc(100vh - 90px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overflow: hidden;
+}
+.drawer-user-row {
+  display: flex !important;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 16px 14px !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+  border-radius: 0 !important;
+  text-decoration: none;
+  background: #fafbfc;
+}
+.drawer-avatar {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1a3a6b, #1e5799);
+  color: #fff;
+  font-weight: 700; font-size: 0.78rem;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; text-transform: uppercase;
+  box-shadow: 0 2px 8px rgba(12,30,58,.2);
+}
+.drawer-username {
+  font-weight: 700; font-size: 0.95rem; color: #0c1e3a !important;
+}
+.drawer-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  padding: 8px 10px;
+  gap: 2px;
+}
+.drawer-grid-divider {
+  grid-column: 1 / -1;
+  height: 1px;
+  background: #f1f5f9;
+  margin: 2px 0;
+}
+.drawer-grid a {
+  display: flex; align-items: center; gap: 8px;
+  padding: 11px 10px;
+  font-weight: 600; font-size: 0.88rem;
+  color: #0c1e3a !important;
+  text-decoration: none;
+  border-radius: 9px;
+  transition: background .12s, color .12s;
+  background: transparent;
+  border: none !important;
+  border-bottom: none !important;
+}
+.drawer-grid a:hover { background: #f1f5f9; color: #1a3a6b !important; }
+.drawer-grid a.nav-active {
+  background: #eff4ff !important;
+  color: #1a3a6b !important;
+  font-weight: 700 !important;
+}
+.drawer-login {
+  display: block; padding: 11px 16px;
+  font-weight: 600; color: #0c1e3a !important;
+  font-size: 0.9rem; border-top: 1px solid #f1f5f9;
+  text-decoration: none;
+}
+#mobileLogoutContainer {
+  border-top: 1px solid #f1f5f9;
+  padding: 6px 10px 8px; margin: 0;
+}
+#mobileLogoutContainer button {
+  width: 100%; padding: 10px 10px; background: none; border: none;
+  text-align: left; font-weight: 700; color: #dc2626; cursor: pointer;
+  font-family: 'DM Sans', sans-serif; font-size: 0.9rem; border-radius: 8px;
+}
+#mobileLogoutContainer button:hover { background: #fef2f2; }
+
+/* ── Mobile page optimizations ───────────────────────────────── */
+.page, main.page, main { width: 100% !important; box-sizing: border-box !important; }
+@media (max-width: 600px) {
+  .page, main.page, main {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+  .page h1, main.page h1, main h1, .page-heading { font-size: 1.25rem !important; }
+  .subtitle, .page-subheading { font-size: 0.83rem !important; }
+  .card, .rg-card { padding: 12px 12px !important; border-radius: 12px !important; }
+  table { font-size: 0.8rem !important; }
+  th, td { padding: 7px 6px !important; }
+}
+@media (min-width: 601px) and (max-width: 860px) {
+  .page, main.page, main {
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+  }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   INLINE REPORT SECTIONS
+══════════════════════════════════════════════════════════════ */
+
+/* Section wrapper */
+.report-section {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
+  margin-bottom: 24px; overflow: hidden;
+}
+.report-section-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 20px; border-bottom: 1px solid var(--border);
+  background: #f8fafc; gap: 12px; flex-wrap: wrap;
+}
+.report-section-title {
+  font-size: .95rem; font-weight: 700; color: var(--navy);
+  display: flex; align-items: center; gap: 8px;
+}
+.report-section-meta {
+  font-size: .78rem; color: var(--muted); font-weight: 500;
+}
+.report-section-body { padding: 0; }
+
+/* Period tabs */
+.period-tabs { display: flex; gap: 4px; }
+.period-tab {
+  padding: 5px 12px; border-radius: 999px; font-size: .75rem; font-weight: 700;
+  border: 1px solid var(--border); background: var(--bg); color: var(--muted);
+  cursor: pointer; transition: all .15s; font-family: 'DM Sans', sans-serif;
+}
+.period-tab.active { background: var(--navy); color: #fff; border-color: var(--navy); }
+.period-tab:hover:not(.active) { background: var(--sky-soft); color: var(--navy); }
+/* ── CSV Export button ───────────────────────────────────────── */
+.btn-export {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 13px; border-radius: 999px; font-size: .75rem; font-weight: 700;
+  border: 1px solid var(--border); background: #fff; color: var(--navy);
+  cursor: pointer; transition: all .15s; font-family: 'DM Sans', sans-serif;
+  text-decoration: none; white-space: nowrap;
+}
+.btn-export:hover { background: var(--navy); color: #fff; border-color: var(--navy); }
+
+
+/* Rent payment table */
+.rpt-table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+.rpt-table th {
+  background: #f8fafc; color: var(--muted); font-size: .7rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .4px;
+  padding: 10px 16px; border-bottom: 1px solid var(--border);
+  text-align: left; white-space: nowrap;
+}
+.rpt-table td { padding: 11px 16px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+.rpt-table tr:last-child td { border-bottom: none; }
+.rpt-table tr:hover td { background: #f8fafc; }
+.rpt-table .mono { font-family: 'DM Mono', monospace; font-size: .83rem; }
+.rpt-table .text-right { text-align: right; }
+.rpt-table .text-center { text-align: center; }
+
+/* Status badges */
+.badge {
+  display: inline-flex; align-items: center;
+  padding: 2px 9px; border-radius: 999px;
+  font-size: .7rem; font-weight: 700; white-space: nowrap;
+}
+.badge-green  { background: var(--success-bg); border: 1px solid var(--success-bdr); color: #065f46; }
+.badge-red    { background: var(--danger-bg);  border: 1px solid var(--danger-bdr);  color: var(--danger-text); }
+.badge-yellow { background: var(--warn-bg);    border: 1px solid var(--warn-bdr);    color: var(--warn-text); }
+.badge-blue   { background: var(--info-bg);    border: 1px solid var(--info-bdr);    color: var(--info-text); }
+.badge-muted  { background: #f1f5f9; border: 1px solid var(--border); color: var(--muted); }
+
+/* Expense category chart area */
+.exp-layout { display: grid; grid-template-columns: 220px 1fr; gap: 0; }
+@media(max-width: 700px) { .exp-layout { grid-template-columns: 1fr; } }
+.exp-chart-wrap {
+  padding: 20px; border-right: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+}
+@media(max-width: 700px) { .exp-chart-wrap { border-right: none; border-bottom: 1px solid var(--border); } }
+.exp-chart-wrap canvas { max-width: 180px; max-height: 180px; }
+.exp-cat-list { padding: 12px 0; overflow-y: auto; max-height: 260px; }
+.exp-cat-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 16px; border-bottom: 1px solid #f8fafc;
+  font-size: .84rem;
+}
+.exp-cat-row:last-child { border-bottom: none; }
+.exp-cat-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.exp-cat-name { flex: 1; font-weight: 600; color: var(--navy); }
+.exp-cat-amount { font-family: 'DM Mono', monospace; font-size: .82rem; color: var(--text); }
+.exp-cat-pct { font-size: .75rem; color: var(--muted); min-width: 36px; text-align: right; }
+
+/* Maintenance summary */
+.maint-summary-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  border-bottom: 1px solid var(--border);
+}
+@media(max-width: 600px) { .maint-summary-grid { grid-template-columns: 1fr 1fr; } }
+.maint-kpi {
+  padding: 16px 18px; border-right: 1px solid var(--border); text-align: center;
+}
+.maint-kpi:last-child { border-right: none; }
+.maint-kpi-val { font-family: 'DM Mono', monospace; font-size: 1.4rem; font-weight: 700; color: var(--navy); }
+.maint-kpi-label { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: var(--muted); margin-top: 4px; }
+
+/* Empty / loading states */
+.rpt-empty {
+  text-align: center; padding: 32px 20px; color: var(--muted); font-size: .88rem;
+}
+.rpt-loading {
+  text-align: center; padding: 28px; color: var(--muted); font-size: .85rem;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+
+/* Rent totals footer row */
+.rpt-totals td { font-weight: 700; background: #f8fafc; border-top: 2px solid var(--border); }
+
+/* Period selector */
+.rpt-period-row {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+.rpt-period-label { font-size: .78rem; font-weight: 700; color: var(--muted); white-space: nowrap; }
+
+</style>
+<style>
+/* ── Global mobile horizontal-overflow guard ─────────────────── */
+@media (max-width: 600px) {
+  body, main.page { overflow-x: hidden; }
+  main.page > * { max-width: 100%; box-sizing: border-box; }
+  .filter-card, .toolbar, .card, .stat-card, .kpi { max-width: 100%; box-sizing: border-box; }
+  input[type="search"], input[type="text"], select { max-width: 100%; box-sizing: border-box; }
+}
+</style>
+</head>
+<body class="auth-guest">
+
+<!-- ═══ SUPABASE BOOTSTRAP (body-first: avoids tracking-prevention blocking safeStorage) ═══ -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
+<!-- ══════════════════════════════════════════════════════════════════════════════════════ -->
+
+<!-- ── Auth Overlay (matches dashboard.html exactly) ─────────── -->
+<div id="authOverlay">
+  <div class="ao-bar-fill" id="aoBarFill"></div>
+</div>
+<!-- ── Header ────────────────────────────────────────────────── -->
+<header class="header-container">
+  <div class="navbar">
+    <a class="brand-area" href="index.html">
+      <img src="images/rg-logo.png" class="brand-logo" alt="Rental Genie" onerror="this.style.display='none'" />
+      <span class="brand-title">Rental Genie</span>
+    </a>
+
+    <nav class="nav-links" aria-label="Main navigation">
+      <a href="dashboard.html">📊 Dashboard</a>
+      <a href="property-management.html">🏘️ Properties</a>
+      <a href="lease-rent-center.html">💰 Lease &amp; Rent</a>
+      <a href="expense-tracking.html">💸 Expenses</a>
+      <a href="maintenance-requests.html">🛠 Maintenance</a>
+      <a href="reports-analytics.html" class="nav-active">📈 Reports</a>
+    </nav>
+
+    <!-- UMD -->
+    <div class="nav-right-group">
+      <a class="nav-bell" id="navBell" href="tenant-messages.html" title="Messages" aria-label="Messages" style="display:none">🔔</a>
+      <div class="umd-wrap" id="userMenu" style="display:none">
+        <button class="umd-toggle" id="umdToggle" aria-haspopup="true" aria-expanded="false">
+          <div class="umd-avatar" id="umdAvatar">?</div>
+          <span class="umd-name" id="umdName">User</span>
+          <span class="umd-caret">▾</span>
+        </button>
+        <div class="umd-dropdown" id="umdDropdown">
+          <div class="umd-user-row">
+            <div class="umd-user-name"  id="umdFullName">—</div>
+            <div class="umd-user-email" id="umdEmail">—</div>
+          </div>
+          <div class="umd-section">
+            <a class="umd-link" href="dashboard.html">📊 Dashboard</a>
+            <a class="umd-link" href="account.html">⚙️ Account Settings</a>
+            <a class="umd-link" href="tenant-portal-picker.html">✉️ Invite Tenant</a>
+            <a class="umd-link" href="tenant-portal-picker.html">🏠 Tenant Portal</a>
+          </div>
+          <div class="umd-section">
+            <a class="umd-link" href="reports-analytics.html">📈 Reports &amp; Analytics</a>
+            <a class="umd-link" href="contact-us.html">💬 Contact Support</a>
+          </div>
+          <div class="umd-section">
+            <button class="umd-link danger" id="logoutBtn">🚪 Sign Out</button>
+          </div>
+        </div>
+      </div>
+
+      <a id="nav-login" href="login.html">Log in</a>
+    </div>
+    <button class="hamburger" id="hamburgerBtn" aria-label="Open menu">☰</button>
+  </div>
+</header>
+
+<!-- Mobile Drawer -->
+<div class="drawer" id="mobileDrawer">
+  <!-- User row (shown when logged in) -->
+  <a href="account.html" id="mobileAccountLink" style="display:none;" class="drawer-user-row">
+    <span class="drawer-avatar" id="drawerAvatar">?</span>
+    <span class="drawer-username" id="mobileUsernameLabel">Account</span>
+  </a>
+  <!-- 2-col nav grid with row dividers -->
+  <div class="drawer-grid">
+    <a href="dashboard.html">📊 Dashboard</a>
+    <a href="property-management.html">🏘️ Properties</a>
+    <div class="drawer-grid-divider"></div>
+    <a href="lease-rent-center.html">💰 Lease & Rent</a>
+    <a href="expense-tracking.html">💸 Expenses</a>
+    <div class="drawer-grid-divider"></div>
+    <a href="maintenance-requests.html">🛠 Maintenance</a>
+    <a href="tenant-messages.html">💬 Messages</a>
+    <a href="reports-analytics.html" class="nav-active">📈 Reports</a>
+  </div>
+  <!-- Guest login link -->
+  <a href="login.html" id="mobileLogin" class="drawer-login" style="display:none;">Log in</a>
+  <!-- Sign out (shown when logged in) -->
+  <div id="mobileLogoutContainer" style="display:none;">
+    <button id="mobileLogoutBtn">Sign Out</button>
+  </div>
+</div>
+
+<!-- ── Main ──────────────────────────────────────────────────── -->
+<main>
+
+  <div class="page-header">
+    <div class="page-title">📈 Reports &amp; Analytics</div>
+    <div class="page-sub">Financial performance by property and across your entire portfolio.</div>
+  </div>
+
+  <!-- Filter bar -->
+  <div class="filter-card" id="filterCard">
+    <div class="filter-group" id="companyFilterGroup" style="display:none">
+      <label class="filter-label" for="companySelect">Company</label>
+      <select class="filter-select" id="companySelect">
+        <option value="">— Select company —</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label class="filter-label" for="propertySelect">Property</label>
+      <select class="filter-select" id="propertySelect">
+        <option value="">— Choose a property —</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Empty / no-workspace state -->
+  <div class="empty-state" id="workspaceEmptyState">
+    <div class="empty-state-icon">🏢</div>
+    <h3>No workspace found</h3>
+    <p>You don't appear to be linked to a company workspace yet.<br>
+       <a href="add-property.html" style="color:var(--sky);font-weight:600;text-decoration:none">+ Add your first property</a> to get started.
+    </p>
+  </div>
+
+  <!-- ── Quick-peek strip ──────────────────────────────────────── -->
+  <div class="qp-strip">
+    <div class="qp-card">
+      <div class="qp-label">🏡 Property</div>
+      <div class="qp-main" id="qp-property-name">No property selected</div>
+      <div class="qp-meta" id="qp-property-address">—</div>
+    </div>
+    <div class="qp-card">
+      <div class="qp-label">👤 Tenant &amp; Lease</div>
+      <div class="qp-main" id="qp-tenant">—</div>
+      <div class="qp-meta" id="qp-lease-dates">—</div>
+      <div class="qp-pill" id="qp-lease-status"></div>
+    </div>
+    <div class="qp-card">
+      <div class="qp-label">💵 This Month</div>
+      <div class="qp-main" id="qp-month-paid">Collected: —</div>
+      <div class="qp-meta" id="qp-last-payment">Last payment: —</div>
+      <div class="qp-pill" id="qp-month-balance"></div>
+    </div>
+  </div>
+
+  <!-- ── Financial snapshot ───────────────────────────────────── -->
+  <div class="section-heading">📊 Financial Snapshot <span style="font-size:.75rem;font-weight:500;color:var(--muted);margin-left:4px">— current month</span></div>
+  <div class="snap-grid">
+    <div class="snap-card">
+      <div class="snap-label">🏦 Fixed Monthly Cost</div>
+      <div class="snap-value" id="snap-fixed">$—</div>
+      <div class="snap-sub"  id="snap-fixed-breakdown">PI / Tax / Ins / HOA / PMI</div>
+    </div>
+    <div class="snap-card">
+      <div class="snap-label">💸 Expenses This Month</div>
+      <div class="snap-value" id="snap-expenses">$—</div>
+      <div class="snap-sub"  id="snap-expenses-meta">From Expense Tracking</div>
+    </div>
+    <div class="snap-card">
+      <div class="snap-label">🧮 Net Cash Flow</div>
+      <div class="snap-value" id="snap-net">$—</div>
+      <div class="snap-sub"  id="snap-net-meta">Rent − Expenses − Fixed</div>
+    </div>
+    <div class="snap-card">
+      <div class="snap-label">💰 Cash Invested</div>
+      <div class="snap-value" id="snap-invested">$—</div>
+      <div class="snap-sub"  id="snap-invested-meta">Down + Closing + Rehab</div>
+    </div>
+    <div class="snap-card">
+      <div class="snap-label">📈 Cash-on-Cash (Est.)</div>
+      <div class="snap-value" id="snap-coc">—%</div>
+      <div class="snap-sub"  id="snap-coc-meta">Annualized from this month</div>
+    </div>
+    <div class="snap-card">
+      <div class="snap-label">🏷️ Cap Rate (Est.)</div>
+      <div class="snap-value" id="snap-caprate">—%</div>
+      <div class="snap-sub"  id="snap-caprate-meta">Annualized / Purchase Price</div>
+    </div>
+  </div>
+
+  <!-- ── 12-month trend chart ──────────────────────────────────── -->
+  <div class="chart-card">
+    <div class="chart-head">
+      <div>
+        <div class="chart-title">📅 12-Month Trend — Income vs Expenses vs Net</div>
+        <div class="chart-meta" id="trendMeta">Select a property to load the trend.</div>
+      </div>
+      <div class="trend-toggle" role="tablist">
+        <button class="trend-btn active" id="trendModeProperty" role="tab" aria-selected="true">🏠 Property</button>
+        <button class="trend-btn"        id="trendModePortfolio" role="tab" aria-selected="false">📊 Portfolio</button>
+      </div>
+    </div>
+    <div class="chart-body">
+      <div class="chart-wrap">
+        <canvas id="trendChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── More reports ───────────────────────────────────────────── -->
+  <div class="section-heading">🗂️ More Reports</div>
+  <div class="report-grid">
+    <a class="report-card" href="portfolio-financial-dashboard.html">
+      <div class="report-icon">📈</div>
+      <div class="report-label">Portfolio Financial<br>Dashboard</div>
+    </a>
+    <a class="report-card" href="all-properties-summary.html">
+      <div class="report-icon">🏘️</div>
+      <div class="report-label">All Properties<br>Summary</div>
+    </a>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       SECTION 1: RENT & PAYMENTS REPORT
+  ══════════════════════════════════════════════════════════ -->
+  <div class="report-section" id="rentReportSection">
+    <div class="report-section-head">
+      <div class="report-section-title">💰 Rent &amp; Payment Report</div>
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+        <div class="period-tabs" id="rentPeriodTabs">
+          <button class="period-tab active" data-months="1">This Month</button>
+          <button class="period-tab" data-months="3">3 Months</button>
+          <button class="period-tab" data-months="6">6 Months</button>
+          <button class="period-tab" data-months="12">12 Months</button>
+        </div>
+        <span class="report-section-meta" id="rentReportMeta">Select a property</span>
+        <button class="btn-export" onclick="exportTableCSV('rent')" title="Download rent report as CSV">⬇ CSV</button>
+      </div>
+    </div>
+    <div class="report-section-body">
+      <!-- Summary KPIs -->
+      <div class="maint-summary-grid" id="rentKpiRow" style="grid-template-columns:repeat(4,1fr);">
+        <div class="maint-kpi">
+          <div class="maint-kpi-val" id="rpt-rent-expected">$—</div>
+          <div class="maint-kpi-label">Expected</div>
+        </div>
+        <div class="maint-kpi">
+          <div class="maint-kpi-val" id="rpt-rent-collected">$—</div>
+          <div class="maint-kpi-label">Collected</div>
+        </div>
+        <div class="maint-kpi">
+          <div class="maint-kpi-val" id="rpt-rent-balance">$—</div>
+          <div class="maint-kpi-label">Outstanding</div>
+        </div>
+        <div class="maint-kpi">
+          <div class="maint-kpi-val" id="rpt-rent-rate">—%</div>
+          <div class="maint-kpi-label">Collection Rate</div>
+        </div>
+      </div>
+      <!-- Payment history table -->
+      <div style="overflow-x:auto;">
+        <table class="rpt-table">
+          <thead>
+            <tr>
+              <th>Date Paid</th>
+              <th>Property</th>
+              <th>Tenant</th>
+              <th class="text-right">Amount</th>
+              <th class="text-center">Status</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody id="rentReportBody">
+            <tr><td colspan="6" class="rpt-loading">⏳ Select a property to load payments</td></tr>
+          </tbody>
+          <tfoot>
+            <tr class="rpt-totals" id="rentReportTotals" style="display:none;">
+              <td colspan="3"><strong>Total</strong></td>
+              <td class="text-right mono" id="rpt-rent-total-cell">$—</td>
+              <td colspan="2"></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       SECTION 2: EXPENSE BREAKDOWN REPORT
+  ══════════════════════════════════════════════════════════ -->
+  <div class="report-section" id="expReportSection">
+    <div class="report-section-head">
+      <div class="report-section-title">💸 Expense Breakdown</div>
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+        <div class="period-tabs" id="expPeriodTabs">
+          <button class="period-tab active" data-months="1">This Month</button>
+          <button class="period-tab" data-months="3">3 Months</button>
+          <button class="period-tab" data-months="6">6 Months</button>
+          <button class="period-tab" data-months="12">12 Months</button>
+        </div>
+        <span class="report-section-meta" id="expReportMeta">Select a property</span>
+        <button class="btn-export" onclick="exportTableCSV('exp')" title="Download expense report as CSV">&#11015; CSV</button>
+      </div>
+    </div>
+    <div class="report-section-body">
+      <div class="exp-layout">
+        <!-- Donut chart -->
+        <div class="exp-chart-wrap">
+          <canvas id="expCatChart"></canvas>
+        </div>
+        <!-- Category breakdown list -->
+        <div class="exp-cat-list" id="expCatList">
+          <div class="rpt-loading">⏳ Select a property to load expenses</div>
+        </div>
+      </div>
+      <!-- Full expense table -->
+      <div style="overflow-x:auto; border-top:1px solid var(--border);">
+        <table class="rpt-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Property</th>
+              <th>Category</th>
+              <th>Description</th>
+              <th class="text-right">Amount</th>
+            </tr>
+          </thead>
+          <tbody id="expReportBody">
+            <tr><td colspan="5" class="rpt-loading">⏳ Select a property to load expenses</td></tr>
+          </tbody>
+          <tfoot>
+            <tr class="rpt-totals" id="expReportTotals" style="display:none;">
+              <td colspan="4"><strong>Total Expenses</strong></td>
+              <td class="text-right mono" id="rpt-exp-total-cell">$—</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       SECTION 3: MAINTENANCE SUMMARY REPORT
+  ══════════════════════════════════════════════════════════ -->
+  <div class="report-section" id="maintReportSection">
+    <div class="report-section-head">
+      <div class="report-section-title">🛠️ Maintenance Summary</div>
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+        <div class="period-tabs" id="maintPeriodTabs">
+          <button class="period-tab active" data-months="1">This Month</button>
+          <button class="period-tab" data-months="3">3 Months</button>
+          <button class="period-tab" data-months="6">6 Months</button>
+          <button class="period-tab" data-months="12">12 Months</button>
+        </div>
+        <span class="report-section-meta" id="maintReportMeta">Select a property</span>
+        <button class="btn-export" onclick="exportTableCSV('maint')" title="Download maintenance report as CSV">&#11015; CSV</button>
+      </div>
+    </div>
+    <div class="report-section-body">
+      <!-- KPI strip -->
+      <div class="maint-summary-grid">
+        <div class="maint-kpi">
+          <div class="maint-kpi-val" id="rpt-maint-total">—</div>
+          <div class="maint-kpi-label">Total Requests</div>
+        </div>
+        <div class="maint-kpi">
+          <div class="maint-kpi-val" id="rpt-maint-open">—</div>
+          <div class="maint-kpi-label">Open / In Progress</div>
+        </div>
+        <div class="maint-kpi">
+          <div class="maint-kpi-val" id="rpt-maint-cost">$—</div>
+          <div class="maint-kpi-label">Total Cost</div>
+        </div>
+      </div>
+      <!-- Maintenance table -->
+      <div style="overflow-x:auto;">
+        <table class="rpt-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Property</th>
+              <th>Issue</th>
+              <th class="text-center">Priority</th>
+              <th class="text-center">Status</th>
+              <th class="text-right">Cost</th>
+            </tr>
+          </thead>
+          <tbody id="maintReportBody">
+            <tr><td colspan="6" class="rpt-loading">⏳ Select a property to load maintenance records</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- Mobile Bottom Nav -->
+<nav class="mobile-nav" aria-label="Mobile navigation">
+  <div class="mobile-nav-inner">
+    <a class="mnav" href="dashboard.html"><div class="ico">📊</div></a>
+    <a class="mnav" href="property-management.html"><div class="ico">🏘️</div></a>
+    <a class="mnav" href="lease-rent-center.html"><div class="ico">💰</div></a>
+    <a class="mnav" href="expense-tracking.html"><div class="ico">💸</div></a>
+    <a class="mnav" href="maintenance-requests.html"><div class="ico">🛠️</div></a>
+    <a class="mnav active" href="reports-analytics.html"><div class="ico">📈</div></a>
+  </div>
+</nav>
+<div class="mobile-pad" aria-hidden="true"></div>
+
+<!-- ── Footer ─────────────────────────────────────────────────── -->
+<footer class="site-footer">
+  <div class="footer-content">
+    <div class="footer-brand">
+      <div class="footer-brand-row">
+        <img src="images/rg-logo.png" class="footer-brand-logo" alt="Rental Genie" onerror="this.style.display='none'" />
+        <span class="footer-brand-name">Rental Genie</span>
+      </div>
+      <p>Smart property management for independent landlords. Manage leases, track rent, and stay on top of maintenance — all in one place.</p>
+    </div>
+    <div class="footer-section">
+      <h4>Navigate</h4>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="property-management.html">Properties</a>
+      <a href="lease-rent-center.html">Lease &amp; Rent</a>
+      <a href="expense-tracking.html">Expenses</a>
+      <a href="maintenance-requests.html">Maintenance</a>
+      <a href="all-properties-summary.html">All Properties Summary</a>
+      <a href="portfolio-financial-dashboard.html">Portfolio Dashboard</a>
+    </div>
+    <div class="footer-section">
+      <h4>Account</h4>
+      <a href="account.html">My Account</a>
+      <a href="tenant-portal.html">Tenant Portal</a>
+      <a href="tenant-portal-picker.html">Invite Tenant</a>
+    </div>
+    <div class="footer-section">
+      <h4>Support</h4>
+      <a href="contact-us.html">Contact Us</a>
+      <a href="contact-us.html">Help Center</a>
+      <a href="terms.html">Terms of Service</a>
+      <a href="privacy.html">Privacy Policy</a>
+    </div>
+  </div>
+  <div class="footer-bottom">© <span id="footerYear"></span> Rental Genie. All rights reserved.</div>
+</footer>
+
+<script>
+/* ============================================================
+   SUPABASE — safeStorage
+============================================================ */
+(function () {
+  var mem = new Map();
+  var wrap = function (s) {
+    return {
+      getItem:    function (k) { try { return (s && s.getItem(k)) || mem.get(k) || null; } catch (e) { return mem.get(k) || null; } },
+      setItem:    function (k, v) { try { s && s.setItem(k, v); } catch (e) {} mem.set(k, v); },
+      removeItem: function (k) { try { s && s.removeItem(k); } catch (e) {} mem.delete(k); }
+    };
+  };
+  var ls = null; try { ls = window.localStorage; } catch (e) {}
+  window._rgClient = window._rgClient || window.supabase.createClient(
+    'https://pbojacnagutipfhcxltj.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBib2phY25hZ3V0aXBmaGN4bHRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgwMDkwODAsImV4cCI6MjA2MzU4NTA4MH0.ZLCcAzTYljoZycpBGwMtthP5VyAJ4schuIvt4HibGc0',
+    { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, lock: undefined, storage: wrap(ls) } }
+  );
+  window.sb     = window._rgClient;
+  window.client = window._rgClient;
+  window.getSbClient = function() { return window._rgClient; };
+  window.GSClient    = { getAsync: async function() { return window._rgClient; } };
+}());
+var sb = window._rgClient;
+
+/* ── waitForClientReady: polls until bootstrap sets window.sb ── */
+async function waitForClientReady() {
+  if (window.sb?.auth) return window.sb;
+  return new Promise(function(resolve) {
+    var t = setInterval(function() {
+      if (window.sb?.auth) { clearInterval(t); resolve(window.sb); }
+    }, 20);
+  });
+}
+
+/* ============================================================
+   HELPERS
+============================================================ */
+function $(id) { return document.getElementById(id); }
+function money(v) { return '$' + Number(v || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+function setText(id, v) { var e = $(id); if (e) e.textContent = v; }
+
+/* setProgress — exact match to dashboard.html
+   pct        : 0–100 bar width
+   statusText : fades the status line to the new string
+   activeStep : 0=Connecting 1=Authenticating 2=Loading data 3=Ready */
+function setProgress(pct, statusText, activeStep) {
+  var bar = document.getElementById('aoBarFill');
+  if (bar) bar.style.width = pct + '%';
+  // statusText/activeStep params retained for call-site compatibility
+}
+
+function hideOverlay() {
+  var o = $('authOverlay');
+  if (o) { o.style.opacity = '0'; setTimeout(function () { o.style.display = 'none'; }, 420); }
+}
+
+/* ============================================================
+   HEADER WIRING
+============================================================ */
+(function wireHeader() {
+  var toggle = $('umdToggle'), drop = $('umdDropdown');
+  if (toggle && drop) {
+    toggle.addEventListener('click', function (e) {
+      e.stopPropagation();
+      drop.classList.toggle('open');
+      toggle.setAttribute('aria-expanded', drop.classList.contains('open'));
+    });
+    document.addEventListener('click', function () { drop.classList.remove('open'); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') drop.classList.remove('open'); });
+  }
+  async function doSignOut() { try { await sb.auth.signOut(); } catch(e) {} location.href = 'login.html'; }
+  var lb = $('logoutBtn');       if (lb) lb.addEventListener('click', doSignOut);
+  var mb = $('mobileLogoutBtn'); if (mb) mb.addEventListener('click', doSignOut);
+  var ham = $('hamburgerBtn'), drw = $('mobileDrawer');
+  if (ham && drw) {
+    ham.addEventListener('click', function (e) {
+      e.stopPropagation();
+      drw.style.display = drw.style.display === 'block' ? 'none' : 'block';
+    });
+    drw.addEventListener('click', function (e) {
+      e.stopPropagation();
+      if (e.target.tagName === 'A') drw.style.display = 'none';
+    });
+    document.addEventListener('click', function (e) {
+      if (drw.style.display === 'block' && !drw.contains(e.target) && !ham.contains(e.target))
+        drw.style.display = 'none';
+    });
+  }
+}());
+
+/* ============================================================
+   AUTH
+============================================================ */
+async function setupAuth() {
+  try {
+    var res = await sb.auth.getUser();
+    var user = res.data && res.data.user;
+    var loginBtn = $('nav-login'), userMenu = $('userMenu'), navBell = $('navBell');
+    if (!user) { hideOverlay(); return null; }
+    var uname = (user.user_metadata && (user.user_metadata.full_name || user.user_metadata.name)) || user.email.split('@')[0];
+    var _dp = uname.split(' ');
+    var initials = (_dp.length >= 2 ? _dp[0][0] + _dp[_dp.length-1][0] : uname.slice(0,2)).toUpperCase();
+    if (loginBtn) loginBtn.style.display = 'none';
+    if (userMenu) userMenu.style.display = 'block';
+    if (navBell) navBell.style.display = 'flex';
+    document.body.classList.remove('auth-guest');
+    document.body.classList.add('auth-ready');
+    var av = $('umdAvatar');   if (av) av.textContent = initials;
+    var nm = $('umdName');     if (nm) nm.textContent = uname;
+    var fn = $('umdFullName'); if (fn) fn.textContent = uname;
+    var em = $('umdEmail');    if (em) em.textContent = user.email || '';
+    /* ── Drawer user row ── */
+    var _da = $('drawerAvatar');        if (_da) _da.textContent = initials;
+    var _ml = $('mobileUsernameLabel'); if (_ml) _ml.textContent = uname;
+    var _ma = $('mobileAccountLink');   if (_ma) _ma.style.display = 'flex';
+    var _mli = $('mobileLogin');        if (_mli) _mli.style.display = 'none';
+    var _mlo = $('mobileLogoutContainer'); if (_mlo) _mlo.style.display = 'block';
+    sb.auth.onAuthStateChange(function (event) { if (event === 'SIGNED_OUT') location.href = 'login.html'; });
+    return user;
+  } catch(e) { hideOverlay(); return null; }
+}
+
+/* ============================================================
+   COMPANY + PROPERTY STATE
+============================================================ */
+var ACTIVE_COMPANY_KEY = 'rg_active_company_id';
+var activeCompanyId = null;
+var currentProperty = '';
+var initialPropertyParam = '';
+try { initialPropertyParam = decodeURIComponent(new URLSearchParams(location.search).get('property') || ''); } catch(e) {}
+
+function resolveActiveCompanyId() {
+  var url = new URLSearchParams(location.search);
+  var q = url.get('company_id') || url.get('company') || '';
+  if (q) { try { localStorage.setItem(ACTIVE_COMPANY_KEY, q); } catch(e) {} return q; }
+  try { return localStorage.getItem(ACTIVE_COMPANY_KEY) || null; } catch(e) { return null; }
+}
+
+async function safeSelect(table, cols, scope) {
+  var q = sb.from(table).select(cols);
+  if (scope) q = scope(q);
+  var res = await q;
+  if (!res.error) return res;
+  return await sb.from(table).select(cols);
+}
+
+/* ============================================================
+   COMPANY DROPDOWN
+============================================================ */
+async function loadCompanyDropdown() {
+  try {
+    var r = await sb.auth.getUser();
+    var user = r.data && r.data.user;
+    var group = $('companyFilterGroup'), sel = $('companySelect');
+    if (!user || !group || !sel) return;
+
+    var res = await sb.from('company_members').select('company_id, companies:company_id (id, name)')
+      .eq('user_id', user.id).order('created_at', { ascending: true });
+
+    if (res.error) { group.style.display = 'none'; return; }
+    var companies = (res.data || []).map(function (m) { return m.companies; }).filter(Boolean);
+
+    if (!companies.length) {
+      activeCompanyId = null;
+      var ws = $('workspaceEmptyState'); if (ws) ws.style.display = 'block';
+      return;
+    }
+
+    var ws = $('workspaceEmptyState'); if (ws) ws.style.display = 'none';
+
+    if (companies.length === 1) {
+      activeCompanyId = companies[0].id;
+      try { localStorage.setItem(ACTIVE_COMPANY_KEY, activeCompanyId); } catch(e) {}
+      group.style.display = 'none';
+      return;
+    }
+
+    group.style.display = 'flex';
+    var stored = resolveActiveCompanyId();
+    var preferred = companies.some(function (c) { return c.id === stored; }) ? stored : companies[0].id;
+    sel.innerHTML = companies.map(function (c) { return '<option value="' + c.id + '">' + (c.name || 'Company') + '</option>'; }).join('');
+    sel.value = preferred;
+    activeCompanyId = preferred;
+    try { localStorage.setItem(ACTIVE_COMPANY_KEY, activeCompanyId); } catch(e) {}
+
+    if (!sel.dataset.wired) {
+      sel.dataset.wired = '1';
+      sel.addEventListener('change', function () {
+        activeCompanyId = sel.value || null;
+        try { activeCompanyId ? localStorage.setItem(ACTIVE_COMPANY_KEY, activeCompanyId) : localStorage.removeItem(ACTIVE_COMPANY_KEY); } catch(e) {}
+        currentProperty = ''; $('propertySelect').value = '';
+        loadPropertyDropdown(true);
+      });
+    }
+  } catch(e) { console.error('loadCompanyDropdown error:', e); }
+}
+
+/* ============================================================
+   PROPERTY DROPDOWN
+============================================================ */
+async function loadPropertyDropdown(keepSelection) {
+  var sel = $('propertySelect'); if (!sel) return Promise.resolve();
+  var res = await safeSelect('properties', 'name, address', function (q) {
+    if (activeCompanyId) q = q.eq('company_id', activeCompanyId);
+    return q.order('name');
+  });
+  if (res.error) { console.error('Property load error:', res.error); return; }
+  var data = res.data || [];
+  sel.innerHTML = '<option value="">— Choose a property —</option>';
+  data.forEach(function (p) {
+    var opt = document.createElement('option');
+    opt.value = p.name;
+    opt.textContent = p.address ? p.name + ' — ' + p.address : p.name;
+    sel.appendChild(opt);
+  });
+
+  var selectedName = '';
+  if (initialPropertyParam) {
+    var match = data.find(function (p) { return p.name === initialPropertyParam; });
+    if (match) selectedName = match.name;
+  }
+  if (!keepSelection) {
+    if (!selectedName && data.length > 0) selectedName = data[0].name;
+    if (selectedName) { currentProperty = selectedName; sel.value = selectedName; }
+  } else {
+    currentProperty = ''; sel.value = '';
+  }
+  applyCurrentProperty();
+
+  if (!sel.dataset.wired) {
+    sel.dataset.wired = '1';
+    sel.addEventListener('change', function (e) {
+      currentProperty = e.target.value || '';
+      applyCurrentProperty();
+    });
+  }
+}
+
+/* ============================================================
+   APPLY PROPERTY — wires card links + loads data
+============================================================ */
+var propCards = {
+  income:      $('incomeDashboardCard'),
+  rent:        $('rentLogCard'),
+  payments:    $('paymentsCard'),
+  maintenance: $('maintenanceCard')
+};
+
+function applyCurrentProperty() {
+  window.__rg_currentProperty = currentProperty || null;
+  var enc = currentProperty ? encodeURIComponent(currentProperty) : '';
+
+  /* Wire card links with property param */
+  if (propCards.income)      propCards.income.href      = 'portfolio-financial-dashboard.html' + (enc ? '?property=' + enc : '');
+  if (propCards.rent)        propCards.rent.href        = 'lease-rent-center.html'             + (enc ? '?property=' + enc : '');
+  if (propCards.payments)    propCards.payments.href    = 'expense-tracking.html'              + (enc ? '?property=' + enc : '');
+  if (propCards.maintenance) propCards.maintenance.href = 'maintenance-cost.html'              + (enc ? '?property=' + enc : '');
+
+  if (!currentProperty) {
+    resetQuickPeek();
+    resetSnapshot();
+    if (trendMode === 'portfolio') loadTrend12Months(null);
+    else { if (trendChart) { trendChart.destroy(); trendChart = null; } setText('trendMeta', 'Select a property to load the trend.'); }
+    return;
+  }
+
+  /* Update URL */
+  try {
+    var url = new URL(location.href);
+    url.searchParams.set('property', currentProperty);
+    history.replaceState({}, '', url);
+  } catch(e) {}
+
+  setText('qp-property-name', currentProperty);
+  loadReportsQuickPeek();
+}
+
+/* ============================================================
+   QUICK-PEEK RESET / LOAD
+============================================================ */
+function resetQuickPeek() {
+  setText('qp-property-name', 'No property selected');
+  setText('qp-property-address', '—');
+  setText('qp-tenant', '—');
+  setText('qp-lease-dates', '—');
+  var ls = $('qp-lease-status'); if (ls) ls.style.display = 'none';
+  setText('qp-month-paid', 'Collected: —');
+  setText('qp-last-payment', 'Last payment: —');
+  var mb = $('qp-month-balance'); if (mb) mb.style.display = 'none';
+}
+function resetSnapshot() {
+  setText('snap-fixed', '$—'); setText('snap-fixed-breakdown', 'PI / Tax / Ins / HOA / PMI');
+  setText('snap-expenses', '$—'); setText('snap-expenses-meta', 'From Expense Tracking');
+  setText('snap-net', '$—'); setText('snap-net-meta', 'Rent − Expenses − Fixed');
+  setText('snap-invested', '$—'); setText('snap-invested-meta', 'Down + Closing + Rehab');
+  setText('snap-coc', '—%'); setText('snap-coc-meta', 'Annualized from this month');
+  setText('snap-caprate', '—%'); setText('snap-caprate-meta', 'Annualized / Purchase Price');
+}
+
+async function loadReportsQuickPeek() {
+  if (!currentProperty) return;
+  resetSnapshot();
+
+  /* Load property row + lease + rent_log + expenses all in parallel */
+  var today = new Date();
+  var firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
+
+  var propQ = safeSelect('properties', '*', function (q) {
+    if (activeCompanyId) q = q.eq('company_id', activeCompanyId);
+    return q;
+  });
+  var leaseQ = safeSelect('leases', '*', function (q) {
+    if (activeCompanyId) q = q.eq('company_id', activeCompanyId);
+    return q;
+  });
+  var rentQ = sb.from('rent_log').select('amount, date_paid')
+    .eq('property_name', currentProperty).gte('date_paid', firstOfMonth);
+  if (activeCompanyId) rentQ = rentQ.eq('company_id', activeCompanyId);
+  var expQ = sb.from('expenses').select('amount, date_paid')
+    .eq('property_name', currentProperty).gte('date_paid', firstOfMonth);
+  if (activeCompanyId) expQ = expQ.eq('company_id', activeCompanyId);
+
+  try {
+    var results = await Promise.all([propQ, leaseQ, rentQ, expQ]);
+    var propRes = results[0], leaseRes = results[1], rentRes = results[2], expRes = results[3];
+
+    /* ── Property snapshot ── */
+    var propRow = (propRes.data || []).find(function (p) { return p.name === currentProperty; });
+    if (propRow) {
+      setText('qp-property-address', propRow.address || '—');
+      var mortgagePI  = Number(propRow.mortgage_pi || 0);
+      var taxMonthly  = Number(propRow.tax_monthly || 0);
+      var insMonthly  = Number(propRow.insurance_monthly || 0);
+      var hoaMonthly  = Number(propRow.hoa_monthly || 0);
+      var pmiMonthly  = Number(propRow.pmi_monthly || 0);
+      var fixedMonthly = mortgagePI + taxMonthly + insMonthly + hoaMonthly + pmiMonthly;
+      var cashInvested = Number(propRow.down_payment || 0) + Number(propRow.closing_costs || 0) + Number(propRow.rehab_cost || 0);
+      var purchasePrice = Number(propRow.purchase_price || 0);
+
+      setText('snap-fixed', money(fixedMonthly));
+      setText('snap-fixed-breakdown', 'PI ' + money(mortgagePI) + ' · Tax ' + money(taxMonthly) + ' · Ins ' + money(insMonthly) + ' · HOA ' + money(hoaMonthly) + ' · PMI ' + money(pmiMonthly));
+      setText('snap-invested', cashInvested > 0 ? money(cashInvested) : '$0');
+      window.__rg_propSnapshot = { fixedMonthly: fixedMonthly, cashInvested: cashInvested, purchasePrice: purchasePrice };
+    } else {
+      window.__rg_propSnapshot = { fixedMonthly: 0, cashInvested: 0, purchasePrice: 0 };
+    }
+
+    /* ── Lease ── */
+    var lease = (leaseRes.data || []).filter(function (l) { return l.property_name === currentProperty; })[0] || null;
+    var monthlyRent = null;
+    if (lease) {
+      setText('qp-tenant', lease.tenant_name || 'No tenant');
+      var s = lease.lease_start || lease.start_date, e2 = lease.lease_end || lease.end_date;
+      setText('qp-lease-dates', (s || e2) ? (s || '?') + ' → ' + (e2 || '?') : '—');
+      monthlyRent = Number(lease.rent_amount || lease.monthly_rent || lease.rent || 0) || null;
+      var lsEl = $('qp-lease-status');
+      if (lsEl) {
+        var st = lease.status || '';
+        if (!st && (s || e2)) {
+          var todayStr = new Date().toISOString().split('T')[0];
+          st = e2 && e2 < todayStr ? 'Expired' : (s && s > todayStr ? 'Upcoming' : 'Active');
+        }
+        if (st) { lsEl.textContent = st; lsEl.style.display = 'inline-flex'; }
+      }
+    } else {
+      setText('qp-tenant', 'No active lease');
+      setText('qp-lease-dates', '—');
+    }
+
+    /* ── Rent this month ── */
+    var totalThisMonth = 0, latestPayDate = null;
+    (rentRes.data || []).forEach(function (p) {
+      var amt = Number(p.amount || 0);
+      totalThisMonth += amt;
+      if (p.date_paid) { var t = Date.parse(p.date_paid); if (!isNaN(t) && (!latestPayDate || t > latestPayDate)) latestPayDate = t; }
+    });
+    setText('qp-month-paid', 'Collected: ' + money(totalThisMonth));
+    setText('qp-last-payment', latestPayDate ? 'Last payment: ' + new Date(latestPayDate).toLocaleDateString() : 'Last payment: none this month');
+
+    if (monthlyRent !== null) {
+      var balance = monthlyRent - totalThisMonth;
+      var mbEl = $('qp-month-balance');
+      if (mbEl) {
+        mbEl.style.display = 'inline-flex';
+        mbEl.textContent = balance > 0 ? 'Remaining: ' + money(balance) : (balance < 0 ? 'Overpaid: ' + money(Math.abs(balance)) : 'Paid in full');
+      }
+    }
+
+    /* ── Expenses this month ── */
+    var expTotal = (expRes.data || []).reduce(function (s, r) { return s + Number(r.amount || 0); }, 0);
+    var snap = window.__rg_propSnapshot || { fixedMonthly: 0, cashInvested: 0, purchasePrice: 0 };
+    var netThisMonth = totalThisMonth - expTotal - snap.fixedMonthly;
+
+    setText('snap-expenses', money(expTotal));
+    setText('snap-expenses-meta', (expRes.data || []).length ? (expRes.data.length + ' expense item(s) this month') : 'No expenses logged this month');
+    setText('snap-net', (netThisMonth >= 0 ? '+' : '') + money(netThisMonth));
+    setText('snap-net-meta', 'Rent ' + money(totalThisMonth) + ' − Exp ' + money(expTotal) + ' − Fixed ' + money(snap.fixedMonthly));
+
+    var annualNet = netThisMonth * 12;
+    if (snap.cashInvested > 0) { setText('snap-coc', (annualNet / snap.cashInvested * 100).toFixed(1) + '%'); } else { setText('snap-coc', '—%'); }
+    if (snap.purchasePrice > 0) { setText('snap-caprate', (annualNet / snap.purchasePrice * 100).toFixed(1) + '%'); } else { setText('snap-caprate', '—%'); }
+
+    /* Update net card colour */
+    var netEl = $('snap-net');
+    if (netEl) { netEl.className = 'snap-value ' + (netThisMonth >= 0 ? 'positive' : 'negative'); }
+
+    /* Load trend chart */
+    loadTrend12Months(currentProperty).catch(function (e) { console.error('Trend error:', e); });
+
+  } catch(e) { console.error('Quick peek error:', e); }
+}
+
+/* ============================================================
+   12-MONTH TREND CHART
+============================================================ */
+var trendChart = null;
+var trendMode  = 'property';
+var trendMetaEl = $('trendMeta');
+
+function setTrendMode(mode) {
+  trendMode = mode;
+  var bp = $('trendModeProperty'), bk = $('trendModePortfolio');
+  if (bp) { bp.classList.toggle('active', mode === 'property'); bp.setAttribute('aria-selected', mode === 'property' ? 'true' : 'false'); }
+  if (bk) { bk.classList.toggle('active', mode === 'portfolio'); bk.setAttribute('aria-selected', mode === 'portfolio' ? 'true' : 'false'); }
+  loadTrend12Months(window.__rg_currentProperty).catch(function (e) { console.error('Trend toggle error:', e); });
+}
+
+var tp = $('trendModeProperty'), tk = $('trendModePortfolio');
+if (tp) tp.addEventListener('click', function () { setTrendMode('property'); });
+if (tk) tk.addEventListener('click', function () { setTrendMode('portfolio'); });
+
+function last12Keys() {
+  var keys = [], now = new Date();
+  var start = new Date(now.getFullYear(), now.getMonth() - 11, 1);
+  for (var i = 0; i < 12; i++) {
+    var d = new Date(start.getFullYear(), start.getMonth() + i, 1);
+    keys.push(d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'));
+  }
+  return keys;
+}
+function monthLabel(key) {
+  var p = key.split('-');
+  return new Date(Number(p[0]), Number(p[1]) - 1, 1).toLocaleString(undefined, { month: 'short', year: '2-digit' });
+}
+function monthKey(dateStr) {
+  if (!dateStr) return null;
+  var d = new Date(dateStr);
+  if (isNaN(d)) return null;
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+}
+
+async function loadTrend12Months(propertyName) {
+  var isPortfolio = (trendMode === 'portfolio');
+  if (!isPortfolio && !propertyName) return Promise.resolve();
+
+  var keys = last12Keys();
+  var labels = keys.map(monthLabel);
+  var now = new Date();
+  var startStr = new Date(now.getFullYear(), now.getMonth() - 11, 1).toISOString().split('T')[0];
+  var endStr   = new Date(now.getFullYear(), now.getMonth() + 1,  1).toISOString().split('T')[0];
+
+  var rentByMonth = {}, expByMonth = {};
+  keys.forEach(function (k) { rentByMonth[k] = 0; expByMonth[k] = 0; });
+
+  var rentQ = sb.from('rent_log').select('amount, date_paid').gte('date_paid', startStr).lt('date_paid', endStr);
+  if (activeCompanyId)   rentQ = rentQ.eq('company_id', activeCompanyId);
+  if (!isPortfolio && propertyName) rentQ = rentQ.eq('property_name', propertyName);
+
+  var expQ = sb.from('expenses').select('amount, date_paid').gte('date_paid', startStr).lt('date_paid', endStr);
+  if (activeCompanyId)  expQ = expQ.eq('company_id', activeCompanyId);
+  if (!isPortfolio && propertyName) expQ = expQ.eq('property_name', propertyName);
+
+  var fixedQ = isPortfolio
+    ? safeSelect('properties', 'mortgage_pi, tax_monthly, insurance_monthly, hoa_monthly, pmi_monthly', function (q) {
+        if (activeCompanyId) q = q.eq('company_id', activeCompanyId);
+        return q;
+      })
+    : Promise.resolve({ data: null });
+
+  var results = await Promise.all([rentQ, expQ, fixedQ]);
+    var rentRes = results[0], expRes = results[1], fixedRes = results[2];
+
+    (rentRes.data || []).forEach(function (r) {
+      var k = monthKey(r.date_paid); if (k && rentByMonth[k] !== undefined) rentByMonth[k] += Number(r.amount || 0);
+    });
+    (expRes.data || []).forEach(function (r) {
+      var k = monthKey(r.date_paid); if (k && expByMonth[k] !== undefined) expByMonth[k] += Number(r.amount || 0);
+    });
+
+    var fixedMonthly = 0;
+    if (isPortfolio && fixedRes.data) {
+      fixedRes.data.forEach(function (p) {
+        fixedMonthly += Number(p.mortgage_pi || 0) + Number(p.tax_monthly || 0) + Number(p.insurance_monthly || 0) + Number(p.hoa_monthly || 0) + Number(p.pmi_monthly || 0);
+      });
+    } else {
+      fixedMonthly = Number((window.__rg_propSnapshot || {}).fixedMonthly || 0);
+    }
+
+    var rent     = keys.map(function (k) { return rentByMonth[k]; });
+    var expenses = keys.map(function (k) { return expByMonth[k]; });
+    var fixed    = keys.map(function () { return fixedMonthly; });
+    var net      = keys.map(function (_, i) { return rent[i] - expenses[i] - fixed[i]; });
+
+    if (trendMetaEl) trendMetaEl.textContent = (isPortfolio ? 'Portfolio (All Properties)' : propertyName) + ' — ' + labels[0] + ' → ' + labels[labels.length - 1];
+    renderTrendChart(labels, rent, expenses, fixed, net);
+
+}
+
+function renderTrendChart(labels, rent, expenses, fixed, net) {
+  var ctx = $('trendChart'); if (!ctx) return;
+  var datasets = [
+    { label: 'Rent Collected', data: rent, borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,.08)', tension: 0.3, borderWidth: 2, pointRadius: 3, fill: true },
+    { label: 'Variable Expenses', data: expenses, borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,.06)', tension: 0.3, borderWidth: 2, pointRadius: 3, fill: true },
+    { label: 'Fixed Costs', data: fixed, borderColor: '#f59e0b', backgroundColor: 'rgba(245,158,11,.05)', tension: 0, borderWidth: 1.5, borderDash: [5,4], pointRadius: 2, fill: false },
+    { label: 'Net Cash Flow', data: net, borderColor: '#2d8cf0', backgroundColor: 'rgba(45,140,240,.07)', tension: 0.3, borderWidth: 2.5, pointRadius: 3, fill: false }
+  ];
+  var maxVal = Math.max.apply(null, rent.concat(expenses).concat(fixed).concat([0]).filter(function(v){return isFinite(v);}));
+  var step = maxVal <= 500 ? 50 : maxVal <= 2000 ? 100 : maxVal <= 10000 ? 500 : 1000;
+  var niceMax = Math.ceil((maxVal * 1.12) / step) * step || step;
+
+  var opts = {
+    responsive: true, maintainAspectRatio: false,
+    animation: { duration: 500 },
+    interaction: { mode: 'index', intersect: false },
+    scales: {
+      y: {
+        max: niceMax,
+        ticks: { maxTicksLimit: 6, callback: function (v) { return '$' + Number(v).toLocaleString(); }, color: '#94a3b8', font: { family: "'DM Mono', monospace", size: 11 } },
+        grid: { color: 'rgba(226,232,240,.6)', drawBorder: false }
+      },
+      x: { grid: { display: false }, ticks: { color: '#94a3b8', font: { family: "'DM Sans', sans-serif", size: 11 } } }
+    },
+    plugins: {
+      legend: { position: 'top', labels: { font: { family: "'DM Sans', sans-serif", size: 12 }, padding: 16, usePointStyle: true, pointStyleWidth: 8 } },
+      tooltip: {
+        backgroundColor: 'rgba(12,30,58,.9)',
+        titleFont: { family: "'DM Sans', sans-serif" },
+        bodyFont:  { family: "'DM Mono', monospace" },
+        callbacks: { label: function (ctx) { return ' ' + ctx.dataset.label + ': $' + Number(ctx.parsed.y || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }); } }
+      }
+    }
+  };
+
+  if (trendChart) { trendChart.data.labels = labels; trendChart.data.datasets = datasets; trendChart.options = opts; trendChart.update(); return; }
+  trendChart = new Chart(ctx, { type: 'line', data: { labels: labels, datasets: datasets }, options: opts });
+}
+
+
+/* ============================================================
+   INIT
+============================================================ */
+document.getElementById('footerYear').textContent = new Date().getFullYear();
+
+
+/* ============================================================
+   CSV EXPORT
+   exportTableCSV(type) — downloads the currently-displayed
+   table as a .csv file. Uses _rentRows / _expRows / _maintRows
+   which are populated by each loadXxxReport() function.
+============================================================ */
+var _rentRows  = [];   // set by loadRentReport
+var _expRows   = [];   // set by loadExpReport
+var _maintRows = [];   // set by loadMaintReport
+
+function exportTableCSV(type) {
+  var rows, filename, headers;
+
+  if (type === 'rent') {
+    headers  = ['Date Paid', 'Property', 'Tenant', 'Amount', 'Status', 'Notes'];
+    rows     = _rentRows.map(function(p) {
+      var amt = Number(p.amount || 0);
+      var exp = _leaseMapForExport[p.property_name] || 0;
+      var status = p.status || (amt >= exp && exp > 0 ? 'Paid' : amt > 0 ? 'Partial' : 'Pending');
+      return [p.date_paid, p.property_name, p.tenant_name || p.payer_name, amt.toFixed(2), status, p.notes || ''];
+    });
+    filename = 'rent-report-' + _csvDateStamp() + '.csv';
+
+  } else if (type === 'exp') {
+    headers  = ['Date', 'Property', 'Category', 'Description', 'Amount'];
+    rows     = _expRows.map(function(e) {
+      return [
+        e.date_paid || e.date,
+        e.property_name,
+        e.category || e.expense_category || 'Other',
+        e.description || e.notes || '',
+        Number(e.amount || 0).toFixed(2)
+      ];
+    });
+    filename = 'expense-report-' + _csvDateStamp() + '.csv';
+
+  } else if (type === 'maint') {
+    headers  = ['Date', 'Property', 'Issue', 'Status', 'Priority', 'Cost'];
+    rows     = _maintRows.map(function(r) {
+      var d = r.created_at ? r.created_at.split('T')[0] : (r.date_submitted || r.date || '');
+      var cost = Number(r.cost || r.repair_cost || r.amount || 0);
+      return [d, r.name || r.property_name, r.issue_description || r.issue || '', r.status || '', r.priority || r.urgency || '', cost > 0 ? cost.toFixed(2) : ''];
+    });
+    filename = 'maintenance-report-' + _csvDateStamp() + '.csv';
+
+  } else {
+    return;
+  }
+
+  if (!rows.length) {
+    alert('No data to export for this period.');
+    return;
+  }
+
+  // Build CSV string
+  var csvLines = [headers.map(_csvCell).join(',')];
+  rows.forEach(function(row) {
+    csvLines.push(row.map(function(v){ return _csvCell(v == null ? '' : String(v)); }).join(','));
+  });
+  var csvStr = csvLines.join('\r\n');
+
+  // Trigger download
+  var blob = new Blob([csvStr], { type: 'text/csv;charset=utf-8;' });
+  var url  = URL.createObjectURL(blob);
+  var a    = document.createElement('a');
+  a.href     = url;
+  a.download = filename;
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(function(){ document.body.removeChild(a); URL.revokeObjectURL(url); }, 500);
+}
+
+function _csvCell(v) {
+  var s = String(v == null ? '' : v);
+  // Wrap in quotes if it contains comma, quote, or newline
+  if (s.indexOf(',') >= 0 || s.indexOf('"') >= 0 || s.indexOf('\n') >= 0) {
+    return '"' + s.replace(/"/g, '""') + '"';
+  }
+  return s;
+}
+
+function _csvDateStamp() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+// Lease map cache used by rent export (populated by loadRentReport)
+var _leaseMapForExport = {};
+/* ============================================================ */
+
+document.addEventListener('DOMContentLoaded', async function () {
+  setProgress(5, 'Connecting to Rental Genie…', 0);
+
+  // ── Wait for body bootstrap to initialise client ──
+  await waitForClientReady();
+  sb = window.sb;
+
+  setProgress(25, 'Connected — verifying your session…', 0);
+
+  try {
+    var user = await setupAuth();
+    setProgress(40, 'Authenticating…', 1);
+    if (!user) { hideOverlay(); return; }
+
+    setProgress(65, 'Loading reports…', 2);
+    activeCompanyId = resolveActiveCompanyId();
+
+    await loadCompanyDropdown();
+    if (!activeCompanyId) { hideOverlay(); return; }
+    await loadPropertyDropdown();
+
+    setProgress(100, 'Ready!', 3);
+    setTimeout(hideOverlay, 320);
+  } catch(e) {
+    console.error('Init error:', e);
+    hideOverlay();
+  }
+});
+
+/* ============================================================
+   REPORT SECTION HELPERS
+============================================================ */
+var EXP_COLORS = ['#2d8cf0','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#f97316','#64748b','#ec4899','#84cc16'];
+var expCatChart = null;
+
+/* Active period (months) per section */
+var rentPeriodMonths = 1;
+var expPeriodMonths  = 1;
+var maintPeriodMonths = 1;
+
+function periodStart(months) {
+  var now = new Date();
+  if (months === 1) return new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+  return new Date(now.getFullYear(), now.getMonth() - months + 1, 1).toISOString().split('T')[0];
+}
+
+function wirePeriodTabs(tabsId, onChangeFn) {
+  var wrap = document.getElementById(tabsId);
+  if (!wrap || wrap.dataset.wired) return;
+  wrap.dataset.wired = '1';
+  wrap.addEventListener('click', function(e) {
+    var btn = e.target.closest('.period-tab');
+    if (!btn) return;
+    wrap.querySelectorAll('.period-tab').forEach(function(b){ b.classList.remove('active'); });
+    btn.classList.add('active');
+    onChangeFn(Number(btn.dataset.months));
+  });
+}
+
+function fmt(v) { return '$' + Number(v||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function fmtDate(s) { if (!s) return '—'; try { return new Date(s + 'T00:00:00').toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'}); } catch(e){ return s; } }
+
+/* ============================================================
+   RENT REPORT
+============================================================ */
+async function loadRentReport(months) {
+  rentPeriodMonths = months || rentPeriodMonths;
+  if (!currentProperty && trendMode !== 'portfolio') return;
+  var start = periodStart(rentPeriodMonths);
+  var isPortfolio = !currentProperty;
+
+  var meta = document.getElementById('rentReportMeta');
+  if (meta) meta.textContent = 'Loading…';
+
+  /* Parallel: rent_log + leases */
+  var rQ = sb.from('rent_log').select('*').gte('date_paid', start).order('date_paid', {ascending: false});
+  if (activeCompanyId) rQ = rQ.eq('company_id', activeCompanyId);
+  if (!isPortfolio) rQ = rQ.eq('property_name', currentProperty);
+
+  var lQ = sb.from('leases').select('property_name, tenant_name, rent_amount, monthly_rent, rent, status');
+  if (activeCompanyId) lQ = lQ.eq('company_id', activeCompanyId);
+  if (!isPortfolio) lQ = lQ.eq('property_name', currentProperty);
+
+  try {
+    var results = await Promise.all([rQ, lQ]);
+    var payments = results[0].data || [];
+    var leases   = results[1].data || [];
+    _rentRows = payments; // cache for CSV export
+
+    /* Build lease map: property_name → monthly rent */
+    var leaseMap = {};
+    leases.forEach(function(l) {
+      leaseMap[l.property_name] = Number(l.rent_amount || l.monthly_rent || l.rent || 0);
+    });
+    _leaseMapForExport = leaseMap; // cache for CSV export
+
+    /* Total expected = months × monthly rent (per property in range) */
+    var totalExpected = 0, totalCollected = 0;
+    Object.keys(leaseMap).forEach(function(p) { totalExpected += leaseMap[p] * rentPeriodMonths; });
+    payments.forEach(function(p) { totalCollected += Number(p.amount || 0); });
+    var outstanding = Math.max(0, totalExpected - totalCollected);
+    var rate = totalExpected > 0 ? Math.round(totalCollected / totalExpected * 100) : 0;
+
+    /* KPIs */
+    setText('rpt-rent-expected',  totalExpected > 0 ? fmt(totalExpected) : '—');
+    setText('rpt-rent-collected', fmt(totalCollected));
+    setText('rpt-rent-balance',   outstanding > 0 ? fmt(outstanding) : '$0.00');
+    setText('rpt-rent-rate',      totalExpected > 0 ? rate + '%' : '—');
+
+    var rateEl = document.getElementById('rpt-rent-rate');
+    if (rateEl) rateEl.style.color = rate >= 100 ? 'var(--success)' : rate >= 80 ? 'var(--warn-text)' : 'var(--danger)';
+
+    /* Table */
+    var tbody = document.getElementById('rentReportBody');
+    var tfoot = document.getElementById('rentReportTotals');
+    if (!tbody) return;
+
+    if (!payments.length) {
+      tbody.innerHTML = '<tr><td colspan="6" class="rpt-empty">No payments recorded for this period.</td></tr>';
+      if (tfoot) tfoot.style.display = 'none';
+    } else {
+      tbody.innerHTML = payments.map(function(p) {
+        var amt = Number(p.amount || 0);
+        var exp = leaseMap[p.property_name] || 0;
+        var status = p.status || (amt >= exp && exp > 0 ? 'Paid' : amt > 0 ? 'Partial' : 'Pending');
+        var badgeCls = status === 'Paid' || status === 'paid' ? 'badge-green' : status === 'Partial' || status === 'partial' ? 'badge-yellow' : 'badge-red';
+        return '<tr>' +
+          '<td>' + fmtDate(p.date_paid) + '</td>' +
+          '<td>' + (p.property_name || '—') + '</td>' +
+          '<td>' + (p.tenant_name || p.payer_name || '—') + '</td>' +
+          '<td class="text-right mono">' + fmt(amt) + '</td>' +
+          '<td class="text-center"><span class="badge ' + badgeCls + '">' + status + '</span></td>' +
+          '<td style="color:var(--muted);font-size:.8rem">' + (p.notes || '') + '</td>' +
+        '</tr>';
+      }).join('');
+      if (tfoot) {
+        tfoot.style.display = '';
+        setText('rpt-rent-total-cell', fmt(totalCollected));
+      }
+    }
+
+    if (meta) meta.textContent = (isPortfolio ? 'All properties' : currentProperty) + ' · ' + (rentPeriodMonths === 1 ? 'This month' : 'Last ' + rentPeriodMonths + ' months');
+  } catch(e) { console.error('Rent report error:', e); }
+}
+
+/* ============================================================
+   EXPENSE REPORT
+============================================================ */
+async function loadExpReport(months) {
+  expPeriodMonths = months || expPeriodMonths;
+  if (!currentProperty && trendMode !== 'portfolio') return;
+  var start = periodStart(expPeriodMonths);
+  var isPortfolio = !currentProperty;
+
+  var meta = document.getElementById('expReportMeta');
+  if (meta) meta.textContent = 'Loading…';
+
+  var eQ = sb.from('expenses').select('*').gte('date_paid', start).order('date_paid', {ascending: false});
+  if (activeCompanyId) eQ = eQ.eq('company_id', activeCompanyId);
+  if (!isPortfolio) eQ = eQ.eq('property_name', currentProperty);
+
+  try {
+    var expenses = (await eQ).data || [];
+    _expRows = expenses; // cache for CSV export
+    var total = expenses.reduce(function(s,r){ return s + Number(r.amount||0); }, 0);
+
+    /* Category aggregation */
+    var catMap = {};
+    expenses.forEach(function(e) {
+      var cat = e.category || e.expense_category || 'Other';
+      catMap[cat] = (catMap[cat] || 0) + Number(e.amount || 0);
+    });
+    var cats = Object.keys(catMap).sort(function(a,b){ return catMap[b] - catMap[a]; });
+
+    /* Donut chart */
+    var ctx = document.getElementById('expCatChart');
+    if (ctx) {
+      var chartData = cats.map(function(c){ return catMap[c]; });
+      var chartColors = cats.map(function(_,i){ return EXP_COLORS[i % EXP_COLORS.length]; });
+      if (expCatChart) {
+        expCatChart.data.labels = cats;
+        expCatChart.data.datasets[0].data = chartData;
+        expCatChart.data.datasets[0].backgroundColor = chartColors;
+        expCatChart.update();
+      } else if (typeof Chart !== 'undefined') {
+        expCatChart = new Chart(ctx, {
+          type: 'doughnut',
+          data: { labels: cats, datasets: [{ data: chartData, backgroundColor: chartColors, borderWidth: 2, borderColor: '#fff' }] },
+          options: {
+            responsive: true, maintainAspectRatio: true, cutout: '65%',
+            plugins: {
+              legend: { display: false },
+              tooltip: { callbacks: { label: function(c){ return ' ' + c.label + ': ' + fmt(c.parsed); } } }
+            }
+          }
+        });
+      }
+    }
+
+    /* Category list */
+    var list = document.getElementById('expCatList');
+    if (list) {
+      if (!cats.length) {
+        list.innerHTML = '<div class="rpt-empty">No expenses for this period.</div>';
+      } else {
+        list.innerHTML = cats.map(function(c, i) {
+          var pct = total > 0 ? Math.round(catMap[c] / total * 100) : 0;
+          return '<div class="exp-cat-row">' +
+            '<div class="exp-cat-dot" style="background:' + EXP_COLORS[i % EXP_COLORS.length] + '"></div>' +
+            '<div class="exp-cat-name">' + c + '</div>' +
+            '<div class="exp-cat-amount">' + fmt(catMap[c]) + '</div>' +
+            '<div class="exp-cat-pct">' + pct + '%</div>' +
+          '</div>';
+        }).join('');
+      }
+    }
+
+    /* Table */
+    var tbody = document.getElementById('expReportBody');
+    var tfoot = document.getElementById('expReportTotals');
+    if (!tbody) return;
+    if (!expenses.length) {
+      tbody.innerHTML = '<tr><td colspan="5" class="rpt-empty">No expenses recorded for this period.</td></tr>';
+      if (tfoot) tfoot.style.display = 'none';
+    } else {
+      tbody.innerHTML = expenses.map(function(e) {
+        return '<tr>' +
+          '<td>' + fmtDate(e.date_paid || e.date) + '</td>' +
+          '<td>' + (e.property_name || '—') + '</td>' +
+          '<td><span class="badge badge-blue">' + (e.category || e.expense_category || 'Other') + '</span></td>' +
+          '<td style="color:var(--muted);font-size:.82rem">' + (e.description || e.notes || '—') + '</td>' +
+          '<td class="text-right mono">' + fmt(e.amount) + '</td>' +
+        '</tr>';
+      }).join('');
+      if (tfoot) {
+        tfoot.style.display = '';
+        setText('rpt-exp-total-cell', fmt(total));
+      }
+    }
+
+    if (meta) meta.textContent = (isPortfolio ? 'All properties' : currentProperty) + ' · ' + (expPeriodMonths === 1 ? 'This month' : 'Last ' + expPeriodMonths + ' months') + ' · ' + fmt(total) + ' total';
+  } catch(e) { console.error('Expense report error:', e); }
+}
+
+/* ============================================================
+   MAINTENANCE REPORT
+============================================================ */
+async function loadMaintReport(months) {
+  maintPeriodMonths = months || maintPeriodMonths;
+  if (!currentProperty && trendMode !== 'portfolio') return;
+  var start = periodStart(maintPeriodMonths);
+  var isPortfolio = !currentProperty;
+
+  var meta = document.getElementById('maintReportMeta');
+  if (meta) meta.textContent = 'Loading…';
+
+  /* Try maintenance_requests table with created_at or date_submitted */
+  var mQ = sb.from('maintenance_requests').select('*').order('created_at', {ascending: false});
+  if (activeCompanyId) mQ = mQ.eq('company_id', activeCompanyId);
+  if (!isPortfolio) mQ = mQ.eq('property_name', currentProperty);
+
+  try {
+    var items = (await mQ).data || [];
+    /* Filter by period locally since field name may vary */
+    _maintRows = []; // reset before filter
+    items = items.filter(function(r) {
+      var d = r.created_at || r.date_submitted || r.date || '';
+      return !d || d >= start;
+    });
+
+    _maintRows = items; // cache for CSV export
+    var totalCost = items.reduce(function(s,r){ return s + Number(r.cost || r.repair_cost || r.amount || 0); }, 0);
+    var openCount = items.filter(function(r){
+      var st = (r.status || '').toLowerCase();
+      return st === 'open' || st === 'in progress' || st === 'pending' || st === '';
+    }).length;
+
+    setText('rpt-maint-total', items.length || '0');
+    setText('rpt-maint-open',  openCount || '0');
+    setText('rpt-maint-cost',  totalCost > 0 ? fmt(totalCost) : '$0.00');
+
+    /* Color open count */
+    var openEl = document.getElementById('rpt-maint-open');
+    if (openEl) openEl.style.color = openCount > 0 ? 'var(--danger)' : 'var(--success)';
+
+    var tbody = document.getElementById('maintReportBody');
+    if (!tbody) return;
+
+    if (!items.length) {
+      tbody.innerHTML = '<tr><td colspan="6" class="rpt-empty">No maintenance records for this period.</td></tr>';
+    } else {
+      tbody.innerHTML = items.map(function(r) {
+        var st = r.status || 'Open';
+        var stCls = st.toLowerCase() === 'completed' || st.toLowerCase() === 'resolved' ? 'badge-green'
+                  : st.toLowerCase() === 'in progress' ? 'badge-yellow'
+                  : 'badge-red';
+        var pri = r.priority || r.urgency || '';
+        var priCls = pri.toLowerCase() === 'high' || pri.toLowerCase() === 'urgent' ? 'badge-red'
+                   : pri.toLowerCase() === 'medium' ? 'badge-yellow' : 'badge-muted';
+        var cost = Number(r.cost || r.repair_cost || r.amount || 0);
+        return '<tr>' +
+          '<td>' + fmtDate(r.created_at ? r.created_at.split('T')[0] : (r.date_submitted || r.date || '')) + '</td>' +
+          '<td>' + (r.property_name || '—') + '</td>' +
+          '<td>' + (r.title || r.issue || r.description || '—') + '</td>' +
+          '<td class="text-center">' + (pri ? '<span class="badge ' + priCls + '">' + pri + '</span>' : '—') + '</td>' +
+          '<td class="text-center"><span class="badge ' + stCls + '">' + st + '</span></td>' +
+          '<td class="text-right mono">' + (cost > 0 ? fmt(cost) : '—') + '</td>' +
+        '</tr>';
+      }).join('');
+    }
+
+    if (meta) meta.textContent = (isPortfolio ? 'All properties' : currentProperty) + ' · ' + (maintPeriodMonths === 1 ? 'This month' : 'Last ' + maintPeriodMonths + ' months') + ' · ' + items.length + ' record(s)';
+  } catch(e) { console.error('Maintenance report error:', e); }
+}
+
+/* ============================================================
+   WIRE PERIOD TABS + LOAD ALL THREE ON PROPERTY CHANGE
+============================================================ */
+document.addEventListener('DOMContentLoaded', function() {
+  wirePeriodTabs('rentPeriodTabs',  function(m){ loadRentReport(m); });
+  wirePeriodTabs('expPeriodTabs',   function(m){ loadExpReport(m); });
+  wirePeriodTabs('maintPeriodTabs', function(m){ loadMaintReport(m); });
+});
+
+/* Extend applyCurrentProperty to also trigger report loads */
+var _origApply = applyCurrentProperty;
+applyCurrentProperty = function() {
+  _origApply();
+  if (currentProperty) {
+    loadRentReport(rentPeriodMonths);
+    loadExpReport(expPeriodMonths);
+    loadMaintReport(maintPeriodMonths);
+  }
+};
+
+</script>
+</body>
+</html>

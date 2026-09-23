@@ -1,0 +1,1185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🏦 Financing – Rental Genie</title>
+
+
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono&display=swap" rel="stylesheet">
+<style>
+
+    /* -------------------------------------------------------------
+       GLOBAL
+    ------------------------------------------------------------- */
+    body {
+      margin: 0;
+      background: #f8f9fa;
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto;
+      color: #111827;
+    }
+    .page {
+      max-width: 1440px;
+      margin: 20px auto;
+      padding: 0 16px 32px;
+    }
+
+    /* -------------------------------------------------------------
+       HEADER — match Add-Expenses / Rent Center style
+    ------------------------------------------------------------- */
+    .header-container {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      width: 100%;
+      margin-left: calc(50% - 50vw);
+      margin-right: calc(50% - 50vw);
+      background: linear-gradient(135deg, #0c1e3a, #1a3a6b, #1e5799);
+      border-bottom: 1px solid rgba(255,255,255,0.25);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    .navbar {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 14px 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .brand-area { display: flex; align-items: center; gap: 10px; }
+    .brand-logo {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, #f0faff, #bae6fd 40%, #0ea5e9 75%);
+      box-shadow: 0px 0px 0px 2px rgba(14,165,233,0.25),
+                  0px 8px 16px rgba(0,0,0,0.15);
+    }
+    .brand-title {
+      font-size: 1.45rem;
+      font-weight: 800;
+      color: #e2e8f0;
+      letter-spacing: 0.3px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.12);
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-wrap: wrap;
+      font-size: 14px;
+    }
+    .nav-links a {
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 600;
+      color: #cbd5e1;
+      padding: 3px 7px;
+      border-radius: 999px;
+      transition: .2s;
+    }
+    .nav-links a:hover { background: rgba(255,255,255,0.75); }
+    .nav-active {
+      background: rgba(255,255,255,0.18) !important;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+    }
+
+    #nav-login {
+      font-weight: 700;
+      padding: 7px 14px;
+      background: white;
+      border-radius: 999px;
+      border: 1px solid #cbd5e1;
+    }
+
+    .user-menu-dropdown.active { display: block; }
+    .user-menu-dropdown a,
+    .user-menu-dropdown button {
+      display: block;
+      width: 100%;
+      padding: 10px 14px;
+      background: none;
+      border: none;
+      text-align: left;
+      cursor: pointer;
+      font-size: .95rem;
+      color: #111827;
+      text-decoration: none;
+    }
+    .user-menu-dropdown a:hover,
+    .user-menu-dropdown button:hover { background: #f1f5f9; }
+
+    /* Mobile hamburger */
+    .hamburger {
+      display: none;
+      font-size: 1.6rem;
+      background: rgba(255,255,255,0.1);
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.3);
+      cursor: pointer;
+    }
+    @media (max-width: 820px) {
+      .nav-links { display: none; }
+      .hamburger { display: block; }
+    }
+
+    /* Mobile Drawer */
+    .drawer {
+      display: none;
+      position: fixed;
+      top: 76px;
+      left: 12px;
+      right: 12px;
+      background: white;
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+      padding: 12px;
+      z-index: 999;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+    }
+    .drawer a {
+      display: block;
+      padding: 12px;
+      color: #0f172a;
+      font-weight: 600;
+      text-decoration: none;
+      border-bottom: 1px solid #e2e8f0;
+      border-radius: 10px;
+    }
+    .drawer a:hover { background: #f8fafc; }
+    .drawer a:last-child { border-bottom: none; }
+
+    #mobileLogoutContainer {
+      border-top: 1px solid #e2e8f0;
+      margin-top: 10px;
+      padding-top: 10px;
+      display: none;
+    }
+    #mobileLogoutContainer button {
+      width: 100%;
+      border: none;
+      background: none;
+      padding: 12px;
+      text-align: left;
+      font-weight: 700;
+      color: #dc2626;
+      cursor: pointer;
+      border-radius: 10px;
+    }
+    #mobileLogoutContainer button:hover { background: #f8fafc; }
+
+    /* -------------------------------------------------------------
+       PAGE CONTENT — Add Property
+    ------------------------------------------------------------- */
+    h1 {
+      text-align: left;
+      color: #1e3a8a;
+      font-size: 1.6rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+    .page-intro {
+      color: #6b7280;
+      margin-bottom: 16px;
+      font-size: .95rem;
+    }
+
+    .card {
+      max-width: 1440px;
+      margin: 0 auto;
+      background: white;
+      padding: 22px 20px 26px;
+      border-radius: 14px;
+      box-shadow: 0 4px 10px rgba(15,23,42,0.08);
+      border: 1px solid #e5e7eb;
+    }
+
+    .section-title {
+      font-weight: 700;
+      margin-top: 6px;
+      margin-bottom: 10px;
+      font-size: 1rem;
+      color: #111827;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+
+    .section-action {
+      margin-left: auto;
+    }
+.form-grid {
+      display: grid;
+      grid-template-columns: repeat(2,minmax(0,1fr));
+      gap: 14px 16px;
+    }
+    .form-field {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 0.9rem;
+    }
+    .form-field label {
+      font-weight: 600;
+      color: #374151;
+    }
+
+    input, select, textarea {
+      box-sizing: border-box;
+      width: 100%;
+      padding: 8px 10px;
+      font-size: 0.9rem;
+      border-radius: 8px;
+      border: 1px solid #d1d5db;
+      margin-top: 2px;
+      font-family: inherit;
+    }
+    textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
+    .full-width { grid-column: 1 / -1; }
+
+    .form-actions {
+      margin-top: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    .primary-btn {
+      background-color: #1a3c5e;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 0.95rem;
+      border-radius: 999px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 2px 6px rgba(15,23,42,0.25);
+    }
+    .primary-btn:hover { background-color: #16324a; }
+
+    .ghost-btn {
+      background: white;
+      border-radius: 999px;
+      border: 1px solid #d1d5db;
+      padding: 8px 16px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #374151;
+    }
+    .ghost-btn:hover { background: #f3f4f6; }
+
+    .ghost-btn.small {
+      padding: 8px 10px;
+      font-size: 0.8rem;
+      white-space: nowrap;
+    }
+    .ghost-btn.small:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .back-inline {
+      margin-top: 16px;
+      text-align: left;
+    }
+    .back-inline a {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: #e5e7eb;
+      color: #374151;
+      text-decoration: none;
+      font-size: 0.86rem;
+    }
+    .back-inline a:hover { background: #d1d5db; }
+
+    .inline-input-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .inline-input-row input { flex: 1; }
+
+    /* -------------------------------------------------------------
+       FOOTER — match Add-Expenses / Rent Center style
+    ------------------------------------------------------------- */
+    .site-footer {
+      margin-top: 40px;
+      padding: 30px 20px 20px;
+      background: white;
+      border-top: 1px solid #e5e7eb;
+      font-size: 0.9rem;
+      color: #475569;
+    }
+    .footer-content {
+      max-width: 1440px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 30px;
+      padding-bottom: 20px;
+    }
+    .footer-section h4 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #1e3a8a;
+      margin-top: 0;
+      margin-bottom: 12px;
+    }
+    .footer-section a,
+    .footer-section p {
+      display: block;
+      color: #475569;
+      text-decoration: none;
+      margin-bottom: 8px;
+      transition: color 0.2s;
+    }
+    .footer-section a:hover { color: #0ea5e9; }
+    .footer-bottom {
+      text-align: center;
+      padding-top: 15px;
+      border-top: 1px solid #e5e7eb;
+      margin-top: 15px;
+    }
+    @media (max-width: 600px) {
+      .footer-content { grid-template-columns: 1fr; text-align: center; }
+      .footer-section h4 { margin-top: 20px; }
+    }
+
+
+    /* Page-specific */
+    .subtle {
+      color: #6b7280;
+      font-size: 0.95rem;
+      line-height: 1.35;
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: #f3f4f6;
+      border: 1px solid #e5e7eb;
+      font-weight: 600;
+      color: #111827;
+      font-size: 0.95rem;
+    }
+    .table-wrap {
+      width: 100%;
+      overflow: auto;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      background: #fff;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 720px;
+    }
+    th, td {
+      text-align: left;
+      padding: 10px 12px;
+      border-bottom: 1px solid #f1f5f9;
+      vertical-align: top;
+    }
+    th {
+      background: #f8fafc;
+      font-size: 0.9rem;
+      color: #334155;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+    .row-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .muted {
+      color: #64748b;
+      font-size: 0.9rem;
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2,minmax(0,1fr));
+      gap: 14px 16px;
+    }
+    @media (max-width: 860px) {
+      .grid-2 { grid-template-columns: 1fr; }
+      table { min-width: 840px; }
+    }
+
+.header-container{position:sticky;top:0;z-index:1000;width:100%;background:linear-gradient(135deg,#0c1e3a 0%,#1a3a6b 55%,#1e5799 100%);border-bottom:1px solid rgba(255,255,255,.08);box-shadow:0 2px 20px rgba(12,30,58,.35);}
+.navbar{max-width:1440px;margin:0 auto;padding:13px 22px;display:flex;align-items:center;justify-content:space-between;}
+.brand-area{display:flex;align-items:center;gap:11px;text-decoration:none;}
+.brand-logo{width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.15);box-shadow:0 0 0 1px rgba(255,255,255,.2),0 4px 12px rgba(0,0,0,.2);object-fit:cover;}
+.brand-title{font-size:1.25rem;font-weight:700;color:#fff;letter-spacing:-0.3px;}
+.nav-links{display:flex;gap:2px;align-items:center;}
+.nav-links a{display:inline-flex;align-items:center;gap:5px;padding:6px 10px;font-size:13.5px;font-weight:500;color:rgba(255,255,255,.78);text-decoration:none;border-radius:8px;white-space:nowrap;transition:all .18s;}
+.nav-links a:hover{background:rgba(255,255,255,.12);color:#fff;}
+.nav-active{background:rgba(255,255,255,.16)!important;color:#fff!important;}
+#nav-login{padding:7px 16px;border-radius:999px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);color:#fff;font-weight:600;font-size:13.5px;text-decoration:none;}
+.hamburger{display:none;font-size:1.4rem;padding:7px 12px;border:1px solid rgba(255,255,255,.22);border-radius:8px;background:rgba(255,255,255,.1);cursor:pointer;color:#fff;}
+@media(max-width:860px){.nav-links{display:none;}.hamburger{display:block;}}
+body.auth-ready #nav-login{display:none!important;}body.auth-ready .umd-wrap{display:block!important;}body.auth-guest .umd-wrap{display:none!important;}
+body.auth-ready .nav-bell{display:flex!important;}body.auth-guest .nav-bell{display:none!important;}
+body.auth-ready #mobileLogin{display:none!important;}body.auth-ready #mobileAccountLink{display:flex!important;}body.auth-ready #mobileLogoutContainer{display:block!important;}
+body.auth-guest #mobileLogin{display:block!important;}body.auth-guest #mobileAccountLink{display:none!important;}body.auth-guest #mobileLogoutContainer{display:none!important;}
+.umd-wrap{position:relative;}.umd-toggle{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:5px 12px 5px 5px;cursor:pointer;transition:background .18s;color:#fff;}
+.umd-toggle:hover{background:rgba(255,255,255,.18);}.umd-toggle .umd-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#38bdf8,#1a3a6b);display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:700;color:#fff;flex-shrink:0;}
+.umd-toggle .umd-name{font-size:.8rem;color:#fff;font-weight:600;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}.umd-caret{font-size:.6rem;color:rgba(255,255,255,.7);}
+.umd-dropdown{display:none;position:absolute;right:0;top:calc(100% + 8px);background:#fff;border:1px solid #e2e8f0;border-radius:12px;box-shadow:0 8px 32px rgba(12,30,58,.18);min-width:220px;overflow:hidden;z-index:1100;}
+.umd-dropdown.open{display:block;animation:umdFadeIn .15s ease both;}@keyframes umdFadeIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+.umd-user-row{padding:14px 16px 10px;border-bottom:1px solid #f1f5f9;}.umd-user-name{font-size:.88rem;font-weight:700;color:#0c1e3a;}.umd-user-email{font-size:.75rem;color:#64748b;margin-top:2px;}
+.umd-section{display:flex;flex-direction:column;padding:6px;border-bottom:1px solid #f1f5f9;}.umd-section:last-child{border-bottom:none;}
+.umd-link{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:8px;font-size:.84rem;font-weight:600;color:#0c1e3a;text-decoration:none;background:none;border:none;cursor:pointer;width:100%;font-family:"DM Sans",sans-serif;transition:background .15s;}
+.umd-link:hover{background:#f8faff;}.umd-link.danger{color:#dc2626;}.umd-link.danger:hover{background:#fef2f2;}
+.nav-right-group{display:flex;align-items:center;gap:8px;}
+.nav-bell{display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:999px;flex-shrink:0;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.22);color:#fff;font-size:1rem;text-decoration:none;transition:background .18s;}
+.nav-bell:hover{background:rgba(255,255,255,.18);}
+@media(max-width:860px){.umd-wrap{display:none!important;}.nav-bell{display:none!important;}}
+.drawer{display:none;position:fixed;top:70px;left:12px;right:12px;background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:10px 10px 6px;z-index:1300;box-shadow:0 16px 40px rgba(12,30,58,.18);max-height:calc(100vh - 90px);overflow-y:auto;}
+.drawer-user-row{display:flex!important;align-items:center;gap:10px;padding:10px 12px 12px!important;border-bottom:1px solid #f1f5f9!important;font-weight:700!important;color:#0c1e3a!important;font-size:0.95rem!important;text-decoration:none;}
+.drawer-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#1a3a6b,#1e5799);color:#fff;font-weight:700;font-size:0.75rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;text-transform:uppercase;}
+.drawer-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:8px 0;}
+.drawer-grid a{display:flex;align-items:center;gap:7px;padding:11px 12px;border-bottom:none!important;font-weight:600;text-decoration:none;color:#0c1e3a;font-size:0.88rem;border-radius:10px;background:#f8fafc;border:1px solid #f1f5f9!important;transition:background .12s;}
+.drawer-grid a:hover{background:#eff4ff;color:#1a3a6b;}.drawer-grid a.nav-active{background:linear-gradient(135deg,#eff4ff,#e8f0fe);color:#1a3a6b;border-color:#bfdbfe!important;font-weight:700;}
+.mobile-nav{display:none;position:fixed;left:0;right:0;bottom:0;z-index:1200;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:linear-gradient(135deg,#0c1e3a,#1a3a6b);border-top:1px solid rgba(255,255,255,.08);box-shadow:0 -4px 20px rgba(12,30,58,.28);}
+.mobile-nav-inner{max-width:1440px;margin:0 auto;display:grid;grid-template-columns:repeat(6,1fr);gap:5px;}
+.mnav{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:9px 6px;border-radius:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.07);color:rgba(255,255,255,.55);font-weight:700;font-size:10px;text-decoration:none;text-align:center;}
+.mnav .ico{font-size:22px;line-height:1;}.mnav.active{background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.25);color:#fff;}
+.mobile-pad{display:none;height:82px;}
+@media(max-width:860px){.mobile-nav{display:block;}.mobile-pad{display:block;}main.page{padding-bottom:calc(82px + env(safe-area-inset-bottom))!important;}}
+@media(max-width:600px){.site-footer{display:none!important;}}
+
+.drawer-login{display:flex;align-items:center;gap:8px;padding:11px 12px;font-weight:600;color:#0c1e3a;font-size:0.9rem;border-top:1px solid #f1f5f9;text-decoration:none;margin-top:4px;}
+#mobileLogoutContainer{border-top:1px solid #f1f5f9;margin-top:4px;padding-top:4px;}#mobileLogoutContainer button{width:100%;padding:11px 12px;background:none;border:none;text-align:left;font-weight:700;color:#dc2626;cursor:pointer;font-family:"DM Sans",sans-serif;font-size:0.9rem;border-radius:8px;}#mobileLogoutContainer button:hover{background:#fef2f2;}
+</style>
+</head>
+<body class="auth-guest">
+
+<header class="header-container">
+  <div class="navbar">
+    <a class="brand-area" href="dashboard.html">
+      <img src="images/rg-logo.png" onerror="this.style.display='none'" class="brand-logo" alt="Rental Genie" />
+      <span class="brand-title">Rental Genie</span>
+    </a>
+    <nav class="nav-links" aria-label="Main navigation">
+      <a href="dashboard.html">📊 Dashboard</a>
+      <a href="property-management.html" class="nav-active">🏘️ Properties</a>
+      <a href="lease-rent-center.html">💰 Lease &amp; Rent</a>
+      <a href="expense-tracking.html">💸 Expenses</a>
+      <a href="maintenance-requests.html">🛠 Maintenance</a>
+      <a href="reports-analytics.html">📈 Reports</a>
+    </nav>
+    <div class="nav-right-group">
+      <a class="nav-bell" id="navBell" href="tenant-messages.html" title="Messages" aria-label="Messages">🔔</a>
+      <div class="umd-wrap" id="userMenu">
+        <button class="umd-toggle" id="umdToggle" aria-haspopup="true" aria-expanded="false">
+          <div class="umd-avatar" id="umdAvatar">?</div>
+          <span class="umd-name" id="umdName">User</span>
+          <span class="umd-caret">▾</span>
+        </button>
+        <div class="umd-dropdown" id="umdDropdown">
+          <div class="umd-user-row">
+            <div class="umd-user-name"  id="umdFullName">—</div>
+            <div class="umd-user-email" id="umdEmail">—</div>
+          </div>
+          <div class="umd-section">
+            <a class="umd-link" href="dashboard.html">📊 Dashboard</a>
+            <a class="umd-link" href="account.html">⚙️ Account Settings</a>
+            <a class="umd-link" href="invite-tenant.html">✉️ Invite Tenant</a>
+            <a class="umd-link" href="tenant-portal-picker.html">🏠 Tenant Portal</a>
+          </div>
+          <div class="umd-section">
+            <a class="umd-link" href="reports-analytics.html">📈 Reports &amp; Analytics</a>
+            <a class="umd-link" href="contact-us.html">💬 Contact Support</a>
+          </div>
+          <div class="umd-section">
+            <button class="umd-link danger" id="logoutBtn">🚪 Sign Out</button>
+          </div>
+        </div>
+      </div>
+      <a id="nav-login" href="login-select.html" style="display:none">Log in</a>
+    </div>
+    <button class="hamburger" id="hamburgerBtn" aria-label="Open menu">☰</button>
+  </div>
+</header>
+
+<div class="drawer" id="mobileDrawer">
+  <a href="account.html" id="mobileAccountLink" style="display:none;" class="drawer-user-row">
+    <span class="drawer-avatar" id="drawerAvatar">?</span>
+    <span id="mobileUsernameLabel">Account</span>
+  </a>
+  <div class="drawer-grid">
+    <a href="dashboard.html">📊 Dashboard</a>
+    <a href="property-management.html" class="nav-active">🏘️ Properties</a>
+    <a href="lease-rent-center.html">💰 Lease &amp; Rent</a>
+    <a href="expense-tracking.html">💸 Expenses</a>
+    <a href="maintenance-requests.html">🛠 Maintenance</a>
+    <a href="tenant-messages.html">💬 Messages</a>
+    <a href="reports-analytics.html">📈 Reports</a>
+  </div>
+  <a href="login-select.html" id="mobileLogin" class="drawer-login">Log in</a>
+  <div id="mobileLogoutContainer" style="display:none;">
+    <button id="mobileLogoutBtn">Sign Out</button>
+  </div>
+</div>
+
+  <main class="page">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">🏦 Financing</h1>
+        <div class="subtle" id="pageSubtitle">Manage refinance history, lender transfers, and keep your current snapshot clean.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">📌 Current Snapshot</div>
+        <div class="muted">This is what dashboards use. Update it by selecting a history record below.</div>
+      </div>
+      <div class="card-body">
+        <div class="grid-2">
+          <div class="pill">🏷️ Property: <span id="propertyName">—</span></div>
+          <div class="pill" id="addressPill" style="display:none;">📍 Address: <span id="propertyAddress">—</span></div>
+        </div>
+
+        <div style="height:12px;"></div>
+
+        <div class="grid-2">
+          <div class="form-field">
+            <label>🏦 Lender Name</label>
+            <input type="text" id="snapLenderName" disabled>
+          </div>
+          <div class="form-field">
+            <label>🌐 Lender Portal URL</label>
+            <div class="inline-input-row">
+              <input type="url" id="snapLenderPortalUrl" disabled>
+              <button type="button" class="ghost-btn small" id="openSnapPortalBtn" disabled>Open</button>
+            </div>
+          </div>
+
+          <div class="form-field">
+            <label>📆 Loan Start Date</label>
+            <input type="date" id="snapLoanStartDate" disabled>
+          </div>
+          <div class="form-field">
+            <label>📈 Interest Rate</label>
+            <input type="text" id="snapInterestRate" disabled>
+          </div>
+
+          <div class="form-field">
+            <label>🧾 Loan Term (years)</label>
+            <input type="text" id="snapLoanTerm" disabled>
+          </div>
+          <div class="form-field">
+            <label>💰 Monthly Payment</label>
+            <input type="number" id="snapMonthlyPayment" disabled>
+          </div>
+
+          <div class="form-field">
+            <label>🏦 Loan Balance</label>
+            <input type="number" id="snapLoanBalance" disabled>
+          </div>
+          <div class="form-field">
+            <label>📝 Notes</label>
+            <input type="text" id="snapNotes" disabled>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="height:16px;"></div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">➕ Add / Update Finance Record</div>
+        <div class="muted">Use this for refinance, servicer transfers, or rate modifications. It will be added to history.</div>
+      </div>
+      <div class="card-body">
+        <form id="financeForm">
+          <input type="hidden" id="recordId" />
+
+          <div class="grid-2">
+            <div class="form-field">
+              <label for="eventType">🔁 Change Type</label>
+              <select id="eventType" required>
+                <option value="origination">Origination</option>
+                <option value="refinance">Refinance (new loan)</option>
+                <option value="servicer_transfer">Servicer / Lender Transfer</option>
+                <option value="rate_modification">Rate Modification</option>
+              </select>
+            </div>
+
+            <div class="form-field">
+              <label for="effectiveDate">📅 Effective Date</label>
+              <input type="date" id="effectiveDate" required />
+            </div>
+
+            <div class="form-field">
+              <label for="lenderName">🏦 Lender Name</label>
+              <input type="text" id="lenderName" placeholder="e.g., PHH Mortgage" required />
+            </div>
+
+            <div class="form-field">
+              <label for="lenderPortalUrl">🌐 Lender Portal URL</label>
+              <input type="url" id="lenderPortalUrl" placeholder="https://..." />
+            </div>
+
+            <div class="form-field">
+              <label for="loanNumber">🔢 Loan Number (optional)</label>
+              <input type="text" id="loanNumber" placeholder="e.g., 8018535438" />
+            </div>
+
+            <div class="form-field">
+              <label for="loanTermYears">🧾 Loan Term (years)</label>
+              <input type="number" id="loanTermYears" placeholder="e.g., 30" />
+            </div>
+
+            <div class="form-field">
+              <label for="interestRate">📈 Interest Rate</label>
+              <input type="text" id="interestRate" placeholder="e.g., 4.99" />
+            </div>
+
+            <div class="form-field">
+              <label for="startDate">📆 Loan Start Date</label>
+              <input type="date" id="startDate" />
+            </div>
+
+            <div class="form-field">
+              <label for="startingBalance">🏦 Starting / Current Balance</label>
+              <input type="number" id="startingBalance" placeholder="e.g., 48144" />
+            </div>
+
+            <div class="form-field">
+              <label for="monthlyPayment">💵 Monthly Payment</label>
+              <input type="number" id="monthlyPayment" placeholder="e.g., 1356.21" />
+            </div>
+
+            <div class="form-field full-width">
+              <label for="notes">📝 Notes</label>
+              <textarea id="notes" rows="3" placeholder="Escrow info, special terms, etc."></textarea>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" class="ghost-btn" id="clearBtn">Clear</button>
+            <button type="submit" class="primary-btn" id="saveBtn">Save Record</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div style="height:16px;"></div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">📚 Financing History</div>
+        <div class="muted">Tip: use "Set as Current" to update the property snapshot.</div>
+      </div>
+      <div class="card-body">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Effective</th>
+                <th>Type</th>
+                <th>Lender</th>
+                <th>Rate</th>
+                <th>Term</th>
+                <th>Payment</th>
+                <th>Balance</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="historyBody">
+              <tr><td colspan="8" class="muted">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+<footer class="site-footer">
+  <div class="footer-content">
+    <div class="footer-section">
+      <h4>Quick Links</h4>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="property-management.html">Property Management</a>
+      <a href="lease-center.html">Lease Center</a>
+      <a href="lease-rent-center.html">Rent Center</a>
+      <a href="expense-tracking.html">Expense Tracking</a>
+    </div>
+
+    <div class="footer-section">
+      <h4>Support & Legal</h4>
+      support@rentalgenie.app
+      support@rentalgenie.app
+      <a href="terms.html">Terms of Service</a>
+      <a href="privacy.html">Privacy Policy</a>
+    </div>
+
+    <div class="footer-section">
+      <h4>Connect</h4>
+      <p>Email: support@rentalgenie.app</p>
+
+
+
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    © <span id="footerYear"></span> Rental Genie. All rights reserved.
+  </div>
+</footer>
+
+<!-- Supabase: isolated body tag -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  if(!window._rgClient){
+    (function(){var _m=new Map(),_l=null;try{_l=window.localStorage;}catch(e){}
+    var _s={getItem:function(k){try{return(_l&&_l.getItem(k))||_m.get(k)||null;}catch(e){return _m.get(k)||null;}},setItem:function(k,v){try{_l&&_l.setItem(k,v);}catch(e){}_m.set(k,v);},removeItem:function(k){try{_l&&_l.removeItem(k);}catch(e){}_m.delete(k);}};
+    window._rgClient=window.supabase.createClient('https://pbojacnagutipfhcxltj.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBib2phY25hZ3V0aXBmaGN4bHRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgwMDkwODAsImV4cCI6MjA2MzU4NTA4MH0.ZLCcAzTYljoZycpBGwMtthP5VyAJ4schuIvt4HibGc0',{auth:{lock:undefined,persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storage:_s}});
+    })();}
+  const sb = window._rgClient;
+
+  async function waitForClientReady(ms){
+    ms=ms||4000;if(window._rgClient&&window._rgClient.auth)return window._rgClient;
+    return new Promise(function(resolve,reject){var elapsed=0;var t=setInterval(function(){elapsed+=25;
+      if(window._rgClient&&window._rgClient.auth){clearInterval(t);resolve(window._rgClient);}
+      else if(elapsed>=ms){clearInterval(t);reject(new Error('not ready'));}},25);});
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  const propertyId = params.get('property_id') || params.get('id') || null;
+  const companyId = params.get('company_id') || null;
+
+  function fmtMoney(v) {
+    const n = Number(v);
+    if (!isFinite(n)) return '—';
+    return n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function safeText(v) {
+    return (v === null || v === undefined || v === '') ? '—' : String(v);
+  }
+
+
+  async function rgSetupAuth() {
+    var user = null;
+    try { var r = await sb.auth.getUser(); user = (!r.error && r.data && r.data.user) ? r.data.user : null; } catch(e) {}
+    if (!user) { try { var s = await sb.auth.getSession(); user = (s.data && s.data.session) ? s.data.session.user : null; } catch(e) {} }
+    var loginEl = document.getElementById('nav-login');
+    var umdEl   = document.getElementById('userMenu');
+    if (!user) {
+      if (loginEl) loginEl.style.display = 'inline-flex';
+      if (umdEl)   umdEl.style.display = 'none';
+      document.body.classList.add('auth-guest');
+      location.href = 'login-select.html?returnTo=' + encodeURIComponent(location.pathname + location.search);
+      return null;
+    }
+    var uname = (user.user_metadata && (user.user_metadata.full_name || user.user_metadata.name)) || user.email.split('@')[0];
+    var parts = uname.trim().split(/\s+/);
+    var initials = (parts.length >= 2 ? parts[0][0] + parts[parts.length-1][0] : uname.slice(0,2)).toUpperCase();
+    if (loginEl) loginEl.style.display = 'none';
+    if (umdEl)   umdEl.style.display = 'block';
+    var av=document.getElementById('umdAvatar');   if(av)av.textContent=initials;
+    var nm=document.getElementById('umdName');     if(nm)nm.textContent=uname;
+    var fn=document.getElementById('umdFullName'); if(fn)fn.textContent=uname;
+    var em=document.getElementById('umdEmail');    if(em)em.textContent=user.email||'';
+    var da=document.getElementById('drawerAvatar');if(da)da.textContent=initials;
+    var ml=document.getElementById('mobileUsernameLabel');if(ml)ml.textContent=uname;
+    var ma=document.getElementById('mobileAccountLink');  if(ma)ma.style.display='flex';
+    var mlo=document.getElementById('mobileLogoutContainer');if(mlo)mlo.style.display='block';
+    var mli=document.getElementById('mobileLogin');if(mli)mli.style.display='none';
+    document.body.classList.remove('auth-guest');
+    document.body.classList.add('auth-ready');
+    sb.auth.onAuthStateChange(function(event){ if(event==='SIGNED_OUT') location.href='login.html'; });
+    return user;
+  }
+
+  function rgWireHeader() {
+    var uBtn=document.getElementById('umdToggle'),uDrop=document.getElementById('umdDropdown');
+    if(uBtn&&uDrop&&!uBtn.dataset.wired){uBtn.dataset.wired='1';uBtn.onclick=function(e){e.stopPropagation();uDrop.classList.toggle('active');};document.addEventListener('click',function(e){if(!uDrop.contains(e.target)&&!uBtn.contains(e.target))uDrop.classList.remove('active');});}
+    var lBtn=document.getElementById('logoutBtn'),mBtn=document.getElementById('mobileLogoutBtn');
+    if(lBtn)lBtn.onclick=async function(){await sb.auth.signOut();location.href='login.html';};
+    if(mBtn)mBtn.onclick=async function(){await sb.auth.signOut();location.href='login.html';};
+    var ham=document.getElementById('hamburgerBtn'),drw=document.getElementById('mobileDrawer');
+    if(ham&&drw&&!ham.dataset.wired){ham.dataset.wired='1';ham.onclick=function(e){e.stopPropagation();drw.style.display=drw.style.display==='block'?'none':'block';};drw.addEventListener('click',function(e){e.stopPropagation();if(e.target.tagName==='A')drw.style.display='none';});document.addEventListener('click',function(e){if(drw.style.display==='block'&&!drw.contains(e.target)&&!ham.contains(e.target))drw.style.display='none';});}
+  }
+  rgWireHeader();
+
+
+  function filterPayloadToKeys(payload, allowedKeys) {
+    const out = {};
+    for (const [k, v] of Object.entries(payload)) {
+      if (allowedKeys.has(k)) out[k] = v;
+    }
+    return out;
+  }
+
+  async function safeUpdatePropertiesSnapshot(snapshot) {
+    const { data: existing, error: readErr } = await sb
+      .from('properties')
+      .select('*')
+      .eq('id', propertyId)
+      .single();
+
+    if (readErr) throw readErr;
+
+    const allowed = new Set(Object.keys(existing || {}));
+    const safeSnap = filterPayloadToKeys(snapshot, allowed);
+
+    return await sb.from('properties').update(safeSnap).eq('id', propertyId);
+  }
+
+  async function loadPropertySnapshot() {
+    if (!propertyId) {
+      document.getElementById('pageSubtitle').textContent = "Missing property_id. Open this page from a property.";
+      document.getElementById('historyBody').innerHTML = '<tr><td colspan="8" class="muted">No property selected.</td></tr>';
+      return null;
+    }
+
+    // propertyId pill removed — name shown instead
+
+    const { data: prop, error } = await sb
+      .from('properties')
+      .select('*')
+      .eq('id', propertyId)
+      .single();
+
+    if (error) {
+      console.error(error);
+      document.getElementById('historyBody').innerHTML = '<tr><td colspan="8" class="muted">Failed to load property.</td></tr>';
+      return null;
+    }
+
+    document.getElementById('propertyName').textContent = safeText(prop?.name);
+    // Show address pill if address available
+    var addr = prop?.address || prop?.street_address || '';
+    if (addr) {
+      document.getElementById('propertyAddress').textContent = addr;
+      document.getElementById('addressPill').style.display = '';
+    }
+
+    const snap = {
+      lender_name: prop?.lender_name || '',
+      lender_portal_url: prop?.lender_portal_url || '',
+      loan_start_date: prop?.loan_start_date || '',
+      interest_rate: prop?.interest_rate || '',
+      loan_term: prop?.loan_term || '',
+      monthly_payment: prop?.monthly_payment ?? '',
+      loan_balance: prop?.loan_balance ?? '',
+      financing_notes: prop?.financing_notes || ''
+    };
+
+    document.getElementById('snapLenderName').value = snap.lender_name;
+    document.getElementById('snapLenderPortalUrl').value = snap.lender_portal_url;
+    document.getElementById('snapLoanStartDate').value = snap.loan_start_date;
+    document.getElementById('snapInterestRate').value = snap.interest_rate;
+    document.getElementById('snapLoanTerm').value = snap.loan_term;
+    document.getElementById('snapMonthlyPayment').value = snap.monthly_payment;
+    document.getElementById('snapLoanBalance').value = snap.loan_balance;
+    document.getElementById('snapNotes').value = snap.financing_notes;
+
+    const openBtn = document.getElementById('openSnapPortalBtn');
+    if (snap.lender_portal_url) {
+      openBtn.disabled = false;
+      openBtn.onclick = () => window.open(snap.lender_portal_url, '_blank', 'noopener,noreferrer');
+    } else {
+      openBtn.disabled = true;
+      openBtn.onclick = null;
+    }
+
+    return prop || null;
+  }
+
+  // Some properties' loan term is stored as free text on `properties`
+  // (e.g. "30 years (ends 2053)") while the finance-history form wants a
+  // plain number of years — pull the leading number out if there is one.
+  function extractLeadingYears(text) {
+    if (!text) return null;
+    const m = String(text).match(/(\d+)/);
+    return m ? parseInt(m[1], 10) : null;
+  }
+
+  // A handful of properties only ever had a loan number typed into the
+  // free-text Financing Notes field (e.g. "Loan Number: 8018535438")
+  // rather than a structured field — pull it out as a fallback.
+  function extractLoanNumber(notes) {
+    if (!notes) return null;
+    const m = String(notes).match(/loan\s*(?:#|number)\s*[:#]?\s*([A-Za-z0-9-]{3,})/i);
+    return m ? m[1] : null;
+  }
+
+  // Pre-fills the "Add / Update Finance Record" form with the property's
+  // current snapshot so a small change (e.g. a rate modification) doesn't
+  // require retyping the lender, portal URL, term, etc. from scratch.
+  // Only runs once at page load — never overwrites an in-progress edit.
+  function prefillFormFromSnapshot(prop) {
+    if (!prop || !prop.is_financed) return;
+    const set = (id, val) => {
+      const el = document.getElementById(id);
+      if (el && !el.value && val !== null && val !== undefined && val !== '') el.value = val;
+    };
+    set('lenderName', prop.lender_name || '');
+    set('lenderPortalUrl', prop.lender_portal_url || '');
+    set('interestRate', prop.interest_rate || '');
+    set('startDate', prop.loan_start_date || '');
+    set('startingBalance', prop.loan_balance ?? '');
+    set('monthlyPayment', prop.monthly_payment ?? '');
+    const years = extractLeadingYears(prop.loan_term);
+    if (years) set('loanTermYears', years);
+    const loanNum = extractLoanNumber(prop.financing_notes);
+    if (loanNum) set('loanNumber', loanNum);
+  }
+
+  function rowHtml(rec) {
+    const eff = safeText(rec.effective_date);
+    const typ = safeText(rec.event_type).replaceAll('_', ' ');
+    const lender = safeText(rec.lender_name);
+    const rate = safeText(rec.interest_rate);
+    const term = safeText(rec.loan_term_years);
+    const pay = rec.monthly_payment != null ? fmtMoney(rec.monthly_payment) : '—';
+    const bal = rec.starting_balance != null ? fmtMoney(rec.starting_balance) : '—';
+
+    return `
+      <tr>
+        <td>${eff}</td>
+        <td>${typ}</td>
+        <td>${lender}</td>
+        <td>${rate}</td>
+        <td>${term}</td>
+        <td>${pay}</td>
+        <td>${bal}</td>
+        <td>
+          <div class="row-actions">
+            <button class="ghost-btn small" type="button" data-action="edit" data-id="${rec.id}">Edit</button>
+            <button class="ghost-btn small" type="button" data-action="setcurrent" data-id="${rec.id}">Set as Current</button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }
+
+  let historyCache = [];
+
+  async function loadHistory() {
+    if (!propertyId) return;
+
+    const { data, error } = await sb
+      .from('property_finance_history')
+      .select('*')
+      .eq('property_id', propertyId)
+      .order('effective_date', { ascending: false });
+
+    const body = document.getElementById('historyBody');
+
+    if (error) {
+      console.error(error);
+      body.innerHTML = '<tr><td colspan="8" class="muted">Failed to load finance history.</td></tr>';
+      return;
+    }
+
+    historyCache = data || [];
+    if (!historyCache.length) {
+      body.innerHTML = '<tr><td colspan="8" class="muted">No finance records yet. Add your first one above.</td></tr>';
+      return;
+    }
+
+    body.innerHTML = historyCache.map(rowHtml).join('');
+  }
+
+  function fillForm(rec) {
+    document.getElementById('recordId').value = rec?.id || '';
+    document.getElementById('eventType').value = rec?.event_type || 'origination';
+    document.getElementById('effectiveDate').value = rec?.effective_date || '';
+    document.getElementById('lenderName').value = rec?.lender_name || '';
+    document.getElementById('lenderPortalUrl').value = rec?.lender_portal_url || '';
+    document.getElementById('loanNumber').value = rec?.loan_number || '';
+    document.getElementById('loanTermYears').value = rec?.loan_term_years ?? '';
+    document.getElementById('interestRate').value = rec?.interest_rate || '';
+    document.getElementById('startDate').value = rec?.start_date || '';
+    document.getElementById('startingBalance').value = rec?.starting_balance ?? '';
+    document.getElementById('monthlyPayment').value = rec?.monthly_payment ?? '';
+    document.getElementById('notes').value = rec?.notes || '';
+  }
+
+  function clearForm() {
+    fillForm(null);
+    document.getElementById('effectiveDate').value = new Date().toISOString().slice(0,10);
+  }
+
+  document.getElementById('clearBtn').addEventListener('click', clearForm);
+
+  document.getElementById('financeForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!propertyId) {
+      alert('Missing property_id.');
+      return;
+    }
+
+    const id = document.getElementById('recordId').value || null;
+
+    const payload = {
+      company_id: companyId,
+      property_id: propertyId,
+      event_type: document.getElementById('eventType').value,
+      effective_date: document.getElementById('effectiveDate').value,
+      lender_name: document.getElementById('lenderName').value.trim(),
+      lender_portal_url: document.getElementById('lenderPortalUrl').value.trim() || null,
+      loan_number: document.getElementById('loanNumber').value.trim() || null,
+      loan_term_years: parseInt(document.getElementById('loanTermYears').value, 10) || null,
+      interest_rate: document.getElementById('interestRate').value.trim() || null,
+      start_date: document.getElementById('startDate').value || null,
+      starting_balance: Number(document.getElementById('startingBalance').value) || null,
+      monthly_payment: Number(document.getElementById('monthlyPayment').value) || null,
+      notes: document.getElementById('notes').value.trim() || null
+    };
+
+    try {
+      let res;
+      if (id) {
+        res = await sb.from('property_finance_history').update(payload).eq('id', id);
+      } else {
+        res = await sb.from('property_finance_history').insert([payload]);
+      }
+
+      if (res.error) {
+        console.error(res.error);
+        alert('❌ Save failed: ' + res.error.message);
+        return;
+      }
+
+      alert('✅ Saved finance record!');
+      clearForm();
+      await loadHistory();
+    } catch (err) {
+      console.error(err);
+      alert('❌ Unexpected error saving record.');
+    }
+  });
+
+  document.getElementById('historyBody').addEventListener('click', async (e) => {
+    const btn = e.target.closest('button[data-action]');
+    if (!btn) return;
+
+    const id = btn.getAttribute('data-id');
+    const action = btn.getAttribute('data-action');
+    const rec = historyCache.find(r => r.id === id);
+    if (!rec) return;
+
+    if (action === 'edit') {
+      fillForm(rec);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    if (action === 'setcurrent') {
+      const snapshot = {
+        is_financed: true,
+        lender_name: rec.lender_name || null,
+        lender_portal_url: rec.lender_portal_url || null,
+        loan_term: rec.loan_term_years != null ? String(rec.loan_term_years) : null,
+        interest_rate: rec.interest_rate || null,
+        loan_start_date: rec.start_date || rec.effective_date || null,
+        loan_balance: rec.starting_balance ?? null,
+        monthly_payment: rec.monthly_payment ?? null,
+        financing_notes: rec.notes || null
+      };
+
+      try {
+        const { error } = await safeUpdatePropertiesSnapshot(snapshot);
+        if (error) {
+          console.error(error);
+          alert('❌ Failed to set current snapshot: ' + error.message);
+          return;
+        }
+        alert('✅ Updated current financing snapshot!');
+        await loadPropertySnapshot();
+        await loadHistory();
+      } catch (err) {
+        console.error(err);
+        alert('❌ Unexpected error updating snapshot.');
+      }
+    }
+  });
+
+  // ── wireHeader (inline) ──
+  var _uBtn = document.getElementById('umdToggle');
+  var _uDrp = document.getElementById('umdDropdown');
+  if (_uBtn && _uDrp) {
+    _uBtn.onclick = function(e) { e.stopPropagation(); _uDrp.classList.toggle('open'); };
+    document.addEventListener('click', function(e) {
+      if (!_uDrp.contains(e.target) && !_uBtn.contains(e.target)) _uDrp.classList.remove('open');
+    });
+  }
+
+  // ── Wire logout ──
+  var _lBtn = document.getElementById('logoutBtn');
+  var _mlBtn = document.getElementById('mobileLogoutBtn');
+  if (_lBtn) _lBtn.onclick = async function() { await sb.auth.signOut(); location.href = 'login.html'; };
+  if (_mlBtn) _mlBtn.onclick = async function() { await sb.auth.signOut(); location.href = 'login.html'; };
+
+  // ── Wire hamburger ──
+  var _ham = document.getElementById('hamburgerBtn');
+  var _drw = document.getElementById('mobileDrawer');
+  if (_ham && _drw) {
+    _ham.onclick = function(e) { e.stopPropagation(); _drw.style.display = _drw.style.display === 'block' ? 'none' : 'block'; };
+    document.addEventListener('click', function(e) {
+      if (_drw.style.display === 'block' && !_drw.contains(e.target) && !_ham.contains(e.target)) _drw.style.display = 'none';
+    });
+  }
+
+  function wireHeader(){} // alias — wired inline above
+  document.getElementById('footerYear').textContent = new Date().getFullYear();
+
+  // ── Boot ──
+  document.addEventListener('DOMContentLoaded', async function() {
+    try {
+      const client = await waitForClientReady();
+      const user = await rgSetupAuth();
+      if (!user) return;
+      // property name loaded by loadPropertySnapshot()
+      clearForm();
+      const [prop] = await Promise.all([ loadPropertySnapshot(), loadHistory() ]);
+      prefillFormFromSnapshot(prop);
+    } catch(e) {
+      console.error('Boot error:', e);
+    }
+  });
+</script>
+<nav class="mobile-nav" aria-label="Mobile navigation">
+  <div class="mobile-nav-inner">
+    <a class="mnav" href="dashboard.html"><div class="ico">📊</div></a>
+    <a class="mnav active" href="property-management.html"><div class="ico">🏘️</div></a>
+    <a class="mnav" href="lease-rent-center.html"><div class="ico">💰</div></a>
+    <a class="mnav" href="expense-tracking.html"><div class="ico">💸</div></a>
+    <a class="mnav" href="maintenance-requests.html"><div class="ico">🛠️</div></a>
+    <a class="mnav" href="reports-analytics.html"><div class="ico">📈</div></a>
+  </div>
+</nav>
+<div class="mobile-pad" aria-hidden="true"></div>
+</body>
+</html>

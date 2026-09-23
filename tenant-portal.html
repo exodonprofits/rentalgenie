@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tenant Portal – Rental Genie</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap">
+  <link rel="dns-prefetch" href="https://pbojacnagutipfhcxltj.supabase.co">
+
+  <style>
+  /* ── Design Tokens ─────────────────────────────────────────── */
+  :root {
+    --navy:        #0c1e3a;
+    --navy-mid:    #1a3a6b;
+    --navy-light:  #1e5799;
+    --sky:         #2d8cf0;
+    --sky-soft:    #e8f0fe;
+    --teal:        #0ea5e9;
+    --border:      #e2e8f0;
+    --bg:          #f1f4f8;
+    --card:        #ffffff;
+    --text:        #0c1e3a;
+    --muted:       #64748b;
+    --success:     #10b981;
+    --success-bg:  #ecfdf5;
+    --success-bdr: #a7f3d0;
+    --warn:        #f59e0b;
+    --warn-bg:     #fffbeb;
+    --warn-bdr:    #fde68a;
+    --warn-text:   #92400e;
+    --danger:      #ef4444;
+    --danger-bg:   #fef2f2;
+    --danger-bdr:  #fecaca;
+    --danger-text: #7f1d1d;
+    --info-bg:     #eff6ff;
+    --info-bdr:    #bfdbfe;
+    --info-text:   #1e40af;
+    --radius-sm:   8px;
+    --radius-md:   12px;
+    --radius-lg:   16px;
+    --radius-xl:   20px;
+    --shadow-sm:   0 1px 4px rgba(12,30,58,.06);
+    --shadow-md:   0 4px 16px rgba(12,30,58,.09);
+    --shadow-lg:   0 8px 32px rgba(12,30,58,.14);
+    --header-grad: linear-gradient(135deg,#0c1e3a 0%,#1a3a6b 55%,#1e5799 100%);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: 'DM Sans', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── Auth Loading Overlay ───────────────────────────────────── */
+  #authOverlay {
+    position: fixed; inset: 0; z-index: 9999;
+    background: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column; gap: 16px;
+    transition: opacity .35s;
+  }
+  #authOverlay.hidden { opacity: 0; pointer-events: none; }
+  .spinner-ring {
+    width: 44px; height: 44px; border-radius: 50%;
+    border: 3px solid rgba(12,30,58,.1);
+    border-top-color: var(--sky);
+    animation: spin .75s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #authOverlay p { font-size: .88rem; color: var(--muted); font-weight: 500; }
+
+  /* ── Header ─────────────────────────────────────────────────── */
+  .header-container {
+    position: sticky; top: 0; z-index: 1000;
+    background: var(--header-grad);
+    border-bottom: 1px solid rgba(255,255,255,.08);
+    box-shadow: 0 2px 20px rgba(12,30,58,.35);
+  }
+  .navbar {
+    max-width: 1280px; margin: 0 auto; padding: 0 22px;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 64px; gap: 12px;
+  }
+  .brand-area { display: flex; align-items: center; gap: 11px; text-decoration: none; flex-shrink: 0; }
+  .brand-logo {
+    width: 38px; height: 38px; border-radius: 9px;
+    background: rgba(255,255,255,.12);
+    box-shadow: 0 0 0 1px rgba(255,255,255,.2), 0 2px 8px rgba(0,0,0,.2);
+    object-fit: cover; flex-shrink: 0;
+  }
+  .brand-title { font-size: 1.1rem; font-weight: 700; color: #fff; letter-spacing: -.2px; }
+  .brand-badge {
+    display: inline-block; font-size: .65rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .5px;
+    background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.2);
+    color: rgba(255,255,255,.8); border-radius: 999px;
+    padding: 2px 8px; margin-left: 2px;
+  }
+
+  .nav-links { display: flex; gap: 2px; align-items: center; }
+  .nav-links a {
+    display: flex; align-items: center; gap: 5px;
+    text-decoration: none; font-size: .82rem; font-weight: 600;
+    padding: 7px 11px; color: rgba(255,255,255,.75);
+    border-radius: var(--radius-sm); transition: all .18s;
+    white-space: nowrap;
+  }
+  .nav-links a:hover { color: #fff; background: rgba(255,255,255,.1); }
+  .nav-links a.nav-active { color: #fff; background: rgba(255,255,255,.15); }
+
+  /* User menu dropdown */
+  .umd-wrap { position: relative; flex-shrink: 0; }
+  .umd-toggle {
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.18);
+    border-radius: 999px; padding: 5px 12px 5px 5px;
+    cursor: pointer; color: #fff; font-family: inherit; font-size: .82rem; font-weight: 600;
+    transition: background .18s;
+  }
+  .umd-toggle:hover { background: rgba(255,255,255,.18); }
+  .umd-avatar {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--sky), var(--navy-mid));
+    display: flex; align-items: center; justify-content: center;
+    font-size: .68rem; font-weight: 700; color: #fff; flex-shrink: 0;
+  }
+  .umd-name { font-size: .78rem; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: rgba(255,255,255,.9); }
+  .umd-caret { font-size: .7rem; opacity: .7; margin-left: 2px; color: rgba(255,255,255,.7); }
+  .umd-dropdown {
+    display: none; position: absolute; top: calc(100% + 10px); right: 0;
+    background: #fff; border: 1px solid #e2e8f0;
+    border-radius: 16px; min-width: 220px;
+    box-shadow: 0 8px 32px rgba(12,30,58,.18);
+    z-index: 1001; overflow: hidden; padding: 6px;
+  }
+  .umd-dropdown.open { display: block; animation: umdFadeIn .15s ease; }
+  @keyframes umdFadeIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
+  .umd-user-row { padding: 10px 12px 8px; border-bottom: 1px solid #e2e8f0; margin-bottom: 4px; }
+  .umd-user-name { font-weight: 700; font-size: .9rem; color: #0c1e3a; }
+  .umd-user-email { font-size: .78rem; color: #64748b; margin-top: 2px; }
+  .umd-section { padding: 4px 0; border-bottom: 1px solid #f1f4f8; margin-bottom: 2px; }
+  .umd-section:last-child { border-bottom: none; margin-bottom: 0; }
+  .umd-link {
+    display: flex; align-items: center; gap: 9px;
+    width: 100%; padding: 9px 12px; border-radius: 10px;
+    font-size: .85rem; font-weight: 600; color: #0c1e3a;
+    text-decoration: none; background: none; border: none;
+    cursor: pointer; font-family: inherit; text-align: left;
+  }
+  .umd-link:hover { background: #f1f4f8; }
+  .umd-link.danger { color: #ef4444; }
+  .umd-link.danger:hover { background: #fef2f2; }
+
+  .hamburger {
+    display: none; padding: 7px 10px;
+    border: 1px solid rgba(255,255,255,.25); border-radius: var(--radius-sm);
+    background: rgba(255,255,255,.1); cursor: pointer;
+    color: #fff; font-size: 1rem; font-weight: 700;
+    transition: background .18s;
+  }
+  .hamburger:hover { background: rgba(255,255,255,.2); }
+
+  @media(max-width:880px) {
+    .nav-links { display: none; }
+    .umd-wrap { display: none; }
+    .hamburger { display: block; }
+  }
+
+  /* Mobile drawer */
+  .drawer {
+    display: none; position: fixed;
+    top: 72px; left: 12px; right: 12px;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 8px;
+    z-index: 999; box-shadow: var(--shadow-lg);
+  }
+  .drawer a {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 14px; border-radius: var(--radius-sm);
+    font-weight: 600; font-size: .9rem;
+    text-decoration: none; color: var(--text);
+    transition: background .15s;
+  }
+  .drawer a:hover { background: var(--bg); }
+  .drawer a.nav-active { background: var(--sky-soft); color: var(--navy-mid); }
+  .drawer-signout { color: var(--danger) !important; }
+  .drawer-divider { height: 1px; background: var(--border); margin: 4px 0; }
+
+  /* ── Auth gate ──────────────────────────────────────────────── */
+  .auth-gate {
+    max-width: 520px; margin: 60px auto; padding: 0 20px;
+    text-align: center;
+  }
+  .auth-gate-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius-xl); padding: 40px 32px;
+    box-shadow: var(--shadow-md);
+  }
+  .auth-gate-icon { font-size: 2.5rem; margin-bottom: 16px; }
+  .auth-gate-card h2 { font-size: 1.3rem; font-weight: 700; color: var(--navy); margin-bottom: 8px; }
+  .auth-gate-card p { font-size: .9rem; color: var(--muted); margin-bottom: 24px; line-height: 1.5; }
+  .hidden { display: none !important; }
+
+  /* ── Main layout ────────────────────────────────────────────── */
+  main {
+    flex: 1; max-width: 1280px; width: 100%;
+    margin: 0 auto; padding: 28px 22px 48px;
+  }
+
+  /* ── Page header bar ────────────────────────────────────────── */
+  .page-header {
+    display: flex; align-items: flex-start;
+    justify-content: space-between; gap: 16px;
+    flex-wrap: wrap; margin-bottom: 24px;
+    animation: fadeUp .4s ease both;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .page-title { font-size: 1.65rem; font-weight: 700; color: var(--navy); letter-spacing: -.4px; line-height: 1.2; }
+  .page-sub { font-size: .88rem; color: var(--muted); margin-top: 4px; font-weight: 500; }
+  .page-header-right { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+
+  /* ── Alert banner ───────────────────────────────────────────── */
+  .alert-banner {
+    display: none; padding: 13px 16px;
+    border-radius: var(--radius-md); font-size: .88rem; font-weight: 600;
+    line-height: 1.45; margin-bottom: 20px;
+    border: 1px solid transparent;
+    animation: fadeUp .3s ease both;
+  }
+  .alert-banner.danger { background: var(--danger-bg); border-color: var(--danger-bdr); color: var(--danger-text); display: flex; }
+  .alert-banner.info   { background: var(--info-bg);   border-color: var(--info-bdr);   color: var(--info-text);   display: flex; }
+
+  /* ── Attention banner ───────────────────────────────────────── */
+  .attention-banner {
+    display: none;
+    background: var(--warn-bg); border: 1px solid var(--warn-bdr);
+    border-radius: var(--radius-md); padding: 14px 18px;
+    margin-bottom: 20px;
+    animation: fadeUp .35s ease both;
+  }
+  .attention-banner-head {
+    display: flex; align-items: center; gap: 8px;
+    font-weight: 700; color: var(--warn-text); font-size: .9rem;
+    margin-bottom: 8px;
+  }
+  .attention-banner-items { font-size: .83rem; color: var(--warn-text); line-height: 1.7; }
+
+  /* ── Hero stats row ─────────────────────────────────────────── */
+  .hero-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px; margin-bottom: 20px;
+    animation: fadeUp .4s ease .05s both;
+  }
+  @media(max-width:720px) { .hero-stats { grid-template-columns: 1fr 1fr; } }
+  @media(max-width:480px) { .hero-stats { grid-template-columns: 1fr; } }
+
+  .hero-stat {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 20px 18px;
+    box-shadow: var(--shadow-sm);
+    position: relative; overflow: hidden;
+    transition: transform .18s, box-shadow .18s;
+  }
+  .hero-stat:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+  .hero-stat::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: var(--header-grad);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  }
+  .hero-stat.warn-stat::before { background: linear-gradient(90deg, var(--warn), #fbbf24); }
+  .hero-stat.good-stat::before { background: linear-gradient(90deg, var(--success), #34d399); }
+  .hero-stat.danger-stat::before { background: linear-gradient(90deg, var(--danger), #f87171); }
+  .stat-label {
+    font-size: .7rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .5px; color: var(--muted); margin-bottom: 8px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .stat-value {
+    font-size: 1.55rem; font-weight: 700; color: var(--navy);
+    letter-spacing: -.5px; line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat-value.mono { font-family: 'DM Mono', monospace; font-size: 1.3rem; }
+  .stat-sub { font-size: .75rem; color: var(--muted); margin-top: 5px; font-weight: 500; }
+
+  /* ── Section cards ──────────────────────────────────────────── */
+  .section-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius-xl); box-shadow: var(--shadow-sm);
+    margin-bottom: 20px; overflow: hidden;
+    animation: fadeUp .4s ease .1s both;
+  }
+  .section-card + .section-card { animation-delay: .15s; }
+  .section-card:nth-child(3) { animation-delay: .2s; }
+
+  .card-head {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; flex-wrap: wrap;
+    padding: 18px 22px 0;
+  }
+  .card-head-left { display: flex; flex-direction: column; }
+  .card-title {
+    font-size: 1rem; font-weight: 700; color: var(--navy);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .card-sub { font-size: .8rem; color: var(--muted); margin-top: 3px; font-weight: 500; }
+  .card-body { padding: 16px 22px 22px; }
+
+  /* ── Info grid (lease details) ──────────────────────────────── */
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+  @media(max-width:720px) { .info-grid { grid-template-columns: 1fr 1fr; } }
+  @media(max-width:480px) { .info-grid { grid-template-columns: 1fr; } }
+
+  .info-cell {
+    background: #f8fafc; border: 1px solid var(--border);
+    border-radius: var(--radius-md); padding: 13px 14px;
+    transition: border-color .15s;
+  }
+  .info-cell:hover { border-color: #cbd5e1; }
+  .info-cell-label {
+    font-size: .68rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .4px; color: var(--muted); margin-bottom: 5px;
+  }
+  .info-cell-value {
+    font-size: .92rem; font-weight: 600; color: var(--navy); line-height: 1.3;
+  }
+
+  /* ── Action grid ────────────────────────────────────────────── */
+  .action-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+  }
+  @media(max-width:860px) { .action-grid { grid-template-columns: repeat(3, 1fr); } }
+  @media(max-width:500px) { .action-grid { grid-template-columns: repeat(2, 1fr); } }
+
+  .action-card {
+    display: flex; flex-direction: column; align-items: center;
+    text-align: center; text-decoration: none; color: var(--text);
+    background: #f8fafc; border: 1.5px solid var(--border);
+    border-radius: var(--radius-lg); padding: 20px 12px 16px;
+    transition: all .18s; cursor: pointer;
+    gap: 10px;
+  }
+  .action-card:hover {
+    border-color: var(--sky); background: var(--sky-soft);
+    transform: translateY(-3px); box-shadow: var(--shadow-md);
+  }
+  .action-icon {
+    width: 48px; height: 48px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem;
+    background: var(--card); border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+    transition: transform .18s;
+  }
+  .action-card:hover .action-icon { transform: scale(1.1); }
+  .action-label { font-size: .83rem; font-weight: 700; color: var(--navy); }
+  .action-hint { font-size: .72rem; color: var(--muted); font-weight: 500; line-height: 1.35; }
+
+  /* ── Repairs snapshot ───────────────────────────────────────── */
+  .repairs-row {
+    display: flex; align-items: center; gap: 14px;
+    padding: 13px 14px; border-radius: var(--radius-md);
+    background: #f8fafc; border: 1px solid var(--border);
+    transition: border-color .15s;
+  }
+  .repairs-row + .repairs-row { margin-top: 8px; }
+  .repairs-row:hover { border-color: #cbd5e1; }
+  .repairs-dot {
+    width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+    background: var(--warn);
+  }
+  .repairs-dot.open  { background: var(--warn); }
+  .repairs-dot.done  { background: var(--success); }
+  .repairs-issue { font-size: .88rem; font-weight: 600; color: var(--navy); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .repairs-status { font-size: .75rem; color: var(--muted); font-weight: 500; flex-shrink: 0; }
+
+  /* ── Chips ──────────────────────────────────────────────────── */
+  .chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 11px; border-radius: 999px;
+    font-weight: 700; font-size: .75rem;
+    border: 1px solid var(--border); background: #f8fafc; color: var(--text);
+    white-space: nowrap;
+  }
+  .chip.good    { background: var(--success-bg); border-color: var(--success-bdr); color: #065f46; }
+  .chip.warn    { background: var(--warn-bg);    border-color: var(--warn-bdr);    color: var(--warn-text); }
+  .chip.danger  { background: var(--danger-bg);  border-color: var(--danger-bdr);  color: var(--danger-text); }
+  .chip.info    { background: var(--info-bg);    border-color: var(--info-bdr);    color: var(--info-text); }
+  .chip-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+  /* ── Buttons ────────────────────────────────────────────────── */
+  .btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 9px 16px; border-radius: var(--radius-md);
+    border: 1.5px solid var(--border); background: var(--card);
+    color: var(--navy); font-family: 'DM Sans', sans-serif;
+    font-size: .83rem; font-weight: 600;
+    text-decoration: none; cursor: pointer;
+    transition: all .16s; white-space: nowrap;
+  }
+  .btn:hover { background: var(--bg); border-color: #cbd5e1; transform: translateY(-1px); }
+  .btn.primary {
+    background: var(--header-grad); border-color: transparent; color: #fff;
+    box-shadow: 0 2px 10px rgba(12,30,58,.2);
+  }
+  .btn.primary:hover { filter: brightness(1.1); box-shadow: 0 4px 16px rgba(12,30,58,.28); }
+
+  /* ── Footer ─────────────────────────────────────────────────── */
+  .site-footer {
+    background: var(--navy); padding: 20px 24px;
+    border-top: 1px solid rgba(255,255,255,.06);
+  }
+  .footer-inner {
+    max-width: 1280px; margin: 0 auto;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; flex-wrap: wrap;
+  }
+  .footer-inner p { color: rgba(255,255,255,.3); font-size: .8rem; }
+  .footer-user {
+    display: flex; align-items: center; gap: 8px;
+    font-size: .78rem; color: rgba(255,255,255,.4); font-weight: 500;
+  }
+  .footer-user-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--success); flex-shrink: 0;
+  }
+
+  /* ── Skeleton loader ────────────────────────────────────────── */
+  .skel {
+    background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s infinite;
+    border-radius: 6px;
+    display: inline-block;
+  }
+  @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+  @media(max-width:600px) {
+    main { padding: 20px 14px 40px; }
+    .page-title { font-size: 1.35rem; }
+  }
+  </style>
+</head>
+<body>
+<!-- ═══ SUPABASE BOOTSTRAP (body-first) ═══ -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- ══════════════════════════════════════════ -->
+
+<!-- ── Loading overlay ───────────────────────────────────────── -->
+<div id="authOverlay">
+  <div class="spinner-ring"></div>
+  <p>Loading your portal…</p>
+</div>
+
+<!-- ── Header ────────────────────────────────────────────────── -->
+<header class="header-container">
+  <div class="navbar">
+    <a class="brand-area" href="tenant-portal.html">
+      <img class="brand-logo" src="images/rg-logo.png" alt="Rental Genie"
+           onerror="this.style.display='none'" />
+      <div>
+        <span class="brand-title">Rental Genie</span>
+        <span class="brand-badge">Tenant</span>
+      </div>
+    </a>
+
+    <nav class="nav-links" aria-label="Tenant navigation">
+      <a id="navHome"     href="tenant-portal.html"          class="nav-active">🏠 Home</a>
+      <a id="navLease"    href="tenant-lease.html">📄 Lease</a>
+      <a id="navPayments" href="tenant-payments.html">💵 Payments</a>
+      <a id="navRepairs"  href="tenant-repair-requests.html">🛠️ Repairs</a>
+      <a id="navDocs"     href="tenant-documents.html">📁 Docs</a>
+      <a id="navContact"  href="tenant-contact.html">💬 Contact</a>
+    </nav>
+
+    <div class="umd-wrap" id="userChip" style="display:none">
+      <button class="umd-toggle" id="umdToggle" aria-haspopup="true" aria-expanded="false">
+        <div class="umd-avatar" id="userAvatar">?</div>
+        <span class="umd-name" id="userEmail">—</span>
+        <span class="umd-caret">▾</span>
+      </button>
+      <div class="umd-dropdown" id="umdDropdown">
+        <div class="umd-user-row">
+          <div class="umd-user-name" id="umdFullName">Tenant</div>
+          <div class="umd-user-email" id="umdEmail">—</div>
+        </div>
+        <div class="umd-section">
+          <a class="umd-link" href="tenant-account.html">👤 My Account</a>
+        </div>
+        <div class="umd-section">
+          <button class="umd-link danger" id="navSignOut">🚪 Sign Out</button>
+        </div>
+      </div>
+    </div>
+
+    <button class="hamburger" id="hamburgerBtn" aria-label="Toggle menu">☰</button>
+  </div>
+</header>
+
+<!-- Mobile drawer -->
+<div class="drawer" id="mobileDrawer">
+  <a id="drawerHome"     href="tenant-portal.html"          class="nav-active">🏠 Portal Home</a>
+  <a id="drawerLease"    href="tenant-lease.html">📄 My Lease</a>
+  <a id="drawerPayments" href="tenant-payments.html">💵 Payments</a>
+  <a id="drawerRepairs"  href="tenant-repair-requests.html">🛠️ Repairs</a>
+  <a id="drawerDocs"     href="tenant-documents.html">📁 Documents</a>
+  <a id="drawerContact"  href="tenant-contact.html">💬 Contact</a>
+  <a id="drawerAccount"  href="tenant-account.html">👤 My Account</a>
+  <div class="drawer-divider"></div>
+  <a id="drawerSignOut"  href="#" class="drawer-signout">🚪 Sign Out</a>
+</div>
+
+<!-- ── Auth gate ─────────────────────────────────────────────── -->
+<section id="authGate" class="auth-gate hidden">
+  <div class="auth-gate-card">
+    <div class="auth-gate-icon">🔐</div>
+    <h2>Session Required</h2>
+    <p>Your session has expired or you're not logged in. Please sign in to access your tenant portal.</p>
+    <a id="loginLink" class="btn primary" href="tenant-login.html">Go to Login →</a>
+  </div>
+</section>
+
+<!-- ── App ───────────────────────────────────────────────────── -->
+<main id="app" class="hidden">
+
+  <!-- Page header -->
+  <div class="page-header">
+    <div>
+      <div class="page-title" id="portalTitle">🏠 Tenant Portal</div>
+      <div class="page-sub" id="portalSub">Loading your rental snapshot…</div>
+    </div>
+    <div class="page-header-right">
+      <button class="btn" onclick="location.reload()">🔄 Refresh</button>
+    </div>
+  </div>
+
+  <!-- Alert banner -->
+  <div class="alert-banner" id="alertBox" role="alert"></div>
+
+  <!-- Attention banner -->
+  <div class="attention-banner" id="attentionBanner">
+    <div class="attention-banner-head">⚠️ Needs Your Attention</div>
+    <div class="attention-banner-items" id="attentionItems"></div>
+  </div>
+
+  <!-- ── Hero stats ─────────────────────────────────────────── -->
+  <div class="hero-stats">
+    <div class="hero-stat" id="statRent">
+      <div class="stat-label">💰 Monthly Rent</div>
+      <div class="stat-value mono" id="qpRent">—</div>
+      <div class="stat-sub" id="qpNextDue">Next due: —</div>
+    </div>
+    <div class="hero-stat" id="statPaid">
+      <div class="stat-label">✅ Paid This Month</div>
+      <div class="stat-value mono" id="qpPaidMonth">—</div>
+      <div class="stat-sub" id="qpLastPay">Last payment: —</div>
+    </div>
+    <div class="hero-stat" id="statLease">
+      <div class="stat-label">📄 Lease Status</div>
+      <div class="stat-value" id="qpLeaseStatus" style="font-size:1.1rem">—</div>
+      <div class="stat-sub" id="qpLeaseTerm">Term: —</div>
+    </div>
+  </div>
+
+  <!-- ── Lease details card ─────────────────────────────────── -->
+  <div class="section-card">
+    <div class="card-head">
+      <div class="card-head-left">
+        <div class="card-title">📋 Lease Details</div>
+        <div class="card-sub">Your current lease at a glance</div>
+      </div>
+      <a class="btn" id="leaseDetailBtn" href="tenant-lease.html">View Full Lease →</a>
+    </div>
+    <div class="card-body">
+      <div class="info-grid">
+        <div class="info-cell">
+          <div class="info-cell-label">Property</div>
+          <div class="info-cell-value" id="qpProperty">—</div>
+        </div>
+        <div class="info-cell">
+          <div class="info-cell-label">Lease Term</div>
+          <div class="info-cell-value" id="qpLeaseTermFull">—</div>
+        </div>
+        <div class="info-cell">
+          <div class="info-cell-label">Monthly Rent</div>
+          <div class="info-cell-value" id="qpRentDetail">—</div>
+        </div>
+        <div class="info-cell">
+          <div class="info-cell-label">Due Day</div>
+          <div class="info-cell-value" id="qpDueDay">—</div>
+        </div>
+        <div class="info-cell">
+          <div class="info-cell-label">Grace Period</div>
+          <div class="info-cell-value" id="qpGrace">—</div>
+        </div>
+        <div class="info-cell">
+          <div class="info-cell-label">Lease Status</div>
+          <div class="info-cell-value" id="qpStatus">—</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Quick actions ──────────────────────────────────────── -->
+  <div class="section-card">
+    <div class="card-head">
+      <div class="card-head-left">
+        <div class="card-title">⚡ Quick Actions</div>
+        <div class="card-sub">Jump straight to what you need</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="action-grid">
+        <a class="action-card" id="leaseLink" href="tenant-lease.html">
+          <div class="action-icon">📄</div>
+          <div class="action-label">My Lease</div>
+          <div class="action-hint" id="leaseHint">View lease details</div>
+        </a>
+        <a class="action-card" id="paymentLink" href="tenant-payments.html">
+          <div class="action-icon">💵</div>
+          <div class="action-label">Payments</div>
+          <div class="action-hint" id="payHint">See your history</div>
+        </a>
+        <a class="action-card" id="maintenanceLink" href="tenant-repair-requests.html">
+          <div class="action-icon">🛠️</div>
+          <div class="action-label">Request Repair</div>
+          <div class="action-hint" id="repairHint">Report an issue fast</div>
+        </a>
+        <a class="action-card" id="docsLink" href="tenant-documents.html">
+          <div class="action-icon">📁</div>
+          <div class="action-label">Documents</div>
+          <div class="action-hint">Download your files</div>
+        </a>
+        <a class="action-card" id="contactLink" href="tenant-contact.html">
+          <div class="action-icon">💬</div>
+          <div class="action-label">Contact</div>
+          <div class="action-hint">Message your landlord</div>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Repairs snapshot ───────────────────────────────────── -->
+  <div class="section-card" id="repairsCard" style="display:none">
+    <div class="card-head">
+      <div class="card-head-left">
+        <div class="card-title">🛠️ Open Repair Requests</div>
+        <div class="card-sub" id="repairsSubtitle">Requests pending or in progress</div>
+      </div>
+      <a class="btn primary" id="btnGoRepairs" href="tenant-repair-requests.html">All Requests →</a>
+    </div>
+    <div class="card-body">
+      <div id="repairsList"></div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ── Footer ────────────────────────────────────────────────── -->
+<footer class="site-footer">
+  <div class="footer-inner">
+    <p>© <span id="footerYear"></span> Rental Genie. All rights reserved.</p>
+    <div class="footer-user">
+      <div class="footer-user-dot"></div>
+      <span id="footerWhoami">—</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function () {
+  /* ── safeStorage bootstrap ──────────────────────────────── */
+  var mem = new Map();
+  var wrap = function (s) {
+    return {
+      getItem:    function (k) { try { return (s && s.getItem(k)) || mem.get(k) || null; } catch (e) { return mem.get(k) || null; } },
+      setItem:    function (k, v) { try { s && s.setItem(k, v); } catch (e) {} mem.set(k, v); },
+      removeItem: function (k) { try { s && s.removeItem(k); } catch (e) {} mem.delete(k); }
+    };
+  };
+  var ls = null; try { ls = window.localStorage; } catch (e) {}
+
+  var sb = window._rgClient || window.supabase.createClient(
+    'https://pbojacnagutipfhcxltj.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBib2phY25hZ3V0aXBmaGN4bHRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgwMDkwODAsImV4cCI6MjA2MzU4NTA4MH0.ZLCcAzTYljoZycpBGwMtthP5VyAJ4schuIvt4HibGc0',
+    { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, lock: undefined, storage: wrap(ls) } }
+  );
+
+  /* ── Helpers ────────────────────────────────────────────── */
+  var params         = new URLSearchParams(location.search);
+  var propertyFromUrl = (params.get('property') || '').trim();
+
+  function $(id) { return document.getElementById(id); }
+
+  function escapeHtml(s) {
+    return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function fmtMoney(v) {
+    var n = Number(v);
+    return isNaN(n) ? '—' : n.toLocaleString(undefined, { style: 'currency', currency: 'USD' });
+  }
+  function fmtDate(iso) {
+    if (!iso) return '—';
+    var d = new Date(iso);
+    return isNaN(d.getTime()) ? String(iso) : d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: '2-digit' });
+  }
+  function setText(id, val) { var e = $(id); if (e) e.textContent = val ?? '—'; }
+  function hideOverlay() {
+    var o = $('authOverlay');
+    if (o) { o.classList.add('hidden'); setTimeout(function () { o.style.display = 'none'; }, 380); }
+  }
+
+  /* ── Alert banner ───────────────────────────────────────── */
+  function setAlert(type, msg) {
+    var el = $('alertBox');
+    if (!el) return;
+    if (!msg) { el.style.display = 'none'; el.className = 'alert-banner'; el.textContent = ''; return; }
+    el.style.display = 'flex';
+    el.className = 'alert-banner ' + (type || 'info');
+    el.textContent = msg;
+  }
+
+  /* ── Attention banner ───────────────────────────────────── */
+  function showAttention(items) {
+    var banner = $('attentionBanner');
+    var list   = $('attentionItems');
+    if (!items.length) { banner.style.display = 'none'; return; }
+    banner.style.display = 'block';
+    list.innerHTML = items.map(function (i) {
+      return '<div>• ' + escapeHtml(i) + '</div>';
+    }).join('');
+  }
+
+  /* ── URL context passthrough ─────────────────────────────── */
+  function withProp(url) {
+    if (!propertyFromUrl) return url;
+    var j = url.includes('?') ? '&' : '?';
+    return url + j + 'property=' + encodeURIComponent(propertyFromUrl);
+  }
+
+  function applyNavContext() {
+    var links = [
+      ['navHome',     'tenant-portal.html'],
+      ['navLease',    'tenant-lease.html'],
+      ['navPayments', 'tenant-payments.html'],
+      ['navRepairs',  'tenant-repair-requests.html'],
+      ['navDocs',     'tenant-documents.html'],
+      ['navContact',  'tenant-contact.html'],
+      ['drawerHome',     'tenant-portal.html'],
+      ['drawerLease',    'tenant-lease.html'],
+      ['drawerPayments', 'tenant-payments.html'],
+      ['drawerRepairs',  'tenant-repair-requests.html'],
+      ['drawerDocs',     'tenant-documents.html'],
+      ['drawerContact',  'tenant-contact.html'],
+      ['leaseLink',      'tenant-lease.html'],
+      ['leaseDetailBtn', 'tenant-lease.html'],
+      ['paymentLink',    'tenant-payments.html'],
+      ['maintenanceLink','tenant-repair-requests.html'],
+      ['docsLink',       'tenant-documents.html'],
+      ['contactLink',    'tenant-contact.html'],
+      ['btnGoRepairs',   'tenant-repair-requests.html'],
+    ];
+    links.forEach(function (pair) {
+      var el = $(pair[0]);
+      if (el) el.setAttribute('href', withProp(pair[1]));
+    });
+  }
+
+  /* ── Hamburger ──────────────────────────────────────────── */
+  function wireNav() {
+    var btn    = $('hamburgerBtn');
+    var drawer = $('mobileDrawer');
+    if (btn && drawer && !btn.__wired) {
+      btn.__wired = true;
+      btn.addEventListener('click', function () {
+        drawer.style.display = (drawer.style.display === 'block') ? 'none' : 'block';
+      });
+      document.addEventListener('click', function (e) {
+        if (drawer.style.display === 'block' && !drawer.contains(e.target) && e.target !== btn) {
+          drawer.style.display = 'none';
+        }
+      });
+    }
+    // Sign out
+    function doSignOut() {
+      try { sb.auth.signOut(); } catch (e) {}
+      location.href = 'tenant-login.html';
+    }
+    var so = $('navSignOut'); if (so) so.addEventListener('click', function (e) { e.preventDefault(); doSignOut(); });
+    var ds = $('drawerSignOut'); if (ds) ds.addEventListener('click', function (e) { e.preventDefault(); doSignOut(); });
+
+    // User menu dropdown
+    var umdBtn = $('umdToggle');
+    var umdDrop = $('umdDropdown');
+    if (umdBtn && umdDrop && !umdBtn.__wired) {
+      umdBtn.__wired = true;
+      umdBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        umdDrop.classList.toggle('open');
+        umdBtn.setAttribute('aria-expanded', umdDrop.classList.contains('open'));
+      });
+      document.addEventListener('click', function () { umdDrop.classList.remove('open'); });
+    }
+  }
+
+  /* ── Auth gate ──────────────────────────────────────────── */
+  function showAuthGate() {
+    hideOverlay();
+    $('authGate').classList.remove('hidden');
+    $('app').classList.add('hidden');
+    var ll = $('loginLink');
+    if (ll) ll.href = 'tenant-login.html?redirect=' + encodeURIComponent(location.href);
+  }
+
+  async function requireTenantUser() {
+    try {
+      var r = await sb.auth.getUser();
+      if (r.data && r.data.user) return r.data.user;
+      var s = await sb.auth.getSession();
+      if (s.data && s.data.session && s.data.session.user) return s.data.session.user;
+      return null;
+    } catch(e) { return null; }
+  }
+
+  /* ── Date helpers ───────────────────────────────────────── */
+  function monthKey(d) {
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+  }
+  function computeNextDueDate(dueDay) {
+    var now = new Date();
+    var dd  = Math.min(Math.max(parseInt(dueDay || '1', 10) || 1, 1), 28);
+    var candidate = new Date(now.getFullYear(), now.getMonth(), dd);
+    if (candidate < now) return new Date(now.getFullYear(), now.getMonth() + 1, dd);
+    return candidate;
+  }
+
+  /* ── Hero stat accent ───────────────────────────────────── */
+  function setStatAccent(cardId, type) {
+    var el = $(cardId);
+    if (!el) return;
+    el.classList.remove('warn-stat', 'good-stat', 'danger-stat');
+    if (type) el.classList.add(type + '-stat');
+  }
+
+  /* ── Resolve tenant identity via auth_user_id (not email) ──
+     Fast path: auth_user_id already linked. Fallback: match by email
+     for first login / not-yet-backfilled tenants, and self-heal the
+     link so future lookups use the fast path. This decouples "which
+     data is mine" from the tenant's current login email. */
+  function resolveTenant(user) {
+    return sb.from('tenants').select('id, auth_user_id, email, tenant_name, phone')
+      .eq('auth_user_id', user.id).maybeSingle()
+      .then(function (r1) {
+        if (r1.data) { if (r1.data.email !== user.email) { sb.from('tenants').update({ email: user.email }).eq('id', r1.data.id).then(function(){}, function(){}); } return r1.data; }
+        return sb.from('tenants').select('id, auth_user_id, email, tenant_name, phone')
+          .ilike('email', user.email).maybeSingle()
+          .then(function (r2) {
+            if (r2.data && !r2.data.auth_user_id) {
+              sb.from('tenants').update({ auth_user_id: user.id }).eq('id', r2.data.id).then(function(){}, function(){});
+            }
+            return r2.data || null;
+          });
+      })
+      .catch(function () { return null; });
+  }
+
+  /* ── Main dashboard load ────────────────────────────────── */
+  function loadDashboard(user) {
+    setText('footerYear', new Date().getFullYear());
+    setText('footerWhoami', user.email || 'Tenant');
+
+    // User chip
+    var chip = $('userChip');
+    var avatarEl = $('userAvatar');
+    var emailEl  = $('userEmail');
+    if (chip && avatarEl && emailEl && user.email) {
+      var initials = user.email.substring(0, 2).toUpperCase();
+      avatarEl.textContent = initials;
+      emailEl.textContent  = user.email;
+      chip.style.display   = 'flex';
+    }
+    setText('umdFullName', user.email || 'Tenant');
+    setText('umdEmail', user.email || '');
+
+    // Lease query — resolve tenant identity first (auth_user_id, not email)
+    resolveTenant(user).then(function (tenant) {
+
+      var _firstName = (tenant && tenant.tenant_name) ? tenant.tenant_name.trim().split(/\s+/)[0] : (user.email || 'there');
+      setText('portalSub', 'Welcome back, ' + _firstName + '! Here\'s your rental snapshot.');
+
+      if (tenant && tenant.tenant_name) {
+        var _parts = tenant.tenant_name.trim().split(/\s+/).filter(Boolean);
+        var _init = _parts.length >= 2 ? (_parts[0][0] + _parts[_parts.length-1][0]).toUpperCase() : (_parts[0] ? _parts[0].slice(0,2).toUpperCase() : '');
+        var _av = document.getElementById('userAvatar'); if (_av && _init) _av.textContent = _init;
+        var _em = document.getElementById('userEmail'); if (_em) _em.textContent = _parts[0];
+        var _fn = document.getElementById('umdFullName'); if (_fn) _fn.textContent = tenant.tenant_name;
+      }
+    var leaseQ = tenant
+      ? sb.from('leases')
+          .select('id, property_name, tenant_name, tenant_email, rent_amount, status, rent_due_day, due_day, lease_start, lease_end, grace_period, late_fee_grace_days')
+          .eq('tenant_id', tenant.id)
+          .order('lease_start', { ascending: false })
+      : sb.from('leases')
+          .select('id, property_name, tenant_name, tenant_email, rent_amount, status, rent_due_day, due_day, lease_start, lease_end, grace_period, late_fee_grace_days')
+          .ilike('tenant_email', user.email)
+          .order('lease_start', { ascending: false });
+    if (propertyFromUrl) leaseQ = leaseQ.eq('property_name', propertyFromUrl);
+
+    // Payment query
+    var payQ = sb.from('rent_log')
+      .select('id, property_name, date_paid, inserted_at, amount, method, note, applied_to_due_date')
+      .order('date_paid', { ascending: false });
+    if (propertyFromUrl) payQ = payQ.eq('property_name', propertyFromUrl);
+
+    Promise.all([leaseQ.limit(10), payQ]).then(function (results) {
+      var leaseRes = results[0];
+      var payRes   = results[1];
+
+      if (leaseRes.error) {
+        console.warn('Lease load failed:', leaseRes.error);
+        setAlert('danger', 'Could not load your lease. Please contact your landlord.');
+      }
+      if (payRes.error) {
+        console.warn('Payments load failed:', payRes.error);
+      }
+
+      var lease = (leaseRes.data && leaseRes.data.length) ? leaseRes.data[0] : null;
+      var rows  = payRes.data || [];
+      var now   = new Date();
+
+      var propertyLabel = lease ? lease.property_name : propertyFromUrl;
+      setText('portalTitle', propertyLabel ? '🏠 Tenant Portal – ' + propertyLabel : '🏠 Tenant Portal');
+
+      var rentAmount = lease ? Number(lease.rent_amount || 0) : 0;
+      var dueDay     = lease ? (lease.rent_due_day || lease.due_day || '') : '';
+      var nextDue    = dueDay ? computeNextDueDate(dueDay) : null;
+
+      var paidThisMonth = rows
+        .filter(function (r) {
+          var d = r.date_paid ? new Date(r.date_paid) : (r.inserted_at ? new Date(r.inserted_at) : null);
+          return d && monthKey(d) === monthKey(now);
+        })
+        .reduce(function (sum, r) { return sum + (Number(r.amount || 0) || 0); }, 0);
+
+      var last = rows.length ? rows[0] : null;
+
+      /* ── Hero stats ── */
+      setText('qpRent', rentAmount ? fmtMoney(rentAmount) : '—');
+      setText('qpNextDue', nextDue ? 'Next due: ' + fmtDate(nextDue) + (dueDay ? ' (day ' + dueDay + ')' : '') : 'Due day not set');
+      setText('qpPaidMonth', fmtMoney(paidThisMonth));
+
+      if (last) {
+        var ld = fmtDate(last.date_paid || last.inserted_at);
+        setText('qpLastPay', 'Last: ' + fmtMoney(last.amount) + ' · ' + (last.method || '—') + ' · ' + ld);
+      } else {
+        setText('qpLastPay', 'No payments recorded');
+      }
+
+      // Paid stat accent
+      if (rentAmount > 0) {
+        if (paidThisMonth >= rentAmount)       setStatAccent('statPaid', 'good');
+        else if (paidThisMonth > 0)            setStatAccent('statPaid', 'warn');
+        else if (nextDue && now > nextDue)     setStatAccent('statPaid', 'danger');
+      }
+
+      /* ── Lease status ── */
+      var statusText = '—';
+      var statusAccent = '';
+      if (!lease) {
+        statusText = 'No lease found';
+        statusAccent = 'warn';
+        setText('qpLeaseStatus', statusText);
+        setStatAccent('statLease', statusAccent);
+      } else {
+        var s = (lease.status || '').toLowerCase();
+        if (s.includes('signed') || s.includes('active')) {
+          statusText   = '✓ Active';
+          statusAccent = 'good';
+        } else if (s) {
+          statusText   = lease.status;
+          statusAccent = 'warn';
+        } else {
+          statusText   = 'Unknown';
+          statusAccent = 'warn';
+        }
+        setText('qpLeaseStatus', statusText);
+        setStatAccent('statLease', statusAccent);
+        setText('qpLeaseTerm', lease.lease_start && lease.lease_end
+          ? fmtDate(lease.lease_start) + ' → ' + fmtDate(lease.lease_end)
+          : '—');
+      }
+
+      /* ── Lease detail cells ── */
+      setText('qpProperty',    lease ? (lease.property_name || '—') : (propertyFromUrl || '—'));
+      setText('qpLeaseTermFull', lease && lease.lease_start
+        ? fmtDate(lease.lease_start) + ' → ' + fmtDate(lease.lease_end)
+        : '—');
+      setText('qpRentDetail',  rentAmount ? fmtMoney(rentAmount) + ' / mo' : '—');
+      setText('qpDueDay',      dueDay ? 'Day ' + dueDay + ' of each month' : '—');
+      setText('qpGrace',       lease && lease.grace_period ? lease.grace_period + ' days' :
+                                (lease && lease.late_fee_grace_days ? lease.late_fee_grace_days + ' days' : '—'));
+      setText('qpStatus',      lease ? (lease.status || '—') : '—');
+
+      /* ── Action hints ── */
+      setText('leaseHint',  lease ? 'Ends: ' + fmtDate(lease.lease_end) : 'View details');
+      setText('payHint',    rentAmount ? 'Paid: ' + fmtMoney(paidThisMonth) + ' this month' : 'See history');
+      setText('repairHint', 'Report an issue');
+
+      /* ── Attention items ── */
+      var attention = [];
+      if (!lease) {
+        attention.push('No active lease found for your email.');
+      } else {
+        if (lease.lease_end) {
+          var daysLeft = Math.ceil((new Date(lease.lease_end) - now) / (1000 * 60 * 60 * 24));
+          if (!isNaN(daysLeft) && daysLeft <= 45 && daysLeft > 0)
+            attention.push('Your lease ends in ' + daysLeft + ' day(s). Consider reaching out about renewal.');
+          if (!isNaN(daysLeft) && daysLeft <= 0)
+            attention.push('Your lease end date has passed. Please contact your landlord.');
+        }
+      }
+      if (rentAmount) {
+        if (paidThisMonth > 0 && paidThisMonth < rentAmount)
+          attention.push('Partial payment this month: paid ' + fmtMoney(paidThisMonth) + ' of ' + fmtMoney(rentAmount) + '.');
+        if (nextDue && now > nextDue && paidThisMonth < rentAmount)
+          attention.push('Rent may be past due. Please check your payment history.');
+      } else if (lease) {
+        attention.push('Monthly rent amount is not set on your lease — contact your landlord.');
+      }
+      showAttention(attention);
+
+      /* ── Repairs snapshot ── */
+      loadRepairsSnapshot(user, tenant, lease ? lease.property_name : propertyFromUrl);
+
+    }).catch(function (err) {
+      console.error('Dashboard load error:', err);
+      setAlert('danger', 'Error loading your portal data. Please try refreshing.');
+    });
+    }); // end resolveTenant().then()
+  }
+
+  /* ── Repairs snapshot ───────────────────────────────────── */
+  function loadRepairsSnapshot(user, tenant, propName) {
+    var q = tenant
+      ? sb.from('maintenance_requests')
+          .select('id, property_name, issue_summary, status, date_submitted, inserted_at')
+          .eq('tenant_id', tenant.id)
+          .order('date_submitted', { ascending: false })
+          .limit(5)
+      : sb.from('maintenance_requests')
+          .select('id, property_name, issue_summary, status, date_submitted, inserted_at')
+          .eq('tenant_email', user.email)
+          .order('date_submitted', { ascending: false })
+          .limit(5);
+    if (propName) q = q.eq('property_name', propName);
+
+    q.then(function (res) {
+      if (res.error) throw res.error;
+      var open = (res.data || []).filter(function (r) {
+        return !String(r.status || '').toLowerCase().includes('complete');
+      });
+      if (!open.length) { var rc = $('repairsCard'); if (rc) rc.style.display = 'none'; return; }
+
+      var card = $('repairsCard');
+      var list = $('repairsList');
+      var sub  = $('repairsSubtitle');
+      if (!card || !list) return;
+
+      card.style.display = 'block';
+      if (sub) sub.textContent = open.length + ' open request' + (open.length !== 1 ? 's' : '') + ' pending or in progress';
+
+      list.innerHTML = open.map(function (r) {
+        var isDone = String(r.status || '').toLowerCase().includes('complete');
+        return '<div class="repairs-row">'
+          + '<div class="repairs-dot ' + (isDone ? 'done' : 'open') + '"></div>'
+          + '<div class="repairs-issue">' + escapeHtml(r.issue_summary || 'No description') + '</div>'
+          + '<div class="repairs-status">' + escapeHtml(r.status || '—') + '</div>'
+          + '</div>';
+      }).join('');
+    }).catch(function () {
+      var rc = $('repairsCard'); if (rc) rc.style.display = 'none';
+    });
+  }
+
+  /* ── Boot ───────────────────────────────────────────────── */
+  document.addEventListener('DOMContentLoaded', function () {
+    wireNav();
+    applyNavContext();
+    $('authGate').classList.add('hidden');
+    $('app').classList.add('hidden');
+
+    // Safety net: always hide overlay
+    setTimeout(hideOverlay, 4000);
+
+    (async function() {
+      try {
+        var user = await requireTenantUser();
+        if (!user) { showAuthGate(); return; }
+        hideOverlay();
+        $('authGate').classList.add('hidden');
+        $('app').classList.remove('hidden');
+        loadDashboard(user);
+      } catch(err) {
+        console.error('Auth error:', err);
+        showAuthGate();
+      }
+    }());
+
+    // Auth state listener
+    sb.auth.onAuthStateChange(function (event, session) {
+      if (event === 'SIGNED_OUT') location.href = 'tenant-login.html';
+    });
+  });
+}());
+</script>
+</body>
+</html>

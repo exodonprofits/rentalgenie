@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Publish Listing – Rental Genie</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap">
+
+<style>
+:root {
+  --navy:#0c1e3a; --navy-mid:#1a3a6b; --navy-light:#1e5799; --sky:#2d8cf0;
+  --border:#e2e8f0; --bg:#f1f4f8; --card:#ffffff; --text:#0c1e3a; --muted:#64748b;
+  --success:#10b981; --success-bg:#ecfdf5; --success-bdr:#a7f3d0;
+  --danger:#ef4444; --warn-bg:#fffbeb; --warn-bdr:#fde68a; --warn-text:#92400e;
+  --radius-sm:8px; --radius-md:12px; --radius-lg:16px;
+  --shadow-sm:0 1px 4px rgba(12,30,58,.06); --shadow-md:0 4px 16px rgba(12,30,58,.09);
+  --header-grad: linear-gradient(135deg,#0c1e3a 0%,#1a3a6b 55%,#1e5799 100%);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',-apple-system,sans-serif; background:var(--bg); color:var(--text);}
+.header-container{position:sticky; top:0; z-index:1000; background:var(--header-grad); box-shadow:0 2px 20px rgba(12,30,58,.35);}
+.navbar{max-width:1200px; margin:0 auto; padding:0 22px; height:64px; display:flex; align-items:center; justify-content:space-between;}
+.brand-area{display:flex; align-items:center; gap:11px; text-decoration:none;}
+.brand-logo{width:38px; height:38px; border-radius:9px; background:rgba(255,255,255,.12);}
+.brand-title{font-size:1.15rem; font-weight:700; color:#fff;}
+.back-link{color:rgba(255,255,255,.85); text-decoration:none; font-size:.85rem; font-weight:600;}
+.back-link:hover{color:#fff;}
+
+.page{max-width:900px; margin:32px auto 60px; padding:0 20px;}
+h1{font-size:1.6rem; font-weight:800; color:var(--navy); margin-bottom:4px;}
+.subtitle{color:var(--muted); font-size:.92rem; margin-bottom:24px;}
+
+.card{background:var(--card); border-radius:var(--radius-lg); border:1px solid var(--border); box-shadow:var(--shadow-sm); padding:24px; margin-bottom:20px;}
+.card h2{font-size:1.05rem; font-weight:700; color:var(--navy); margin-bottom:14px;}
+
+.publish-toggle{display:flex; align-items:center; justify-content:space-between; padding:14px 16px; background:var(--bg); border-radius:12px; margin-bottom:18px;}
+.publish-toggle-label{font-weight:700; font-size:.95rem;}
+.publish-toggle-sub{font-size:.8rem; color:var(--muted); margin-top:2px;}
+.switch{position:relative; width:46px; height:26px; flex-shrink:0;}
+.switch input{opacity:0; width:0; height:0;}
+.switch-track{position:absolute; inset:0; background:#cbd5e1; border-radius:999px; cursor:pointer; transition:.2s;}
+.switch-thumb{position:absolute; top:3px; left:3px; width:20px; height:20px; background:#fff; border-radius:50%; transition:.2s; box-shadow:0 1px 3px rgba(0,0,0,.3);}
+.switch input:checked + .switch-track{background:var(--success);}
+.switch input:checked + .switch-track .switch-thumb{transform:translateX(20px);}
+
+.notice{padding:12px 14px; border-radius:10px; font-size:.85rem; margin-bottom:16px;}
+.notice.warn{background:var(--warn-bg); border:1px solid var(--warn-bdr); color:var(--warn-text);}
+.notice.info{background:#eff6ff; border:1px solid #bfdbfe; color:#1e40af;}
+
+.form-grid{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+
+.facts-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:12px; margin-top:14px;}
+.fact-item{background:var(--bg); border-radius:10px; padding:10px 12px;}
+.fact-item .fact-label{font-size:.72rem; font-weight:700; text-transform:uppercase; color:#64748b; letter-spacing:.02em;}
+.fact-item .fact-value{font-size:.95rem; font-weight:700; color:var(--navy); margin-top:2px;}
+.fact-item.missing .fact-value{color:#b45309; font-weight:600; font-size:.82rem;}
+
+.ai-suggest-btn{
+  padding:6px 12px; border-radius:8px; border:1px solid #c7d2fe; background:#eef2ff;
+  color:#4338ca; font-size:.78rem; font-weight:700; cursor:pointer; white-space:nowrap;
+}
+.ai-suggest-btn:hover{background:#e0e7ff;}
+.ai-suggest-btn:disabled{opacity:.6; cursor:default;}
+.field{display:flex; flex-direction:column; gap:5px;}
+.field.full{grid-column:1/-1;}
+.field label{font-size:.75rem; font-weight:700; text-transform:uppercase; color:#64748b; letter-spacing:.02em;}
+.field input, .field textarea{padding:9px 12px; border-radius:10px; border:1px solid #cbd5e1; font-family:'DM Sans',sans-serif; font-size:.9rem;}
+.field textarea{min-height:100px; resize:vertical;}
+.field-hint{font-size:.75rem; color:var(--muted);}
+
+.photo-row{display:flex; gap:8px; margin-bottom:8px;}
+.photo-row input{flex:1;}
+.photo-row button{padding:8px 12px; border-radius:8px; border:1px solid #cbd5e1; background:#fff; cursor:pointer; font-size:.85rem;}
+.add-photo-btn{padding:8px 14px; border-radius:8px; border:1px dashed #94a3b8; background:#fff; cursor:pointer; font-size:.85rem; color:var(--muted);}
+
+.save-bar{display:flex; gap:10px; margin-top:18px;}
+.add-btn{padding:11px 20px; border-radius:999px; font-weight:700; font-size:.9rem; cursor:pointer; border:none; background:linear-gradient(135deg,var(--navy),var(--sky)); color:#fff;}
+.add-btn:disabled{opacity:.6; cursor:default;}
+.status-msg{font-size:.85rem; font-weight:600; margin-top:10px;}
+.status-msg.ok{color:var(--success);}
+.status-msg.err{color:var(--danger);}
+
+/* APPLICATIONS */
+.app-row{border:1px solid var(--border); border-radius:12px; margin-bottom:10px; overflow:hidden;}
+.app-row-header{display:flex; justify-content:space-between; align-items:center; padding:14px; cursor:pointer; flex-wrap:wrap; gap:10px;}
+.app-row-header:hover{background:var(--bg);}
+.app-info strong{font-size:.92rem;}
+.app-info .app-sub{font-size:.8rem; color:var(--muted); margin-top:2px;}
+.app-status{padding:4px 10px; border-radius:999px; font-size:.75rem; font-weight:700;}
+.app-status.submitted{background:#eff6ff; color:#1e40af;}
+.app-status.reviewed{background:#fffbeb; color:#92400e;}
+.app-status.approved{background:var(--success-bg); color:#166534;}
+.app-status.denied{background:#fef2f2; color:#7f1d1d;}
+.app-actions{display:flex; gap:6px;}
+.app-actions button{padding:6px 10px; border-radius:8px; border:1px solid #cbd5e1; background:#fff; font-size:.78rem; cursor:pointer;}
+.app-actions button:hover{background:#f1f5f9;}
+.empty-apps{color:var(--muted); font-size:.88rem; text-align:center; padding:20px;}
+
+.app-row-body{display:none; padding:0 16px 16px; border-top:1px solid var(--border);}
+.app-row-body.open{display:block; padding-top:14px;}
+
+.app-detail-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:10px; margin-bottom:12px;}
+.app-detail-label{font-size:.7rem; font-weight:700; text-transform:uppercase; color:#94a3b8; letter-spacing:.02em;}
+.app-detail-value{font-size:.85rem; font-weight:600; color:var(--text); margin-top:2px;}
+.app-message-note{background:var(--bg); border-radius:10px; padding:10px 12px; font-size:.85rem; font-style:italic; color:#475569; margin-bottom:12px;}
+
+.screening-box{background:var(--bg); border-radius:10px; padding:12px 14px; font-size:.85rem; margin-bottom:16px;}
+.screening-btn{padding:6px 11px; border-radius:8px; border:1px solid #cbd5e1; background:#fff; font-size:.76rem; font-weight:600; cursor:pointer;}
+.screening-btn:hover{background:#f1f5f9;}
+.screening-report-row{display:flex; gap:8px; margin-top:10px;}
+.screening-report-input{flex:1; padding:7px 10px; border-radius:8px; border:1px solid #cbd5e1; font-family:'DM Sans',sans-serif; font-size:.8rem;}
+
+.thread-box h4{font-size:.85rem; font-weight:700; color:var(--navy); margin-bottom:8px;}
+.msg-list{display:flex; flex-direction:column; gap:8px; max-height:220px; overflow-y:auto; margin-bottom:10px;}
+.msg{max-width:78%; padding:8px 12px; border-radius:12px; font-size:.84rem; line-height:1.4;}
+.msg.mine{align-self:flex-end; background:linear-gradient(135deg,var(--navy),var(--sky)); color:#fff; border-bottom-right-radius:3px;}
+.msg.theirs{align-self:flex-start; background:var(--bg); color:var(--text); border-bottom-left-radius:3px;}
+.msg-time{font-size:.66rem; opacity:.7; margin-top:2px;}
+.msg-empty{color:var(--muted); font-size:.82rem;}
+.msg-form{display:flex; gap:8px;}
+.msg-form input{flex:1; padding:8px 12px; border-radius:8px; border:1px solid #cbd5e1; font-family:'DM Sans',sans-serif; font-size:.84rem;}
+.msg-form button{padding:8px 16px; border-radius:8px; border:none; background:var(--navy); color:#fff; font-weight:700; font-size:.8rem; cursor:pointer;}
+</style>
+</head>
+<body>
+
+<header class="header-container">
+  <div class="navbar">
+    <a href="property-management.html" class="brand-area">
+      <img src="images/rg-logo.png" class="brand-logo" alt="Rental Genie" onerror="this.style.display='none'" />
+      <span class="brand-title">Rental Genie</span>
+    </a>
+    <a href="property-management.html" class="back-link">← Back to Properties</a>
+  </div>
+</header>
+
+<main class="page">
+  <h1>📢 Publish Listing</h1>
+  <p class="subtitle" id="propertyLabel">Loading property…</p>
+
+  <div id="notVacantNotice"></div>
+
+  <div class="card" id="propertyFactsCard" style="display:none;">
+    <h2>🏠 Property Details <span style="font-weight:500; color:var(--muted); font-size:.8rem;">(shown automatically on the public listing)</span></h2>
+    <div class="facts-grid" id="factsGrid"></div>
+    <p class="field-hint" style="margin-top:12px;">These come from the property's core record. To correct any of them, edit the property itself in <a href="property-management.html" style="color:var(--sky);">Property Management</a> — not here.</p>
+  </div>
+
+  <div class="card">
+    <div class="publish-toggle">
+      <div>
+        <div class="publish-toggle-label">Public listing</div>
+        <div class="publish-toggle-sub" id="toggleSub">When on, this property appears on the public Available Rentals page. You can publish while a unit is still occupied — just set an Available Date for pre-leasing.</div>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="publicToggle" />
+        <span class="switch-track"><span class="switch-thumb"></span></span>
+      </label>
+    </div>
+
+    <h2>Listing Details</h2>
+    <div class="form-grid">
+      <div class="field"><label>Asking Rent ($/mo)</label><input id="fRent" type="number" placeholder="2200" /></div>
+      <div class="field"><label>Security Deposit ($)</label><input id="fDeposit" type="number" placeholder="2200" /></div>
+      <div class="field"><label>Available Date <span style="color:#94a3b8; font-weight:600; text-transform:none;">(recommended)</span></label><input id="fAvailDate" type="date" /></div>
+      <div class="field"><label>Pet Policy</label><input id="fPetPolicy" type="text" placeholder="e.g. Cats OK, no dogs" /></div>
+      <div class="field"><label>Contact Email</label><input id="fContactEmail" type="email" placeholder="you@example.com" /></div>
+      <div class="field"><label>Contact Phone</label><input id="fContactPhone" type="tel" placeholder="(555) 555-5555" /></div>
+      <div class="field full">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <label style="margin-bottom:0;">Description</label>
+          <button type="button" class="ai-suggest-btn" id="aiSuggestBtn">✨ Suggest with AI</button>
+        </div>
+        <textarea id="fDescription" placeholder="Describe the unit, neighborhood, and what makes it a great place to live…"></textarea>
+        <div class="field-hint" id="aiStatus" style="min-height:16px;"></div>
+      </div>
+      <div class="field full">
+        <label>Photo URLs</label>
+        <div class="field-hint" style="margin-bottom:6px;">Paste image URLs (one per row). The first photo is used as the cover image.</div>
+        <div id="photoRows"></div>
+        <button type="button" class="add-photo-btn" id="addPhotoBtn">+ Add photo URL</button>
+      </div>
+    </div>
+
+    <div class="save-bar">
+      <button class="add-btn" id="saveBtn">💾 Save Listing</button>
+    </div>
+    <div class="status-msg" id="statusMsg"></div>
+  </div>
+
+  <div class="card">
+    <h2>Applications Received</h2>
+    <div id="appsList"><div class="empty-apps">Loading…</div></div>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const sb = window.supabase.createClient(
+  "https://pbojacnagutipfhcxltj.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBib2phY25hZ3V0aXBmaGN4bHRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgwMDkwODAsImV4cCI6MjA2MzU4NTA4MH0.ZLCcAzTYljoZycpBGwMtthP5VyAJ4schuIvt4HibGc0"
+);
+
+const propertyId = new URLSearchParams(window.location.search).get("property_id");
+let CURRENT_PROPERTY = null;
+
+function $(id){ return document.getElementById(id); }
+
+function renderFactsGrid(p){
+  const facts = [
+    { label: "Property Type", value: p.property_type },
+    { label: "Units", value: p.units },
+    { label: "Bedrooms", value: p.bedrooms },
+    { label: "Bathrooms", value: p.bathrooms },
+    { label: "Square Feet", value: p.square_feet },
+    { label: "Year Built", value: p.year_built },
+    { label: "Address", value: p.address },
+  ];
+
+  $("factsGrid").innerHTML = facts.map(f => {
+    const hasValue = f.value !== null && f.value !== undefined && f.value !== "";
+    return `
+      <div class="fact-item${hasValue ? "" : " missing"}">
+        <div class="fact-label">${f.label}</div>
+        <div class="fact-value">${hasValue ? escapeHtml(String(f.value)) : "Not set"}</div>
+      </div>`;
+  }).join("");
+
+  $("propertyFactsCard").style.display = "";
+}
+
+function escapeHtml(s){
+  return String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+
+function addPhotoRow(value){
+  const row = document.createElement("div");
+  row.className = "photo-row";
+  row.innerHTML = `<input type="text" class="photo-url" placeholder="https://…" value="${value ? value.replace(/"/g,'&quot;') : ''}" />
+    <button type="button" class="remove-photo">✕</button>`;
+  row.querySelector(".remove-photo").addEventListener("click", () => row.remove());
+  $("photoRows").appendChild(row);
+}
+$("addPhotoBtn").addEventListener("click", () => addPhotoRow(""));
+
+$("aiSuggestBtn").addEventListener("click", async () => {
+  if (!CURRENT_PROPERTY){ return; }
+  const btn = $("aiSuggestBtn");
+  const aiStatus = $("aiStatus");
+  const existing = $("fDescription").value.trim();
+
+  if (existing){
+    const proceed = confirm("This will replace the current description text with an AI-generated draft. Continue?");
+    if (!proceed) return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = "✨ Writing…";
+  aiStatus.textContent = "";
+  aiStatus.style.color = "";
+
+  const p = CURRENT_PROPERTY;
+  const rent = $("fRent").value;
+  const petPolicy = $("fPetPolicy").value.trim();
+  const availDate = $("fAvailDate").value;
+
+  const facts = [
+    p.property_type ? `Property type: ${p.property_type}` : null,
+    p.bedrooms ? `${p.bedrooms} bedroom(s)` : null,
+    p.bathrooms ? `${p.bathrooms} bathroom(s)` : null,
+    p.square_feet ? `${p.square_feet} sqft` : null,
+    p.year_built ? `Built in ${p.year_built}` : null,
+    p.address ? `Address: ${p.address}` : null,
+    rent ? `Asking rent: $${rent}/month` : null,
+    petPolicy ? `Pet policy: ${petPolicy}` : null,
+    availDate ? `Available: ${availDate}` : "Available now",
+  ].filter(Boolean).join("\n");
+
+  const prompt = `Write a warm, honest, 3-4 sentence rental listing description for a prospective tenant, based only on these facts (do not invent amenities, finishes, or neighborhood details that aren't listed):\n\n${facts}\n\nTone: friendly and straightforward, like a good independent landlord writing it themselves — not a real-estate agency template. No bullet points, no headers, no emojis. Return only the description text, nothing else.`;
+
+  try {
+    // Calls the Supabase Edge Function named "ai-proxy" — see
+    // supabase-ai-proxy/index.ts for the function code and deploy steps.
+    const { data, error: fnError } = await sb.functions.invoke("ai-proxy", {
+      body: { prompt }
+    });
+
+    if (fnError || !data || !data.text){
+      throw new Error((data && data.error) || fnError?.message || "No description returned.");
+    }
+    $("fDescription").value = data.text.trim();
+    aiStatus.textContent = "✅ Draft generated — feel free to edit before saving.";
+    aiStatus.style.color = "#166534";
+  } catch (err){
+    aiStatus.textContent = "Couldn't generate a description right now. Please try again or write your own.";
+    aiStatus.style.color = "#ef4444";
+  }
+
+  btn.disabled = false;
+  btn.textContent = "✨ Suggest with AI";
+});
+
+function getPhotoUrls(){
+  return Array.from(document.querySelectorAll(".photo-url"))
+    .map(i => i.value.trim())
+    .filter(Boolean);
+}
+
+async function loadProperty(){
+  if (!propertyId){
+    $("propertyLabel").textContent = "No property selected.";
+    return;
+  }
+  const { data: p, error } = await sb
+    .from("properties")
+    .select("*")
+    .eq("id", propertyId)
+    .single();
+
+  if (error || !p){
+    $("propertyLabel").textContent = "Property not found.";
+    return;
+  }
+
+  CURRENT_PROPERTY = p;
+  $("propertyLabel").textContent = `${p.name || ""} — ${p.address || ""}`;
+  renderFactsGrid(p);
+
+  const vacant = String(p.occupancy_status||"").toLowerCase() === "vacant";
+  if (!vacant){
+    $("notVacantNotice").innerHTML = `<div class="notice info">ℹ️ This property is currently marked <b>${(p.occupancy_status||"").replace("_"," ")}</b>. That's fine for pre-leasing — just set an <b>Available Date</b> below so renters know when the unit is actually ready, rather than implying it's available now.</div>`;
+  }
+
+  $("publicToggle").checked = !!p.is_public_listing;
+  $("fRent").value = p.listing_rent ?? "";
+  $("fDeposit").value = p.listing_deposit ?? "";
+  $("fAvailDate").value = p.listing_available_date ?? "";
+  $("fPetPolicy").value = p.listing_pet_policy ?? "";
+  $("fContactEmail").value = p.listing_contact_email ?? "";
+  $("fContactPhone").value = p.listing_contact_phone ?? "";
+  $("fDescription").value = p.listing_description ?? "";
+  if (!p.listing_description){
+    $("aiSuggestBtn").textContent = "✨ Generate Description";
+  } else {
+    $("aiSuggestBtn").textContent = "✨ Suggest with AI";
+  }
+
+  $("photoRows").innerHTML = "";
+  let photos = [];
+  try { photos = Array.isArray(p.listing_photos) ? p.listing_photos : JSON.parse(p.listing_photos || "[]"); } catch(e){}
+  if (!photos.length) photos = [""];
+  photos.forEach(addPhotoRow);
+}
+
+$("saveBtn").addEventListener("click", async () => {
+  if (!propertyId) return;
+  const btn = $("saveBtn");
+  const statusMsg = $("statusMsg");
+
+  const isPublic = $("publicToggle").checked;
+  const availDate = $("fAvailDate").value;
+
+  if (isPublic && !availDate){
+    const proceed = confirm(
+      "No Available Date is set. Without one, this listing will show as \"Available Now.\" " +
+      "If this unit is still occupied and you're pre-leasing, set an Available Date so renters aren't misled.\n\n" +
+      "Publish anyway without a date?"
+    );
+    if (!proceed) return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = "Saving…";
+
+  const payload = {
+    is_public_listing: isPublic,
+    listing_rent: parseFloat($("fRent").value) || null,
+    listing_deposit: parseFloat($("fDeposit").value) || null,
+    listing_available_date: availDate || null,
+    listing_pet_policy: $("fPetPolicy").value.trim() || null,
+    listing_contact_email: $("fContactEmail").value.trim() || null,
+    listing_contact_phone: $("fContactPhone").value.trim() || null,
+    listing_description: $("fDescription").value.trim() || null,
+    listing_photos: getPhotoUrls(),
+  };
+  if (isPublic) payload.listing_published_at = new Date().toISOString();
+
+  const { error } = await sb.from("properties").update(payload).eq("id", propertyId);
+
+  btn.disabled = false;
+  btn.textContent = "💾 Save Listing";
+
+  if (error){
+    statusMsg.textContent = "❌ Save failed: " + (error.message || "unexpected error.");
+    statusMsg.className = "status-msg err";
+    return;
+  }
+  statusMsg.textContent = isPublic ? "✅ Listing published — now visible on the public site." : "✅ Saved.";
+  statusMsg.className = "status-msg ok";
+});
+
+function fmtMoney(n){ return (n === null || n === undefined || n === "") ? null : "$" + Number(n).toLocaleString(); }
+
+const SCREENING_LABELS = {
+  not_requested: "Not Requested",
+  requested: "In Progress",
+  completed: "Complete",
+  failed: "Failed",
+};
+
+async function loadApplications(){
+  const list = $("appsList");
+  if (!propertyId){ list.innerHTML = `<div class="empty-apps">No property selected.</div>`; return; }
+
+  const { data, error } = await sb
+    .from("applications")
+    .select("*")
+    .eq("property_id", propertyId)
+    .order("created_at", { ascending: false });
+
+  if (error){
+    list.innerHTML = `<div class="empty-apps">Couldn't load applications: ${error.message}</div>`;
+    return;
+  }
+  if (!data || !data.length){
+    list.innerHTML = `<div class="empty-apps">No applications yet. Once your listing is public, applications will show up here.</div>`;
+    return;
+  }
+
+  list.innerHTML = data.map(a => {
+    const income = fmtMoney(a.monthly_income);
+    return `
+    <div class="app-row" data-id="${a.id}">
+      <div class="app-row-header" data-toggle="${a.id}">
+        <div class="app-info">
+          <strong>${a.applicant_name || "—"}</strong>
+          <div class="app-sub">${a.applicant_email || ""}${a.applicant_phone ? " · " + a.applicant_phone : ""}${a.desired_move_in ? " · Move-in: " + new Date(a.desired_move_in).toLocaleDateString() : ""}</div>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span class="app-status ${a.status}">${a.status}</span>
+          <div class="app-actions">
+            ${a.status !== "approved" ? `<button data-action="approved">Approve</button>` : ""}
+            ${a.status !== "denied" ? `<button data-action="denied">Deny</button>` : ""}
+            ${a.status === "submitted" ? `<button data-action="reviewed">Mark Reviewed</button>` : ""}
+          </div>
+        </div>
+      </div>
+
+      <div class="app-row-body" id="appBody-${a.id}">
+        <div class="app-detail-grid">
+          <div><div class="app-detail-label">Current Address</div><div class="app-detail-value">${a.current_address || "—"}</div></div>
+          <div><div class="app-detail-label">Employment</div><div class="app-detail-value">${(a.employment_status || "—").replace("_"," ")}${a.employer_name ? " · " + a.employer_name : ""}</div></div>
+          <div><div class="app-detail-label">Monthly Income</div><div class="app-detail-value">${income || "—"}</div></div>
+          <div><div class="app-detail-label">Occupants</div><div class="app-detail-value">${a.occupants_count || "—"}</div></div>
+          <div><div class="app-detail-label">Pets</div><div class="app-detail-value">${a.has_pets ? (a.pet_details || "Yes") : "None"}</div></div>
+          <div><div class="app-detail-label">Emergency Contact</div><div class="app-detail-value">${a.emergency_contact_name ? `${a.emergency_contact_name}${a.emergency_contact_phone ? " · " + a.emergency_contact_phone : ""}` : "—"}</div></div>
+        </div>
+        ${a.message ? `<div class="app-message-note">"${a.message}"</div>` : ""}
+
+        <div class="screening-box">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+            <div>
+              🔍 <strong>Screening:</strong> ${SCREENING_LABELS[a.screening_status] || "Not Requested"}
+              ${a.screening_consent ? `<span style="color:var(--success); font-size:.78rem; margin-left:6px;">✓ Applicant consented</span>` : `<span style="color:#b45309; font-size:.78rem; margin-left:6px;">⚠ No consent on file</span>`}
+            </div>
+            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+              <button type="button" class="screening-btn" data-screening-open="${a.id}">Open SmartMove ↗</button>
+              ${a.screening_status !== "requested" ? `<button type="button" class="screening-btn" data-screening-status="${a.id}" data-value="requested">Mark Requested</button>` : ""}
+              ${a.screening_status !== "completed" ? `<button type="button" class="screening-btn" data-screening-status="${a.id}" data-value="completed">Mark Complete</button>` : ""}
+            </div>
+          </div>
+          <div class="screening-report-row">
+            <input type="text" class="screening-report-input" id="reportUrl-${a.id}" placeholder="Paste report URL from SmartMove (optional)" value="${a.screening_report_url || ""}" />
+            <button type="button" class="screening-btn" data-save-report="${a.id}">Save</button>
+          </div>
+        </div>
+
+        <div class="thread-box">
+          <h4>💬 Messages</h4>
+          <div class="msg-list" id="landlordMsgs-${a.id}"><div class="msg-empty">Loading…</div></div>
+          <div class="msg-form">
+            <input type="text" id="landlordMsgInput-${a.id}" placeholder="Write a message to the applicant…" />
+            <button type="button" data-send-msg="${a.id}">Send</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  }).join("");
+
+  list.querySelectorAll("[data-toggle]").forEach(el => {
+    el.addEventListener("click", () => {
+      const id = el.getAttribute("data-toggle");
+      const body = $("appBody-" + id);
+      const wasOpen = body.classList.contains("open");
+      body.classList.toggle("open");
+      if (!wasOpen) loadApplicationMessages(id);
+    });
+  });
+
+  list.querySelectorAll(".app-actions button").forEach(btn => {
+    btn.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      const row = e.target.closest(".app-row");
+      const id = row.getAttribute("data-id");
+      const newStatus = e.target.getAttribute("data-action");
+      await sb.from("applications").update({ status: newStatus, updated_at: new Date().toISOString() }).eq("id", id);
+      loadApplications();
+    });
+  });
+
+  list.querySelectorAll("[data-screening-open]").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      window.open("https://www.mysmartmove.com/", "_blank");
+    });
+  });
+
+  list.querySelectorAll("[data-screening-status]").forEach(btn => {
+    btn.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      const id = e.target.getAttribute("data-screening-status");
+      const value = e.target.getAttribute("data-value");
+      const payload = { screening_status: value };
+      if (value === "requested") payload.screening_requested_at = new Date().toISOString();
+      await sb.from("applications").update(payload).eq("id", id);
+      loadApplications();
+    });
+  });
+
+  list.querySelectorAll("[data-save-report]").forEach(btn => {
+    btn.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      const id = e.target.getAttribute("data-save-report");
+      const url = $("reportUrl-" + id).value.trim() || null;
+      await sb.from("applications").update({ screening_report_url: url }).eq("id", id);
+    });
+  });
+
+  list.querySelectorAll("[data-send-msg]").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      sendLandlordMessage(e.target.getAttribute("data-send-msg"));
+    });
+  });
+}
+
+async function loadApplicationMessages(applicationId){
+  const el = $("landlordMsgs-" + applicationId);
+  const { data, error } = await sb
+    .from("application_messages")
+    .select("*")
+    .eq("application_id", applicationId)
+    .order("created_at", { ascending: true });
+
+  if (error){
+    el.innerHTML = `<div class="msg-empty">Couldn't load messages: ${error.message}</div>`;
+    return;
+  }
+  if (!data || !data.length){
+    el.innerHTML = `<div class="msg-empty">No messages yet.</div>`;
+    return;
+  }
+  el.innerHTML = data.map(m => `
+    <div class="msg ${m.sender_role === "landlord" ? "mine" : "theirs"}">
+      ${m.message}
+      <div class="msg-time">${new Date(m.created_at).toLocaleString()}</div>
+    </div>
+  `).join("");
+  el.scrollTop = el.scrollHeight;
+}
+
+async function sendLandlordMessage(applicationId){
+  const input = $("landlordMsgInput-" + applicationId);
+  const text = input.value.trim();
+  if (!text) return;
+  input.disabled = true;
+  const { error } = await sb.from("application_messages").insert({
+    application_id: applicationId,
+    sender_role: "landlord",
+    message: text
+  });
+  input.disabled = false;
+  if (error){ alert("Couldn't send message: " + error.message); return; }
+  input.value = "";
+  loadApplicationMessages(applicationId);
+}
+
+document.addEventListener("DOMContentLoaded", async () => {
+  const { data } = await sb.auth.getUser();
+  if (!data?.user){
+    window.location.href = "login.html";
+    return;
+  }
+  await loadProperty();
+  await loadApplications();
+});
+</script>
+</body>
+</html>

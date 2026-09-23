@@ -1,0 +1,1608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Add Property – Rental Genie</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap">
+<link rel="dns-prefetch" href="https://pbojacnagutipfhcxltj.supabase.co">
+
+<style>
+/* ── Design Tokens (property-overview source of truth) ──────── */
+:root {
+  --navy:        #0c1e3a;
+  --navy-mid:    #1a3a6b;
+  --navy-light:  #1e5799;
+  --sky:         #2d8cf0;
+  --sky-soft:    #e8f0fe;
+  --border:      #e2e8f0;
+  --bg:          #f1f4f8;
+  --card:        #ffffff;
+  --text:        #0c1e3a;
+  --muted:       #64748b;
+  --success:     #10b981;
+  --success-bg:  #ecfdf5;
+  --success-bdr: #a7f3d0;
+  --warn-bg:     #fffbeb;
+  --warn-bdr:    #fde68a;
+  --warn-text:   #92400e;
+  --danger:      #ef4444;
+  --danger-bg:   #fef2f2;
+  --danger-bdr:  #fecaca;
+  --danger-text: #7f1d1d;
+  --info-bg:     #eff6ff;
+  --info-bdr:    #bfdbfe;
+  --info-text:   #1e40af;
+  --radius-sm:   8px;
+  --radius-md:   12px;
+  --radius-lg:   16px;
+  --radius-xl:   20px;
+  --shadow-sm:   0 1px 4px rgba(12,30,58,.06);
+  --shadow-md:   0 4px 16px rgba(12,30,58,.09);
+  --shadow-lg:   0 8px 32px rgba(12,30,58,.14);
+  --header-grad: linear-gradient(135deg,#0c1e3a 0%,#1a3a6b 55%,#1e5799 100%);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: 'DM Sans', -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Canonical 3px top shimmer progress bar ──────────────────── */
+#authOverlay {
+  position: fixed; top: 0; left: 0; right: 0;
+  height: 3px; z-index: 9999; pointer-events: none;
+  background: rgba(255,255,255,0);
+  transition: opacity .3s ease;
+}
+#authOverlay.hidden { opacity: 0; }
+.ao-bar-fill {
+  height: 100%; width: 0%;
+  background: linear-gradient(90deg, #2d8cf0, #38bdf8, #2d8cf0);
+  background-size: 200% 100%;
+  transition: width .4s cubic-bezier(.4,0,.2,1);
+  animation: aoShimmer 1.6s linear infinite;
+  box-shadow: 0 0 8px rgba(56,189,248,.5);
+}
+@keyframes aoShimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ── Header ─────────────────────────────────────────────────── */
+.header-container {
+  position: sticky; top: 0; z-index: 1000;
+  background: var(--header-grad);
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  box-shadow: 0 2px 20px rgba(12,30,58,.35);
+}
+.navbar {
+  max-width: 1440px; margin: 0 auto; padding: 0 22px;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 64px; gap: 12px;
+}
+.brand-area { display: flex; align-items: center; gap: 11px; text-decoration: none; flex-shrink: 0; }
+.brand-logo {
+  width: 38px; height: 38px; border-radius: 9px;
+  background: rgba(255,255,255,.12);
+  box-shadow: 0 0 0 1px rgba(255,255,255,.2), 0 2px 8px rgba(0,0,0,.2);
+  object-fit: cover; flex-shrink: 0;
+}
+.brand-title { font-size: 1.15rem; font-weight: 700; color: #fff; letter-spacing: -.2px; }
+.nav-links { display: flex; gap: 2px; align-items: center; }
+.nav-links a {
+  display: flex; align-items: center; gap: 5px;
+  text-decoration: none; font-size: .8rem; font-weight: 600;
+  padding: 6px 10px; color: rgba(255,255,255,.72);
+  border-radius: var(--radius-sm); transition: all .18s; white-space: nowrap;
+}
+.nav-links a:hover  { color: #fff; background: rgba(255,255,255,.1); }
+.nav-links a.nav-active { color: #fff; background: rgba(255,255,255,.15); }
+
+/* UMD */
+.umd-wrap { position: relative; }
+.umd-toggle {
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.22);
+  border-radius: 999px; padding: 5px 12px 5px 5px;
+  cursor: pointer; transition: background .18s;
+}
+.umd-toggle:hover { background: rgba(255,255,255,.18); }
+.umd-avatar {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--sky), var(--navy-mid));
+  display: flex; align-items: center; justify-content: center;
+  font-size: .68rem; font-weight: 700; color: #fff; flex-shrink: 0;
+}
+.umd-name  { font-size: .8rem; color: #fff; font-weight: 600; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.umd-caret { font-size: .6rem; color: rgba(255,255,255,.7); }
+.umd-dropdown {
+  display: none; position: absolute; right: 0; top: calc(100% + 8px);
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); box-shadow: var(--shadow-lg);
+  min-width: 220px; overflow: hidden; z-index: 200;
+}
+.umd-dropdown.open { display: block; }
+.umd-user-row { padding: 14px 16px 10px; border-bottom: 1px solid var(--border); }
+.umd-user-name  { font-size: .88rem; font-weight: 700; color: var(--navy); }
+.umd-user-email { font-size: .75rem; color: var(--muted); margin-top: 2px; }
+.umd-section { display: flex; flex-direction: column; padding: 6px; border-bottom: 1px solid var(--border); }
+.umd-section:last-child { border-bottom: none; }
+.umd-link {
+  display: flex; align-items: center; gap: 9px;
+  padding: 9px 10px; border-radius: var(--radius-sm);
+  font-size: .84rem; font-weight: 600; color: var(--text);
+  text-decoration: none; background: none; border: none;
+  cursor: pointer; width: 100%; font-family: 'DM Sans', sans-serif; transition: background .15s;
+}
+.umd-link:hover { background: var(--bg); }
+.umd-link.danger { color: var(--danger); }
+.umd-link.danger:hover { background: var(--danger-bg); }
+#nav-login {
+  background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.25);
+  color: #fff; padding: 7px 14px; border-radius: 999px;
+  font-weight: 600; text-decoration: none; font-size: .82rem;
+}
+.hamburger {
+  display: none; padding: 7px 10px;
+  border: 1px solid rgba(255,255,255,.25); border-radius: var(--radius-sm);
+  background: rgba(255,255,255,.1); cursor: pointer;
+  color: #fff; font-size: 1rem; transition: background .18s;
+}
+.hamburger:hover { background: rgba(255,255,255,.2); }
+@media(max-width:1400px) { .nav-links { display: none; } .hamburger { display: block; } .umd-wrap { display: none !important; } #nav-login { display: none !important; } }
+
+.drawer {
+  display: none; position: fixed;
+  top: 72px; left: 12px; right: 12px;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 8px;
+  z-index: 999; box-shadow: var(--shadow-lg);
+}
+.drawer a, .drawer button {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 14px; border-radius: var(--radius-sm);
+  font-weight: 600; font-size: .88rem;
+  text-decoration: none; color: var(--text);
+  background: none; border: none; cursor: pointer;
+  width: 100%; font-family: 'DM Sans', sans-serif; transition: background .15s;
+}
+.drawer a:hover, .drawer button:hover { background: var(--bg); }
+.drawer a.nav-active { background: var(--sky-soft); color: var(--navy-mid); }
+.drawer-divider { height: 1px; background: var(--border); margin: 4px 0; }
+.drawer-signout { color: var(--danger) !important; }
+
+/* ── Main ───────────────────────────────────────────────────── */
+main {
+  flex: 1; max-width: 1400px; width: 100%;
+  margin: 0 auto; padding: 28px 22px 64px;
+  animation: fadeUp .35s ease both;
+}
+
+/* ── Page header ────────────────────────────────────────────── */
+.page-header {
+  display: flex; align-items: flex-start;
+  justify-content: space-between; gap: 16px;
+  flex-wrap: wrap; margin-bottom: 24px;
+}
+.page-title { font-size: 1.65rem; font-weight: 700; color: var(--navy); letter-spacing: -.4px; line-height: 1.2; }
+.page-sub   { font-size: .88rem; color: var(--muted); margin-top: 4px; font-weight: 500; }
+.page-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+
+/* ── Status message ─────────────────────────────────────────── */
+.status-msg {
+  display: none; padding: 13px 16px;
+  border-radius: var(--radius-md); font-size: .88rem; font-weight: 600;
+  line-height: 1.45; margin-bottom: 18px; border: 1px solid transparent;
+  animation: fadeUp .3s ease both;
+}
+.status-msg.ok   { background: var(--success-bg); border-color: var(--success-bdr); color: #166534; display: block; }
+.status-msg.err  { background: var(--danger-bg);  border-color: var(--danger-bdr);  color: var(--danger-text); display: block; }
+.status-msg.info { background: var(--info-bg);    border-color: var(--info-bdr);    color: var(--info-text);   display: block; }
+
+/* ── Section cards ──────────────────────────────────────────── */
+.section-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius-xl); box-shadow: var(--shadow-sm);
+  margin-bottom: 16px; overflow: hidden;
+}
+.section-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; flex-wrap: wrap; padding: 16px 22px 0;
+}
+.section-title {
+  display: flex; align-items: center; gap: 8px;
+  font-size: .72rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .5px; color: var(--muted);
+}
+.section-body { padding: 14px 22px 22px; }
+
+/* ── Form grid & fields ─────────────────────────────────────── */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.form-grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+.form-grid.cols-1 { grid-template-columns: 1fr; }
+@media(max-width:580px) { .form-grid, .form-grid.cols-3 { grid-template-columns: 1fr; } }
+.form-group { display: flex; flex-direction: column; gap: 5px; }
+.form-group.full { grid-column: 1 / -1; }
+
+label {
+  font-size: .7rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .45px; color: var(--muted);
+}
+label .req { color: var(--danger); margin-left: 2px; }
+
+input, select, textarea {
+  padding: 10px 13px; border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  font-family: 'DM Sans', sans-serif; font-size: .9rem;
+  color: var(--text); background: #f8fafc; width: 100%;
+  transition: border-color .15s, box-shadow .15s, background .15s;
+  appearance: none; -webkit-appearance: none; outline: none;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: var(--sky); background: #fff;
+  box-shadow: 0 0 0 3px rgba(45,140,240,.1);
+}
+input::placeholder, textarea::placeholder { color: #b8c4ce; }
+input[readonly] { background: #f1f5f9; color: var(--muted); cursor: default; }
+input[readonly]:focus { border-color: var(--border); box-shadow: none; }
+input[type="number"] { font-family: 'DM Mono', monospace; }
+input[type="date"]   { font-family: 'DM Mono', monospace; font-size: .85rem; }
+textarea { resize: vertical; min-height: 80px; }
+.field-hint { font-size: .72rem; color: var(--muted); margin-top: 4px; }
+
+/* Input with prefix $ */
+.input-wrap { position: relative; }
+.input-prefix {
+  position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+  font-size: .85rem; color: var(--muted); font-weight: 600;
+  pointer-events: none; font-family: 'DM Mono', monospace;
+}
+.input-suffix {
+  position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+  font-size: .75rem; color: var(--muted); font-weight: 600; pointer-events: none;
+}
+.input-wrap input { padding-left: 26px; }
+.input-wrap.has-btn input { padding-right: 100px; }
+
+/* Inline row (input + button side by side) */
+.inline-row { display: flex; gap: 8px; align-items: stretch; }
+.inline-row input { flex: 1; }
+
+/* ── Divider ─────────────────────────────────────────────────── */
+.section-divider { height: 1px; background: var(--border); margin: 4px 0 16px; }
+
+/* ── Monthly cost summary ───────────────────────────────────── */
+.cost-summary {
+  grid-column: 1 / -1;
+  background: var(--sky-soft); border: 1px solid var(--info-bdr);
+  border-radius: var(--radius-md); padding: 12px 16px;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; flex-wrap: wrap;
+}
+.cost-summary-label { font-size: .78rem; font-weight: 700; color: var(--info-text); }
+.cost-summary-value { font-family: 'DM Mono', monospace; font-size: 1.1rem; font-weight: 700; color: var(--navy); }
+
+/* ── Tax summary view-only ──────────────────────────────────── */
+.tax-summary {
+  grid-column: 1 / -1;
+  background: #f8fafc; border: 1px solid var(--border);
+  border-radius: var(--radius-md); padding: 13px 16px;
+  display: none;
+}
+.tax-summary-row { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
+.tax-summary-item { display: flex; flex-direction: column; gap: 2px; }
+.tax-summary-key   { font-size: .67rem; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: var(--muted); }
+.tax-summary-val   { font-size: .88rem; font-weight: 600; color: var(--navy); font-family: 'DM Mono', monospace; }
+.tax-summary-note  { margin-left: auto; font-size: .75rem; color: var(--muted); font-style: italic; }
+
+/* ── Finance tools section header row ───────────────────────── */
+.finance-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; flex-wrap: wrap; padding: 16px 22px 0;
+}
+.finance-title {
+  font-size: .72rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .5px; color: var(--muted);
+  display: flex; align-items: center; gap: 8px;
+}
+.finance-tools-row { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* ── Utility grid ───────────────────────────────────────────── */
+.util-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+}
+@media(max-width:580px) { .util-grid { grid-template-columns: 1fr 1fr; } }
+.util-card {
+  background: #f8fafc; border: 1.5px solid var(--border);
+  border-radius: var(--radius-md); padding: 12px 14px;
+  transition: border-color .15s;
+}
+.util-card:hover { border-color: #cbd5e1; }
+.util-label { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: var(--muted); margin-bottom: 7px; display: flex; align-items: center; gap: 5px; }
+.util-card select { border: none; background: transparent; padding: 0; font-size: .88rem; font-weight: 600; color: var(--navy); box-shadow: none; }
+.util-card select:focus { box-shadow: none; }
+
+/* ── Buttons ────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 9px 16px; border-radius: var(--radius-md);
+  border: 1.5px solid var(--border); background: var(--card);
+  color: var(--navy); font-family: 'DM Sans', sans-serif;
+  font-size: .85rem; font-weight: 600; text-decoration: none;
+  cursor: pointer; transition: all .16s; white-space: nowrap;
+}
+.btn:hover { background: var(--bg); border-color: #cbd5e1; transform: translateY(-1px); }
+.btn:disabled { opacity: .45; cursor: not-allowed; transform: none; pointer-events: none; }
+.btn.primary {
+  background: var(--header-grad); border-color: transparent; color: #fff;
+  box-shadow: 0 2px 10px rgba(12,30,58,.22);
+}
+.btn.primary:hover { filter: brightness(1.1); box-shadow: 0 4px 18px rgba(12,30,58,.3); }
+.btn.primary:disabled { opacity: .5; filter: none; }
+.btn.sm { padding: 7px 12px; font-size: .78rem; }
+.btn.ghost { color: var(--muted); }
+
+/* ── Finance drawer (mobile) ────────────────────────────────── */
+.finance-backdrop {
+  position: fixed; inset: 0; background: rgba(12,30,58,.4);
+  z-index: 1400; display: none;
+}
+.finance-backdrop.open { display: block; }
+.finance-drawer {
+  position: fixed; left: 12px; right: 12px; bottom: 12px;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius-xl); box-shadow: var(--shadow-lg);
+  transform: translateY(120%); transition: transform .22s ease;
+  z-index: 1450; max-width: 720px; margin: 0 auto;
+  display: none;
+}
+@media(max-width:600px) { .finance-drawer { display: block; } }
+.finance-drawer.open { transform: translateY(0); }
+.finance-drawer-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px 12px; border-bottom: 1px solid var(--border);
+}
+.finance-drawer-title { font-size: .95rem; font-weight: 700; color: var(--navy); }
+.finance-drawer-body { padding: 12px 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+.finance-drawer-btn {
+  width: 100%; text-align: left;
+  background: #f8fafc; border: 1.5px solid var(--border);
+  border-radius: var(--radius-md); padding: 13px 16px;
+  font-weight: 600; font-size: .88rem; color: var(--navy);
+  cursor: pointer; transition: all .15s; font-family: 'DM Sans', sans-serif;
+  display: flex; align-items: center; gap: 10px;
+}
+.finance-drawer-btn:hover { border-color: var(--sky); background: var(--sky-soft); }
+.finance-drawer-btn:disabled { opacity: .5; cursor: not-allowed; }
+.finance-drawer-hint { font-size: .78rem; color: var(--muted); padding: 0 4px; }
+/* Show tools toggle only on mobile */
+.finance-tools-toggle { display: none; }
+@media(max-width:600px) {
+  .finance-tools-toggle { display: inline-flex; }
+  .finance-inline-tools { display: none !important; }
+  .finance-head { position: sticky; top: 64px; background: var(--card); z-index: 50; padding-bottom: 10px; margin-bottom: -10px; }
+}
+
+/* ── Mobile bottom nav ──────────────────────────────────────── */
+.mobile-nav {
+  position: fixed; left: 0; right: 0; bottom: 0; display: none; z-index: 1200;
+  padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+  background: var(--header-grad);
+  border-top: 1px solid rgba(255,255,255,.08);
+  box-shadow: 0 -4px 20px rgba(12,30,58,.25);
+}
+.mobile-nav-inner { max-width: 1440px; margin: 0 auto; display: grid; grid-template-columns: repeat(6,1fr); gap: 5px; }
+.mnav {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 4px; padding: 10px 8px; border-radius: 8px;
+  border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.07);
+  color: rgba(255,255,255,.6); font-size: 11px; font-weight: 700;
+  text-decoration: none; text-align: center;
+}
+.mnav .ico { font-size: 22px; line-height: 1; }
+.mnav.active { background: rgba(255,255,255,.18); color: #fff; border-color: rgba(255,255,255,.25); }
+.mobile-pad { display: none; height: 86px; }
+@media(max-width:860px) { .mobile-nav { display: block; } .mobile-pad { display: block; } }
+@media(max-width:860px) { main { padding-bottom: 110px; } }
+
+/* ── Footer ─────────────────────────────────────────────────── */
+.site-footer { background: var(--navy); padding: 28px 20px 20px; margin-top: 40px; }
+.footer-content {
+  max-width: 1440px; margin: 0 auto;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 28px; padding-bottom: 18px;
+}
+.footer-section h4 { font-size: .75rem; font-weight: 700; color: rgba(255,255,255,.75); text-transform: uppercase; letter-spacing: .8px; margin: 0 0 12px; }
+.footer-section a  { display: block; color: rgba(255,255,255,.4); text-decoration: none; margin-bottom: 8px; font-size: .82rem; }
+.footer-section a:hover { color: rgba(255,255,255,.85); }
+.footer-bottom { text-align: center; padding-top: 14px; border-top: 1px solid rgba(255,255,255,.08); color: rgba(255,255,255,.28); font-size: .82rem; }
+@media(max-width:600px) { .site-footer { display: none; } }
+
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }
+
+@media(max-width:600px) {
+  main { padding: 20px 14px 110px; }
+  .page-title { font-size: 1.35rem; }
+  .section-head, .section-body { padding-left: 16px; padding-right: 16px; }
+  .finance-head { padding-left: 16px; padding-right: 16px; }
+}
+</style>
+<style>
+/* ── Mobile: hide UMD pill ── */
+@media (max-width: 860px) {
+  .umd-wrap, #userMenu { display: none !important; }
+  #nav-login { display: none !important; }
+}
+/* ── Drawer canonical styles ── */
+.drawer-user-row { display:flex !important; align-items:center; gap:12px; padding:16px 16px 14px !important; border-bottom:1px solid #f1f5f9 !important; background:#fafbfc; text-decoration:none; }
+.drawer-avatar { width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,#1a3a6b,#1e5799); color:#fff; font-weight:700; font-size:.78rem; display:flex; align-items:center; justify-content:center; flex-shrink:0; text-transform:uppercase; }
+.drawer-username { font-weight:700; font-size:.95rem; color:#0c1e3a !important; }
+.drawer-grid { display:grid; grid-template-columns:1fr 1fr; padding:8px 10px; gap:2px; }
+.drawer-grid-divider { grid-column:1/-1; height:1px; background:#f1f5f9; margin:2px 0; }
+.drawer-grid a { display:flex; align-items:center; gap:8px; padding:11px 10px; font-weight:600; font-size:.88rem; color:#0c1e3a !important; text-decoration:none; border-radius:9px; transition:background .12s; }
+.drawer-grid a:hover { background:#eff4ff; color:#1a3a6b !important; }
+.drawer-grid a.nav-active { background:#eff4ff !important; color:#1a3a6b !important; font-weight:700 !important; }
+.drawer-login { display:block; padding:11px 16px; font-weight:600; color:#0c1e3a !important; font-size:.9rem; border-top:1px solid #f1f5f9; text-decoration:none; }
+#mobileLogoutContainer { border-top:1px solid #f1f5f9; padding:6px 10px 8px; }
+#mobileLogoutContainer button { width:100%; padding:10px; background:none; border:none; text-align:left; font-weight:700; color:#dc2626; cursor:pointer; font-family:'DM Sans',sans-serif; font-size:.9rem; border-radius:8px; }
+
+/* ── Advanced collapsible section ──────────────────────────── */
+.adv-toggle-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; padding: 14px 22px; cursor: pointer;
+  background: #f8fafc; border: 1px solid var(--border);
+  border-radius: var(--radius-xl); margin-bottom: 16px;
+  transition: background .15s, border-color .15s; user-select: none;
+}
+.adv-toggle-bar:hover { background: var(--sky-soft); border-color: var(--sky); }
+.adv-toggle-bar.open  { border-radius: var(--radius-xl) var(--radius-xl) 0 0; margin-bottom: 0; border-bottom: none; }
+.adv-toggle-left { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.adv-toggle-title { font-size: .88rem; font-weight: 700; color: var(--navy); display: flex; align-items: center; gap: 7px; }
+.adv-toggle-hint { font-size: .75rem; color: var(--muted); font-weight: 500; }
+.adv-toggle-badge {
+  display: none; padding: 2px 9px; border-radius: 999px;
+  font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .3px;
+  background: var(--info-bg); border: 1px solid var(--info-bdr); color: var(--info-text);
+}
+.adv-toggle-badge.visible { display: inline-flex; }
+.adv-chevron { font-size: .75rem; color: var(--muted); transition: transform .22s ease; display: inline-block; }
+.adv-toggle-bar.open .adv-chevron { transform: rotate(180deg); }
+.adv-body {
+  display: none; border: 1px solid var(--border);
+  border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+  border-top: none; margin-bottom: 16px; overflow: hidden;
+}
+.adv-body.open { display: block; }
+.adv-body .section-card {
+  border-radius: 0; border: none;
+  border-bottom: 1px solid var(--border);
+  box-shadow: none; margin-bottom: 0;
+}
+.adv-body .section-card:last-child { border-bottom: none; }
+</style>
+</head>
+<body>
+<!-- ═══ SUPABASE BOOTSTRAP (body-first: avoids tracking-prevention blocking safeStorage) ═══ -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/* ── Rental Genie Supabase Bootstrap ── */
+(function() {
+  try {
+    var _mem = new Map();
+    var _ls = null; try { _ls = window.localStorage; } catch(e) {}
+    var _store = {
+      getItem:    function(k){ try { return (_ls && _ls.getItem(k)) || _mem.get(k) || null; } catch(e) { return _mem.get(k) || null; } },
+      setItem:    function(k,v){ try { _ls && _ls.setItem(k,v); } catch(e) {} _mem.set(k,v); },
+      removeItem: function(k){ try { _ls && _ls.removeItem(k); } catch(e) {} _mem.delete(k); }
+    };
+    var _c = window._rgClient || window.supabase.createClient(
+      'https://pbojacnagutipfhcxltj.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBib2phY25hZ3V0aXBmaGN4bHRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgwMDkwODAsImV4cCI6MjA2MzU4NTA4MH0.ZLCcAzTYljoZycpBGwMtthP5VyAJ4schuIvt4HibGc0',
+      { auth: { lock: undefined, persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storage: _store } }
+    );
+    window._rgClient = _c; window.sb = _c; window.client = _c;
+    window.getSbClient = function() { return _c; };
+    window.GSClient = { getAsync: async function() { return _c; } };
+  } catch(e) { console.error('RG bootstrap failed:', e); }
+})();
+</script>
+<!-- ══════════════════════════════════════════════════════════════════════════════════════ -->
+
+<!-- ── Auth Overlay (canonical 3px top shimmer) ──────────────── -->
+<div id="authOverlay">
+  <div class="ao-bar-fill" id="aoBarFill"></div>
+</div>
+
+<!-- ── Header ────────────────────────────────────────────────── -->
+<header class="header-container">
+  <div class="navbar">
+    <a class="brand-area" href="index.html">
+      <img src="images/rg-logo.png" class="brand-logo" alt="Rental Genie"
+           onerror="this.style.display='none'" />
+      <span class="brand-title">Rental Genie</span>
+    </a>
+
+    <nav class="nav-links" aria-label="Main navigation">
+      <a href="dashboard.html">📊 Dashboard</a>
+      <a href="property-management.html" class="nav-active">🏘️ Properties</a>
+      <a href="lease-rent-center.html">💰 Lease &amp; Rent</a>
+      <a href="expense-tracking.html">💸 Expenses</a>
+      <a href="maintenance-requests.html">🛠 Maintenance</a>
+      <a href="tenant-messages.html">💬 Messages</a>
+      <a href="reports-analytics.html">📈 Reports</a>
+    </nav>
+
+    <!-- UMD -->
+    <div class="umd-wrap" id="userMenu" style="display:none">
+      <button class="umd-toggle" id="umdToggle" aria-haspopup="true" aria-expanded="false">
+        <div class="umd-avatar" id="umdAvatar">?</div>
+        <span class="umd-name" id="umdName">User</span>
+        <span class="umd-caret">▾</span>
+      </button>
+      <div class="umd-dropdown" id="umdDropdown">
+        <div class="umd-user-row">
+          <div class="umd-user-name"  id="umdFullName">—</div>
+          <div class="umd-user-email" id="umdEmail">—</div>
+        </div>
+        <div class="umd-section">
+          <a class="umd-link" href="dashboard.html">📊 Dashboard</a>
+          <a class="umd-link" href="account.html">⚙️ Account Settings</a>
+        </div>
+        <div class="umd-section">
+          <button class="umd-link danger" id="logoutBtn">🚪 Sign Out</button>
+        </div>
+      </div>
+    </div>
+
+    <a id="nav-login" href="login.html">Log in</a>
+    <button class="hamburger" id="hamburgerBtn" aria-label="Open menu">☰</button>
+  </div>
+</header>
+
+<!-- Mobile Drawer -->
+<div class="drawer" id="mobileDrawer">
+  <!-- User row (shown when logged in) -->
+  <a href="account.html" id="mobileAccountLink" style="display:none;" class="drawer-user-row">
+    <span class="drawer-avatar" id="drawerAvatar">?</span>
+    <span class="drawer-username" id="mobileUsernameLabel">Account</span>
+  </a>
+  <!-- 2-col nav grid with row dividers -->
+  <div class="drawer-grid">
+    <a href="dashboard.html">📊 Dashboard</a>
+    <a href="property-management.html" class="nav-active">🏘️ Properties</a>
+    <div class="drawer-grid-divider"></div>
+    <a href="lease-rent-center.html">💰 Lease &amp; Rent</a>
+    <a href="expense-tracking.html">💸 Expenses</a>
+    <div class="drawer-grid-divider"></div>
+    <a href="maintenance-requests.html">🛠 Maintenance</a>
+    <a href="tenant-messages.html">💬 Messages</a>
+    <a href="reports-analytics.html">📈 Reports</a>
+  </div>
+  <!-- Guest login link -->
+  <a href="login.html" id="mobileLogin" class="drawer-login" style="display:none;">Log in</a>
+  <!-- Sign out (shown when logged in) -->
+  <div id="mobileLogoutContainer" style="display:none;">
+    <button id="mobileLogoutBtn">Sign Out</button>
+  </div>
+</div>
+
+<!-- ── Main ──────────────────────────────────────────────────── -->
+<main>
+
+  <!-- Page header -->
+  <div class="page-header">
+    <div>
+      <div class="page-title" id="pageTitle">🏠 Add Property</div>
+      <div class="page-sub"  id="pageIntro">Add a new rental property to your portfolio, including purchase details and financing info.</div>
+    </div>
+    <div class="page-actions">
+      <a class="btn ghost" href="property-management.html">← Back</a>
+    </div>
+  </div>
+
+  <!-- Status message -->
+  <div class="status-msg" id="statusMsg" role="alert"></div>
+
+  <form id="addPropertyForm" novalidate>
+
+    <!-- ── 1. Basic Details ──────────────────────────────────── -->
+    <div class="section-card">
+      <div class="section-head">
+        <div class="section-title">🏡 Basic Property Details</div>
+      </div>
+      <div class="section-body">
+        <div class="form-grid">
+          <div class="form-group full">
+            <label for="propertyName">Property Name <span class="req">*</span></label>
+            <input type="text" id="propertyName" placeholder="e.g., Main St Duplex" required />
+          </div>
+          <div class="form-group full">
+            <label for="propertyAddress">Address</label>
+            <input type="text" id="propertyAddress" placeholder="123 Main St, City, State 00000" />
+          </div>
+          <div class="form-group">
+            <label for="purchasePrice">Purchase Price</label>
+            <div class="input-wrap">
+              <span class="input-prefix">$</span>
+              <input type="number" id="purchasePrice" placeholder="250,000" min="0" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="purchaseDate">Purchase Date</label>
+            <input type="date" id="purchaseDate" />
+          </div>
+          <div class="form-group">
+            <label for="useType">Property Use</label>
+            <select id="useType">
+              <option value="rental">🏠 Rental Property</option>
+              <option value="primary">🏡 Primary Residence</option>
+              <option value="vacation">🌴 Vacation Home</option>
+              <option value="mixed">🏢 Mixed / Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="propertyStatus">Occupancy Status</label>
+            <select id="propertyStatus"></select>
+          </div>
+          <div class="form-group full">
+            <label for="propertyNotes">Notes</label>
+            <textarea id="propertyNotes" rows="3" placeholder="Insurance company, rental conditions, key location…"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 2. Property Classification ───────────────────────── -->
+    <div class="section-card">
+      <div class="section-head">
+        <div class="section-title">🏗️ Property Classification</div>
+      </div>
+      <div class="section-body">
+        <div class="form-grid cols-3">
+          <div class="form-group">
+            <label for="propertyType">Building Type</label>
+            <select id="propertyType">
+              <option value="single_family">Single Family</option>
+              <option value="condo">Condo</option>
+              <option value="townhome">Townhome</option>
+              <option value="duplex">Duplex</option>
+              <option value="multi_family">Multi-Family</option>
+              <option value="commercial">Commercial</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="units">Units</label>
+            <input type="number" id="units" value="1" min="1" placeholder="1" />
+          </div>
+          <div class="form-group">
+            <label for="yearBuilt">Year Built</label>
+            <input type="number" id="yearBuilt" placeholder="e.g., 1998" min="1800" max="2030" />
+          </div>
+          <div class="form-group">
+            <label for="bedrooms">Bedrooms</label>
+            <input type="number" id="bedrooms" step="0.5" placeholder="3" />
+          </div>
+          <div class="form-group">
+            <label for="bathrooms">Bathrooms</label>
+            <input type="number" id="bathrooms" step="0.5" placeholder="2" />
+          </div>
+          <div class="form-group">
+            <label for="squareFeet">Square Feet</label>
+            <input type="number" id="squareFeet" placeholder="1,400" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Advanced Details toggle bar ──────────────────────── -->
+    <div class="adv-toggle-bar" id="advToggleBar" role="button" tabindex="0" aria-expanded="false" aria-controls="advBody">
+      <div class="adv-toggle-left">
+        <div class="adv-toggle-title">🏦 Financial &amp; Advanced Details
+          <span class="adv-toggle-badge" id="advBadge">Has data</span>
+        </div>
+        <span class="adv-toggle-hint">Ownership, financing, mortgage breakdown — fill in later if needed</span>
+      </div>
+      <span class="adv-chevron">▼</span>
+    </div>
+
+    <!-- ── Advanced body (sections 3, 4, 5) ─────────────────── -->
+    <div class="adv-body" id="advBody">
+
+        <!-- 3a. Ownership & Acquisition -->
+        <div style="padding:18px 22px 0;">
+          <div class="section-title" style="margin-bottom:14px;">🏢 Ownership &amp; Acquisition</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="ownershipType">Ownership Type</label>
+              <select id="ownershipType">
+                <option value="personal">Personal</option>
+                <option value="llc">LLC</option>
+                <option value="trust">Trust</option>
+                <option value="partnership">Partnership</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="downPayment">Down Payment</label>
+              <div class="input-wrap"><span class="input-prefix">$</span>
+                <input type="number" id="downPayment" placeholder="50,000" min="0" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="closingCosts">Closing Costs</label>
+              <div class="input-wrap"><span class="input-prefix">$</span>
+                <input type="number" id="closingCosts" placeholder="5,000" min="0" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="rehabCost">Initial Rehab / Renovation</label>
+              <div class="input-wrap"><span class="input-prefix">$</span>
+                <input type="number" id="rehabCost" placeholder="0" min="0" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3b. Financing Details -->
+        <div style="padding:22px 22px 0; border-top:1px solid var(--border); margin-top:20px;">
+          <div class="finance-head" id="financeHead" style="padding:0 0 14px;">
+            <div class="finance-title" style="font-size:.72rem;">🏦 Financing Details</div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <button type="button" class="btn sm finance-tools-toggle" id="financeToolsToggle">📂 Tools</button>
+              <div class="finance-inline-tools" style="display:flex;gap:8px;">
+                <button type="button" class="btn sm" id="manageFinanceBtn"          disabled title="Save property first">⚙️ Manage</button>
+                <button type="button" class="btn sm" id="manageMortgageActivityBtn" disabled title="Save property first">📒 Activity</button>
+                <button type="button" class="btn sm" id="manageEscrowBtn"           disabled title="Save property first">💼 Escrow</button>
+                <button type="button" class="btn sm" id="manageInsuranceBtn"        disabled title="Save property first">🛡 Insurance</button>
+              </div>
+            </div>
+          </div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="isFinanced">Loan Status</label>
+              <select id="isFinanced">
+                <option value="false">✅ Paid Off / Free &amp; Clear</option>
+                <option value="true">🏦 Financed / Active Mortgage</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="monthlyPayment">Total Monthly Payment</label>
+              <div class="input-wrap"><span class="input-prefix">$</span>
+                <input type="number" id="monthlyPayment" placeholder="1,230" min="0" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="lenderName">Lender Name</label>
+              <input type="text" id="lenderName" placeholder="e.g., Chase Bank" />
+            </div>
+            <div class="form-group">
+              <label for="lenderPortalUrl">Lender Portal URL</label>
+              <div class="inline-row">
+                <input type="url" id="lenderPortalUrl" placeholder="https://yourlender.com/login" />
+                <button type="button" class="btn sm" id="openLenderPortalBtn" disabled>📂 Open</button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="loanTerm">Loan Term</label>
+              <input type="text" id="loanTerm" placeholder="30 years (ends 2053)" />
+            </div>
+            <div class="form-group">
+              <label for="loanBalance">Current Loan Balance</label>
+              <div class="input-wrap"><span class="input-prefix">$</span>
+                <input type="number" id="loanBalance" placeholder="195,000" min="0" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="interestRate">Interest Rate</label>
+              <div class="input-wrap">
+                <input type="text" id="interestRate" placeholder="6.25" style="padding-right:36px" />
+                <span class="input-suffix">%</span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="loanStartDate">Loan Start Date</label>
+              <input type="date" id="loanStartDate" />
+            </div>
+            <div class="form-group">
+              <label for="loanEndDate">Loan End / Maturity Date</label>
+              <input type="date" id="loanEndDate" />
+            </div>
+            <div class="form-group full">
+              <label for="financingNotes">Financing Notes</label>
+              <textarea id="financingNotes" rows="2" placeholder="Escrow details, PMI info, refinance history…"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3c. Monthly Cost Breakdown -->
+        <div style="padding:22px 22px 22px; border-top:1px solid var(--border); margin-top:20px;">
+          <div class="section-title" style="margin-bottom:14px;">📊 Monthly Cost Breakdown</div>
+          <div class="form-grid cols-3">
+            <div class="form-group">
+              <label for="mortgagePI">Principal &amp; Interest</label>
+              <div class="input-wrap"><span class="input-prefix">$</span>
+                <input type="number" id="mortgagePI" placeholder="900" min="0" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="taxMonthly">Property Tax (monthly)</label>
+              <div class="inline-row">
+                <div class="input-wrap" style="flex:1"><span class="input-prefix">$</span>
+                  <input type="number" id="taxMonthly" placeholder="320" min="0" />
+                </div>
+                <button type="button" class="btn sm" id="manageTaxBtn" disabled title="Save property first">⚙️ Manage</button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="insuranceMonthly">Insurance (monthly)</label>
+              <div class="input-wrap"><span class="input-prefix">$</span>
+                <input type="number" id="insuranceMonthly" placeholder="120" min="0" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="hoaMonthly">HOA (monthly)</label>
+              <div class="input-wrap"><span class="input-prefix">$</span>
+                <input type="number" id="hoaMonthly" placeholder="0" min="0" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="pmiMonthly">PMI (monthly)</label>
+              <div class="input-wrap"><span class="input-prefix">$</span>
+                <input type="number" id="pmiMonthly" placeholder="0" min="0" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="totalMonthlyCost">Total Monthly Cost</label>
+              <div class="input-wrap"><span class="input-prefix">$</span>
+                <input type="number" id="totalMonthlyCost" readonly placeholder="0.00" />
+              </div>
+              <span class="field-hint">Auto-calculated from fields above.</span>
+            </div>
+            <div class="tax-summary" id="taxSummaryWrap">
+              <div class="tax-summary-row">
+                <div class="tax-summary-item">
+                  <span class="tax-summary-key">Annual Tax</span>
+                  <span class="tax-summary-val" id="taxAnnualText">—</span>
+                </div>
+                <div class="tax-summary-item">
+                  <span class="tax-summary-key">Due Month</span>
+                  <span class="tax-summary-val" id="taxDueMonthText">—</span>
+                </div>
+                <div class="tax-summary-item">
+                  <span class="tax-summary-key">Account #</span>
+                  <span class="tax-summary-val" id="taxAccountText">—</span>
+                </div>
+                <div class="tax-summary-item">
+                  <span class="tax-summary-key">Tax Portal</span>
+                  <span class="tax-summary-val" id="taxPortalText">—</span>
+                </div>
+                <span class="tax-summary-note">Edit in Property Tax page →</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+    </div><!-- /advBody -->
+
+    <!-- ── 6. Utilities ─────────────────────────────────────── -->
+    <div class="section-card">
+      <div class="section-head">
+        <div class="section-title">⚡ Utilities Responsibility</div>
+      </div>
+      <div class="section-body">
+        <div class="util-grid">
+          <div class="util-card">
+            <div class="util-label">💧 Water</div>
+            <select id="utilWater"><option value="tenant">Tenant</option><option value="landlord">Landlord</option></select>
+          </div>
+          <div class="util-card">
+            <div class="util-label">🔥 Gas</div>
+            <select id="utilGas"><option value="tenant">Tenant</option><option value="landlord">Landlord</option></select>
+          </div>
+          <div class="util-card">
+            <div class="util-label">⚡ Electric</div>
+            <select id="utilElectric"><option value="tenant">Tenant</option><option value="landlord">Landlord</option></select>
+          </div>
+          <div class="util-card">
+            <div class="util-label">🗑️ Trash</div>
+            <select id="utilTrash"><option value="tenant">Tenant</option><option value="landlord">Landlord</option></select>
+          </div>
+          <div class="util-card">
+            <div class="util-label">🌿 Lawn / Snow</div>
+            <select id="utilLawn"><option value="tenant">Tenant</option><option value="landlord">Landlord</option></select>
+          </div>
+          <div class="util-card">
+            <div class="util-label">🌐 Internet</div>
+            <select id="utilInternet"><option value="tenant">Tenant</option><option value="landlord">Landlord</option></select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 7. Property Management Company ─────────────────── -->
+    <div class="section-card" id="pmSection">
+      <div class="section-head">
+        <div class="section-title">🏢 Property Management Company</div>
+        <!-- Toggle pill -->
+        <label style="display:flex;align-items:center;gap:9px;cursor:pointer;user-select:none;">
+          <span style="font-size:.78rem;font-weight:600;color:var(--muted)" id="pmToggleOff">Self-managed</span>
+          <span style="position:relative;display:inline-block;width:44px;height:24px;">
+            <input type="checkbox" id="pmManaged" style="opacity:0;width:0;height:0;position:absolute;" />
+            <span id="pmTrack" style="position:absolute;inset:0;border-radius:999px;background:#cbd5e1;transition:background .2s;"></span>
+            <span id="pmThumb" style="position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.2);transition:transform .2s;"></span>
+          </span>
+          <span style="font-size:.78rem;font-weight:600;color:var(--sky);display:none;" id="pmToggleOn">Professionally managed</span>
+        </label>
+      </div>
+      <!-- Collapsible body — hidden when self-managed -->
+      <div class="section-body" id="pmFields" style="display:none;">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="pmCompanyName">Company Name</label>
+            <input type="text" id="pmCompanyName" placeholder="e.g., Acme Property Management" />
+          </div>
+          <div class="form-group">
+            <label for="pmManagerName">Assigned Manager</label>
+            <input type="text" id="pmManagerName" placeholder="e.g., Sarah Johnson" />
+          </div>
+          <div class="form-group">
+            <label for="pmPhone">Phone</label>
+            <input type="tel" id="pmPhone" placeholder="(555) 000-0000" />
+          </div>
+          <div class="form-group">
+            <label for="pmEmail">Email</label>
+            <input type="email" id="pmEmail" placeholder="manager@company.com" />
+          </div>
+          <!-- Fee amount + type side-by-side -->
+          <div class="form-group">
+            <label for="pmFeeAmount">Management Fee</label>
+            <div class="inline-row">
+              <div class="input-wrap" style="flex:1;">
+                <input type="number" id="pmFeeAmount" placeholder="8.5" min="0" step="0.1" />
+              </div>
+              <select id="pmFeeType" style="width:140px;flex-shrink:0;">
+                <option value="percent">% of rent</option>
+                <option value="flat">$ flat / mo</option>
+              </select>
+            </div>
+            <span class="field-hint">e.g. 8.5% of collected rent, or $150 flat/month</span>
+          </div>
+          <!-- Contract dates -->
+          <div class="form-group">
+            <label for="pmContractStart">Contract Start</label>
+            <input type="date" id="pmContractStart" />
+          </div>
+          <div class="form-group">
+            <label for="pmContractEnd">Contract End</label>
+            <input type="date" id="pmContractEnd" />
+            <span class="field-hint">Leave blank if ongoing.</span>
+          </div>
+          <!-- Notes full-width -->
+          <div class="form-group full">
+            <label for="pmNotes">Notes / Instructions</label>
+            <textarea id="pmNotes" rows="2" placeholder="e.g., handles maintenance up to $500 without approval, monthly statements due on the 5th…"></textarea>
+          </div>
+        </div>
+      </div>
+      <!-- Self-managed message -->
+      <div class="section-body" id="pmSelfMsg">
+        <p style="font-size:.88rem;color:var(--muted);font-style:italic;padding:4px 0 8px;">
+          This property is self-managed. Toggle the switch above to record a property management company.
+        </p>
+      </div>
+    </div>
+
+    <!-- ── Actions ──────────────────────────────────────────── -->
+    <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;align-items:center;margin-top:4px">
+      <button type="button" class="btn ghost" onclick="history.back()">Cancel</button>
+      <button type="submit" class="btn primary" id="savePropertyBtn">➕ Add Property</button>
+    </div>
+
+  </form>
+
+</main>
+
+<!-- ── Footer ─────────────────────────────────────────────────── -->
+<footer class="site-footer">
+  <div class="footer-content">
+    <div class="footer-section">
+      <h4>Navigate</h4>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="property-management.html">Property Management</a>
+      <a href="lease-rent-center.html">Lease &amp; Rent Center</a>
+      <a href="expense-tracking.html">Expense Tracking</a>
+    </div>
+    <div class="footer-section">
+      <h4>Support &amp; Legal</h4>
+      <a href="contact-us.html">Contact Us</a>
+      <a href="contact-us.html">Help Center</a>
+      <a href="terms.html">Terms of Service</a>
+      <a href="privacy.html">Privacy Policy</a>
+    </div>
+    <div class="footer-section">
+      <h4>Account</h4>
+      <a href="account.html">My Account</a>
+      <a href="invite-tenant.html">Invite Tenant</a>
+    </div>
+  </div>
+  <div class="footer-bottom">© <span id="footerYear"></span> Rental Genie. All rights reserved.</div>
+</footer>
+
+<!-- Mobile Bottom Nav -->
+<nav class="mobile-nav" aria-label="Mobile navigation">
+  <div class="mobile-nav-inner">
+    <a class="mnav" href="dashboard.html"><div class="ico">📊</div></a>
+    <a class="mnav active" href="property-management.html"><div class="ico">🏘️</div></a>
+    <a class="mnav" href="lease-rent-center.html"><div class="ico">💰</div></a>
+    <a class="mnav" href="expense-tracking.html"><div class="ico">💸</div></a>
+    <a class="mnav" href="maintenance-requests.html"><div class="ico">🛠️</div></a>
+    <a class="mnav" href="reports-analytics.html"><div class="ico">📈</div></a>
+  </div>
+</nav>
+<div class="mobile-pad" aria-hidden="true"></div>
+
+<!-- Finance Tools Mobile Drawer -->
+<div class="finance-backdrop" id="financeBackdrop"></div>
+<aside class="finance-drawer" id="financeDrawer" role="dialog" aria-modal="true" aria-label="Financing tools">
+  <div class="finance-drawer-header">
+    <div class="finance-drawer-title">🏦 Financing Tools</div>
+    <button type="button" class="btn sm" id="financeDrawerClose">✖</button>
+  </div>
+  <div class="finance-drawer-body">
+    <div class="finance-drawer-hint" id="financeDrawerHint">Save this property first to access financing tools.</div>
+    <button type="button" class="finance-drawer-btn" id="financeManageBtnMobile"   disabled>⚙️ Manage Financing</button>
+    <button type="button" class="finance-drawer-btn" id="financeMortgageBtnMobile" disabled>📒 Mortgage Activity</button>
+    <button type="button" class="finance-drawer-btn" id="financeEscrowBtnMobile"   disabled>💼 Escrow Reconciliation</button>
+    <button type="button" class="finance-drawer-btn" id="financeInsuranceBtnMobile" disabled>🛡 Insurance</button>
+  </div>
+</aside>
+
+<script>
+/* ============================================================
+   SUPABASE — safeStorage (window._rgClient pattern)
+============================================================ */
+var sb = window._rgClient;
+
+/* ============================================================
+   URL PARAMS
+============================================================ */
+var urlParams  = new URLSearchParams(window.location.search);
+var propertyId = urlParams.get('id') || urlParams.get('property_id') || null;
+var companyId  = urlParams.get('company_id') || null;
+window.propertyId = propertyId;
+window.companyId  = companyId;
+
+/* ============================================================
+   HELPERS
+============================================================ */
+function $(id) { return document.getElementById(id); }
+function setStatus(msg, kind) {
+  var el = $('statusMsg');
+  el.className = 'status-msg' + (kind ? ' ' + kind : '');
+  el.textContent = msg || '';
+  if (!kind || !msg) { el.style.display = 'none'; return; }
+  el.style.display = 'block';
+  el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+function hideOverlay() {
+  var o = $('authOverlay');
+  if (!o) return;
+  // Fill bar to 100% before fading out (canonical 3px shimmer pattern)
+  var bar = $('aoBarFill');
+  if (bar) bar.style.width = '100%';
+  setTimeout(function() {
+    o.classList.add('hidden');
+    setTimeout(function() { o.style.display = 'none'; }, 380);
+  }, 150);
+}
+// Kick the bar to ~70% on boot so the shimmer is visible during auth
+(function() {
+  var bar = document.getElementById('aoBarFill');
+  if (bar) bar.style.width = '70%';
+})();
+
+/* ============================================================
+   HEADER — UMD wiring
+============================================================ */
+(function wireHeader() {
+  var toggle = $('umdToggle'), drop = $('umdDropdown');
+  if (toggle && drop) {
+    toggle.addEventListener('click', function (e) {
+      e.stopPropagation();
+      drop.classList.toggle('open');
+      toggle.setAttribute('aria-expanded', drop.classList.contains('open'));
+    });
+    document.addEventListener('click', function () { drop.classList.remove('open'); });
+  }
+  async function doSignOut() { try { await sb.auth.signOut(); } catch(e) {} location.href = 'login.html'; }
+  var lb = $('logoutBtn');       if (lb) lb.addEventListener('click', doSignOut);
+  var mb = $('mobileLogoutBtn'); if (mb) mb.addEventListener('click', doSignOut);
+  var ham = $('hamburgerBtn'), drw = $('mobileDrawer');
+  if (ham && drw) {
+    ham.addEventListener('click', function () { drw.style.display = drw.style.display === 'block' ? 'none' : 'block'; });
+    document.addEventListener('click', function (e) {
+      if (drw.style.display === 'block' && !drw.contains(e.target) && !ham.contains(e.target))
+        drw.style.display = 'none';
+    });
+  }
+}());
+
+/* ============================================================
+   AUTH SETUP
+============================================================ */
+async function setupAuth() {
+  try {
+    var res = await sb.auth.getUser();
+    var user = res.data && res.data.user;
+    var loginBtn = $('nav-login'), userMenu = $('userMenu');
+    if (!user) { hideOverlay(); return null; }
+    var uname    = (user.user_metadata && (user.user_metadata.full_name || user.user_metadata.name)) || user.email.split('@')[0];
+    var _dp = uname.split(' ');
+    var initials = (_dp.length >= 2 ? _dp[0][0] + _dp[_dp.length-1][0] : uname.slice(0,2)).toUpperCase();
+    if (loginBtn)  loginBtn.style.display  = 'none';
+    if (userMenu)  userMenu.style.display  = window.innerWidth > 860 ? 'block' : 'none';
+    var av = $('umdAvatar');   if (av) av.textContent  = initials;
+    var nm = $('umdName');     if (nm) nm.textContent  = uname;
+    var fn = $('umdFullName'); if (fn) fn.textContent  = uname;
+    var em = $('umdEmail');    if (em) em.textContent  = user.email || '';
+    var da = $('drawerAvatar'); if (da) da.textContent = initials;
+    var ml = $('mobileUsernameLabel'); if (ml) ml.textContent = uname;
+    var ma = $('mobileAccountLink'); if (ma) ma.style.display = 'block';
+    var mlo = $('mobileLogoutContainer'); if (mlo) mlo.style.display = 'block';
+    sb.auth.onAuthStateChange(function (event) { if (event === 'SIGNED_OUT') location.href = 'login.html'; });
+    return user;
+  } catch(e) { hideOverlay(); return null; }
+}
+
+/* ============================================================
+   OCCUPANCY OPTIONS (dynamic based on use type)
+============================================================ */
+function refreshOccupancyOptions() {
+  var useSel = $('useType'), occSel = $('propertyStatus');
+  if (!useSel || !occSel) return;
+  var useType = (useSel.value || 'rental').toLowerCase();
+  var current = occSel.value;
+  var OPTIONS = {
+    vacant:           '🚪 Vacant',
+    tenant_occupied:  '✅ Tenant Occupied',
+    owner_occupied:   '🧍 Owner Occupied',
+    renovation:       '🛠️ Renovation / Hold',
+    off_market:       '📌 Off Market'
+  };
+  var allowed;
+  if (useType === 'primary')  allowed = ['owner_occupied','renovation','off_market'];
+  else if (useType === 'vacation') allowed = ['owner_occupied','vacant','renovation','off_market'];
+  else if (useType === 'rental')   allowed = ['tenant_occupied','vacant','renovation','off_market'];
+  else                             allowed = ['tenant_occupied','owner_occupied','vacant','renovation','off_market'];
+  occSel.innerHTML = '';
+  allowed.forEach(function (key) {
+    var opt = document.createElement('option');
+    opt.value = key;
+    opt.textContent = OPTIONS[key] || key;
+    occSel.appendChild(opt);
+  });
+  if (current && allowed.indexOf(current) !== -1) occSel.value = current;
+  else {
+    var fallback = useType === 'primary' ? 'owner_occupied' : 'vacant';
+    occSel.value = allowed.indexOf(fallback) !== -1 ? fallback : allowed[0];
+  }
+}
+$('useType').addEventListener('change', refreshOccupancyOptions);
+
+/* ============================================================
+   MONTHLY COST RECALC
+============================================================ */
+function recalcMonthlyCost() {
+  var ids = ['mortgagePI','taxMonthly','insuranceMonthly','hoaMonthly','pmiMonthly'];
+  var total = ids.reduce(function (sum, id) {
+    return sum + (parseFloat($(id) && $(id).value) || 0);
+  }, 0);
+  var el = $('totalMonthlyCost');
+  if (el) el.value = total > 0 ? total.toFixed(2) : '';
+}
+['mortgagePI','taxMonthly','insuranceMonthly','hoaMonthly','pmiMonthly'].forEach(function (id) {
+  var el = $(id); if (el) el.addEventListener('input', recalcMonthlyCost);
+});
+
+/* ============================================================
+   LENDER PORTAL BUTTON
+============================================================ */
+function updateLenderPortalButton() {
+  var inp = $('lenderPortalUrl'), btn = $('openLenderPortalBtn');
+  if (!inp || !btn) return;
+  btn.disabled = !inp.value.trim();
+}
+var lenderInp = $('lenderPortalUrl');
+if (lenderInp) {
+  lenderInp.addEventListener('input', updateLenderPortalButton);
+  $('openLenderPortalBtn').addEventListener('click', function () {
+    var raw = lenderInp.value.trim();
+    if (!raw) return;
+    var url = /^https?:\/\//i.test(raw) ? raw : 'https://' + raw;
+    window.open(url, '_blank', 'noopener');
+  });
+}
+
+/* ============================================================
+   FINANCING TOOL BUTTONS (enabled after property is saved)
+============================================================ */
+function makeNavBtn(desktopId, mobileId, targetPage) {
+  function go() {
+    var qs = new URLSearchParams();
+    if (propertyId) qs.set('property_id', propertyId);
+    if (companyId)  qs.set('company_id', companyId);
+    qs.set('return_to', window.location.pathname + window.location.search);
+    window.location.href = targetPage + '?' + qs.toString();
+  }
+  var db = $(desktopId); if (db) db.addEventListener('click', go);
+  var mb = $(mobileId);  if (mb) mb.addEventListener('click', function () { closeFinanceDrawer(); go(); });
+}
+makeNavBtn('manageFinanceBtn',         'financeManageBtnMobile',   'property-finance.html');
+makeNavBtn('manageMortgageActivityBtn','financeMortgageBtnMobile', 'property-mortgage-activity.html');
+makeNavBtn('manageEscrowBtn',          'financeEscrowBtnMobile',   'property-escrow-reconciliation.html');
+makeNavBtn('manageInsuranceBtn',       'financeInsuranceBtnMobile','property-insurance.html');
+
+var manageTaxBtnEl = $('manageTaxBtn');
+if (manageTaxBtnEl) manageTaxBtnEl.addEventListener('click', function () {
+  if (!propertyId) { setStatus('Save this property first to manage tax details.', 'info'); return; }
+  var qs = new URLSearchParams();
+  qs.set('property_id', propertyId);
+  if (companyId) qs.set('company_id', companyId);
+  qs.set('return_to', window.location.pathname + window.location.search);
+  window.location.href = 'property-tax.html?' + qs.toString();
+});
+
+function setFinanceButtonsEnabled(enabled) {
+  ['manageFinanceBtn','manageMortgageActivityBtn','manageEscrowBtn','manageInsuranceBtn',
+   'manageTaxBtn','financeManageBtnMobile','financeMortgageBtnMobile','financeEscrowBtnMobile','financeInsuranceBtnMobile'
+  ].forEach(function (id) { var el = $(id); if (el) el.disabled = !enabled; });
+  var hint = $('financeDrawerHint');
+  if (hint) hint.style.display = enabled ? 'none' : 'block';
+}
+window.setMobileFinanceButtonsEnabled = setFinanceButtonsEnabled;
+
+/* ============================================================
+   FINANCE DRAWER (mobile)
+============================================================ */
+var financeBackdrop = $('financeBackdrop');
+var financeDrawer   = $('financeDrawer');
+
+function openFinanceDrawer()  { if (financeDrawer) financeDrawer.classList.add('open');    if (financeBackdrop) financeBackdrop.classList.add('open'); }
+function closeFinanceDrawer() { if (financeDrawer) financeDrawer.classList.remove('open'); if (financeBackdrop) financeBackdrop.classList.remove('open'); }
+
+var ftToggle = $('financeToolsToggle');
+var ftClose  = $('financeDrawerClose');
+if (ftToggle) ftToggle.addEventListener('click', openFinanceDrawer);
+if (ftClose)  ftClose.addEventListener('click',  closeFinanceDrawer);
+if (financeBackdrop) financeBackdrop.addEventListener('click', closeFinanceDrawer);
+
+/* ============================================================
+   SAFE UPSERT (probe-columns pattern)
+============================================================ */
+function filterPayload(payload, allowedKeys) {
+  var out = {};
+  Object.keys(payload).forEach(function (k) { if (allowedKeys[k] !== undefined || allowedKeys.has && allowedKeys.has(k)) out[k] = payload[k]; });
+  return out;
+}
+function safeUpsertProperty(payload) {
+  if (propertyId) {
+    return sb.from('properties').select('*').eq('id', propertyId).single()
+      .then(function (res) {
+        if (res.error) throw res.error;
+        var allowed = new Set(Object.keys(res.data || {}));
+        allowed.add('name');
+        var safe = {};
+        Object.keys(payload).forEach(function (k) { if (allowed.has(k)) safe[k] = payload[k]; });
+        return sb.from('properties').update(safe).eq('id', propertyId);
+      });
+  }
+  return sb.from('properties').insert([payload]).then(function (res) {
+    if (!res.error) return res;
+    if (res.error.code !== 'PGRST204') return res;
+    return sb.from('properties').select('*').limit(1).then(function (sample) {
+      var s = sample.data && sample.data[0];
+      if (!s) return res;
+      var allowed = new Set(Object.keys(s));
+      var safe = {};
+      Object.keys(payload).forEach(function (k) { if (allowed.has(k)) safe[k] = payload[k]; });
+      return sb.from('properties').insert([safe]);
+    });
+  });
+}
+
+/* ============================================================
+   LOAD PROPERTY FOR EDIT
+============================================================ */
+function loadPropertyForEdit() {
+  if (!propertyId) return Promise.resolve();
+  return sb.from('properties').select('*').eq('id', propertyId).single()
+    .then(function (res) {
+      if (res.error) { setStatus('❌ Could not load this property for editing.', 'err'); return; }
+      var p = res.data || {};
+      var titleEl = $('pageTitle'), introEl = $('pageIntro'), btnEl = $('savePropertyBtn');
+      if (titleEl) titleEl.textContent = '✏️ Edit Property';
+      if (introEl) introEl.textContent = 'Update the details for this property. Changes will be saved immediately.';
+      if (btnEl)   btnEl.textContent   = '💾 Save Changes';
+
+      // Basic
+      var set = function(id, val) { var e = $(id); if (e && val != null) e.value = val; };
+      set('propertyName',    p.name);
+      set('propertyAddress', p.address);
+      set('purchasePrice',   p.purchase_price);
+      set('purchaseDate',    p.purchase_date);
+      if ($('useType') && p.use_type) $('useType').value = p.use_type;
+      refreshOccupancyOptions();
+      if ($('propertyStatus') && (p.occupancy_status || p.status))
+        $('propertyStatus').value = p.occupancy_status || p.status || 'vacant';
+      set('propertyNotes',   p.notes);
+
+      // Classification
+      if ($('propertyType') && p.property_type) $('propertyType').value = p.property_type;
+      set('units',      p.units     != null ? p.units     : 1);
+      set('yearBuilt',  p.year_built);
+      set('squareFeet', p.square_feet);
+      set('bedrooms',   p.bedrooms);
+      set('bathrooms',  p.bathrooms);
+
+      // Ownership
+      if ($('ownershipType') && p.ownership_type) $('ownershipType').value = p.ownership_type;
+      set('downPayment',  p.down_payment);
+      set('closingCosts', p.closing_costs);
+      set('rehabCost',    p.rehab_cost);
+
+      // Auto-expand advanced section if any financial data already saved
+      var hasAdvData = !!(p.down_payment || p.closing_costs || p.rehab_cost ||
+        p.is_financed || p.monthly_payment || p.lender_name || p.loan_balance ||
+        p.interest_rate || p.mortgage_pi || p.tax_monthly || p.insurance_monthly);
+      if (hasAdvData) {
+        if (window._openAdvSection) window._openAdvSection();
+        if (window._showAdvBadge)   window._showAdvBadge();
+      }
+
+      // Financing
+      if ($('isFinanced')) $('isFinanced').value = p.is_financed === true ? 'true' : 'false';
+      set('monthlyPayment', p.monthly_payment);
+      set('lenderName',     p.lender_name);
+      set('lenderPortalUrl', p.lender_portal_url);
+      set('loanTerm',       p.loan_term);
+      set('loanBalance',    p.loan_balance);
+      set('interestRate',   p.interest_rate);
+      set('loanStartDate',  p.loan_start_date);
+      set('loanEndDate',    p.loan_end_date);
+      set('financingNotes', p.financing_notes);
+
+      // Monthly breakdown
+      set('mortgagePI',       p.mortgage_pi);
+      set('taxMonthly',       p.tax_monthly);
+      set('insuranceMonthly', p.insurance_monthly);
+      set('hoaMonthly',       p.hoa_monthly);
+      set('pmiMonthly',       p.pmi_monthly);
+      recalcMonthlyCost();
+
+      // Tax summary view-only
+      try {
+        var annual  = p.property_tax_annual ?? p.tax_annual ?? null;
+        var due     = p.property_tax_due_month ?? p.tax_due_month ?? null;
+        var acct    = p.property_tax_account_number ?? p.tax_account_number ?? null;
+        var portal  = p.property_tax_portal_url ?? p.tax_portal_url ?? null;
+        var hasAny  = !!(annual || due || acct || portal);
+        var wrap    = $('taxSummaryWrap');
+        if (wrap) wrap.style.display = hasAny ? 'block' : 'none';
+        if (hasAny) {
+          var at = $('taxAnnualText');   if (at) at.textContent = annual ? ('$' + Number(annual).toLocaleString()) : '—';
+          var dt = $('taxDueMonthText'); if (dt) dt.textContent = due || '—';
+          var ac = $('taxAccountText');  if (ac) ac.textContent = acct || '—';
+          var pt = $('taxPortalText');   if (pt) pt.textContent = portal ? '✅ Set' : '—';
+        }
+      } catch (e) {}
+
+      // Utilities
+      var utils = {utilWater:'util_water',utilGas:'util_gas',utilElectric:'util_electric',
+                   utilTrash:'util_trash',utilLawn:'util_lawn',utilInternet:'util_internet'};
+      Object.keys(utils).forEach(function(id) { var e = $(id); if (e && p[utils[id]]) e.value = p[utils[id]]; });
+
+      // Property Management Company
+      var isManaged = !!(p.pm_managed || p.property_managed);
+      var pmChk = $('pmManaged');
+      if (pmChk) { pmChk.checked = isManaged; if (window._applyPmToggle) window._applyPmToggle(isManaged); }
+      if ($('pmCompanyName') && p.pm_company_name)   $('pmCompanyName').value = p.pm_company_name;
+      if ($('pmManagerName') && p.pm_manager_name)   $('pmManagerName').value = p.pm_manager_name;
+      if ($('pmPhone')       && p.pm_phone)           $('pmPhone').value       = p.pm_phone;
+      if ($('pmEmail')       && p.pm_email)           $('pmEmail').value       = p.pm_email;
+      if ($('pmFeeAmount')   && p.pm_fee_amount != null) $('pmFeeAmount').value = p.pm_fee_amount;
+      if ($('pmFeeType')     && p.pm_fee_type)        $('pmFeeType').value     = p.pm_fee_type;
+      if ($('pmContractStart') && p.pm_contract_start) $('pmContractStart').value = p.pm_contract_start;
+      if ($('pmContractEnd')   && p.pm_contract_end)   $('pmContractEnd').value   = p.pm_contract_end;
+      if ($('pmNotes')       && p.pm_notes)           $('pmNotes').value       = p.pm_notes;
+
+      // Auto-expand accordion if any financial data present
+      var hasFinancial = !!(p.down_payment || p.closing_costs || p.rehab_cost ||
+        p.monthly_payment || p.lender_name || p.loan_balance || p.interest_rate ||
+        p.mortgage_pi || p.tax_monthly || p.insurance_monthly || p.hoa_monthly || p.pmi_monthly);
+      if (hasFinancial) {
+        if (window._openAdvSection) window._openAdvSection();
+        if (window._showAdvBadge) window._showAdvBadge();
+      }
+
+      // Enable finance tools
+      setFinanceButtonsEnabled(true);
+      updateLenderPortalButton();
+    });
+}
+
+
+/* ============================================================
+   PM TOGGLE — wire checkbox to show/hide fields
+============================================================ */
+(function wirePmToggle() {
+  var chk    = document.getElementById('pmManaged');
+  var fields = document.getElementById('pmFields');
+  var selfMsg= document.getElementById('pmSelfMsg');
+  var track  = document.getElementById('pmTrack');
+  var thumb  = document.getElementById('pmThumb');
+  var lblOff = document.getElementById('pmToggleOff');
+  var lblOn  = document.getElementById('pmToggleOn');
+
+  function applyPmToggle(checked) {
+    if (!fields || !selfMsg) return;
+    fields.style.display  = checked ? 'block' : 'none';
+    selfMsg.style.display = checked ? 'none'  : 'block';
+    if (track) track.style.background = checked ? 'var(--sky)' : '#cbd5e1';
+    if (thumb) thumb.style.transform  = checked ? 'translateX(20px)' : 'translateX(0)';
+    if (lblOff) lblOff.style.display  = checked ? 'none'   : 'inline';
+    if (lblOn)  lblOn.style.display   = checked ? 'inline' : 'none';
+  }
+
+  if (chk) {
+    chk.addEventListener('change', function() { applyPmToggle(chk.checked); });
+    applyPmToggle(false); // default: self-managed
+  }
+  window._applyPmToggle = applyPmToggle; // expose for loadPropertyForEdit
+}());
+
+
+/* ============================================================
+   ADVANCED SECTION TOGGLE
+============================================================ */
+(function wireAdvToggle() {
+  var bar  = document.getElementById('advToggleBar');
+  var body = document.getElementById('advBody');
+  if (!bar || !body) return;
+
+  function setOpen(open) {
+    bar.classList.toggle('open', open);
+    body.classList.toggle('open', open);
+    bar.setAttribute('aria-expanded', open ? 'true' : 'false');
+  }
+
+  bar.addEventListener('click', function () { setOpen(!bar.classList.contains('open')); });
+  bar.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setOpen(!bar.classList.contains('open')); }
+  });
+
+  window._openAdvSection = function () { setOpen(true); };
+  window._showAdvBadge   = function () {
+    var b = document.getElementById('advBadge');
+    if (b) b.classList.add('visible');
+  };
+}());
+
+
+/* ============================================================
+   FORM SUBMIT
+============================================================ */
+$('addPropertyForm').addEventListener('submit', function (e) {
+  e.preventDefault();
+  var name = ($('propertyName').value || '').trim();
+  if (!name) { setStatus('Please enter a property name.', 'err'); return; }
+
+  var btn = $('savePropertyBtn');
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+  setStatus('Saving property…', 'info');
+
+  var payload = {
+    name:              name,
+    address:           ($('propertyAddress').value || '').trim() || null,
+    purchase_price:    parseFloat($('purchasePrice').value)  || null,
+    purchase_date:     $('purchaseDate').value               || null,
+    use_type:          $('useType').value,
+    occupancy_status:  $('propertyStatus').value,
+    notes:             ($('propertyNotes').value || '').trim() || null,
+    property_type:     $('propertyType').value               || null,
+    units:             parseInt($('units').value, 10)         || 1,
+    year_built:        parseInt($('yearBuilt').value, 10)     || null,
+    square_feet:       parseInt($('squareFeet').value, 10)    || null,
+    bedrooms:          parseFloat($('bedrooms').value)        || null,
+    bathrooms:         parseFloat($('bathrooms').value)       || null,
+    ownership_type:    $('ownershipType').value               || 'personal',
+    down_payment:      parseFloat($('downPayment').value)     || null,
+    closing_costs:     parseFloat($('closingCosts').value)    || null,
+    rehab_cost:        parseFloat($('rehabCost').value)       || null,
+    is_financed:       $('isFinanced').value === 'true',
+    monthly_payment:   parseFloat($('monthlyPayment').value)  || null,
+    lender_name:       ($('lenderName').value || '').trim()   || null,
+    lender_portal_url: ($('lenderPortalUrl').value || '').trim() || null,
+    loan_term:         ($('loanTerm').value || '').trim()     || null,
+    loan_balance:      parseFloat($('loanBalance').value)     || null,
+    interest_rate:     ($('interestRate').value || '').trim() || null,
+    loan_start_date:   $('loanStartDate').value               || null,
+    loan_end_date:     $('loanEndDate').value                 || null,
+    financing_notes:   ($('financingNotes').value || '').trim() || null,
+    mortgage_pi:       parseFloat($('mortgagePI').value)      || null,
+    tax_monthly:       parseFloat($('taxMonthly').value)      || null,
+    insurance_monthly: parseFloat($('insuranceMonthly').value) || null,
+    hoa_monthly:       parseFloat($('hoaMonthly').value)      || null,
+    pmi_monthly:       parseFloat($('pmiMonthly').value)      || null,
+    util_water:        $('utilWater').value    || 'tenant',
+    util_gas:          $('utilGas').value      || 'tenant',
+    util_electric:     $('utilElectric').value || 'tenant',
+    util_trash:        $('utilTrash').value    || 'tenant',
+    util_lawn:         $('utilLawn').value     || 'tenant',
+    util_internet:     $('utilInternet').value || 'tenant',
+    // Property Management Company
+    pm_managed:        !!($('pmManaged') && $('pmManaged').checked),
+    pm_company_name:   ($('pmCompanyName') && $('pmCompanyName').value.trim()) || null,
+    pm_manager_name:   ($('pmManagerName') && $('pmManagerName').value.trim()) || null,
+    pm_phone:          ($('pmPhone') && $('pmPhone').value.trim())             || null,
+    pm_email:          ($('pmEmail') && $('pmEmail').value.trim())             || null,
+    pm_fee_amount:     ($('pmFeeAmount') && $('pmFeeAmount').value !== '') ? parseFloat($('pmFeeAmount').value) : null,
+    pm_fee_type:       ($('pmFeeType') && $('pmFeeType').value)               || 'percent',
+    pm_contract_start: ($('pmContractStart') && $('pmContractStart').value)   || null,
+    pm_contract_end:   ($('pmContractEnd') && $('pmContractEnd').value)       || null,
+    pm_notes:          ($('pmNotes') && $('pmNotes').value.trim())            || null,
+  };
+  if (companyId) payload.company_id = companyId;
+
+  safeUpsertProperty(payload).then(function (res) {
+    if (res.error) throw res.error;
+    setStatus(propertyId ? '✅ Property updated!' : '✅ Property added!', 'ok');
+    btn.textContent = '✅ Saved';
+    setTimeout(function () { window.location.href = 'property-management.html'; }, 1200);
+  }).catch(function (err) {
+    console.error('Save error:', err);
+    setStatus('❌ Save failed: ' + (err.message || 'Unexpected error.'), 'err');
+    btn.disabled = false;
+    btn.textContent = propertyId ? '💾 Save Changes' : '➕ Add Property';
+  });
+});
+
+/* ============================================================
+   INIT
+============================================================ */
+document.getElementById('footerYear').textContent = new Date().getFullYear();
+
+document.addEventListener('DOMContentLoaded', function () {
+  setTimeout(hideOverlay, 5000);
+  refreshOccupancyOptions();
+
+  (async function() {
+    var user = await setupAuth();
+    if (!user) { hideOverlay(); window.location.href = 'login.html'; return; }
+    hideOverlay();
+    if (propertyId) {
+      try { await loadPropertyForEdit(); }
+      catch(e) { console.error('loadPropertyForEdit error:', e); setStatus('❌ Error loading property data.', 'err'); }
+    } else {
+      setFinanceButtonsEnabled(false);
+    }
+  }());
+});
+</script>
+</body>
+</html>

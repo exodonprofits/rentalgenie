@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap">
+<link rel="dns-prefetch" href="https://pbojacnagutipfhcxltj.supabase.co">
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<title>✉️ Invite Tenant – Rental Genie</title>
+<style>
+:root {
+  --navy:#0c1e3a; --navy-mid:#1a3a6b; --navy-lt:#1e5799;
+  --sky:#2d8cf0; --sky-lt:#e8f0fe;
+  --green:#16a34a; --green-lt:#ecfdf5;
+  --border:#e2e8f0; --bg:#f1f4f8; --card:#ffffff;
+  --text:#0c1e3a; --muted:#64748b; --danger:#dc2626;
+  --radius-sm:8px; --radius-md:12px; --radius-lg:16px;
+  --shadow-sm:0 1px 4px rgba(12,30,58,.06);
+  --shadow-md:0 4px 16px rgba(12,30,58,.10);
+}
+*,*::before,*::after{box-sizing:border-box;}
+html,body{height:100%;margin:0;}
+body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;}
+
+/* Auth overlay */
+#authOverlay{position:fixed;inset:0;z-index:9999;background:linear-gradient(160deg,#0c1e3a 0%,#0f2547 60%,#0c1e3a 100%);display:flex;align-items:center;justify-content:center;transition:opacity .4s ease;pointer-events:none;}
+.auth-overlay-inner{text-align:center;color:white;width:300px;position:relative;}
+.auth-overlay-inner .ao-icon{font-size:3.2rem;margin-bottom:10px;display:block;animation:aoPulse 1.8s ease-in-out infinite;filter:drop-shadow(0 0 16px rgba(45,140,240,.4));}
+.ao-title{font-size:1.15rem;font-weight:700;color:#fff;margin-bottom:5px;}
+.ao-status{font-size:.82rem;color:rgba(255,255,255,.55);margin-bottom:18px;min-height:1.2em;transition:opacity .25s ease;}
+.ao-bar-track{width:100%;height:4px;border-radius:999px;background:rgba(255,255,255,.1);overflow:hidden;margin-bottom:20px;}
+.ao-bar-fill{height:100%;border-radius:999px;width:0%;background:linear-gradient(90deg,#2d8cf0,#38bdf8,#2d8cf0);background-size:200% 100%;transition:width .5s cubic-bezier(.4,0,.2,1);animation:aoShimmer 1.8s linear infinite;}
+@keyframes aoShimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.ao-steps{display:flex;justify-content:space-between;gap:4px;}
+.ao-step{display:flex;flex-direction:column;align-items:center;gap:5px;font-size:.65rem;font-weight:600;color:rgba(255,255,255,.28);text-transform:uppercase;letter-spacing:.5px;transition:color .3s;flex:1;}
+.ao-step-dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.18);display:block;transition:background .3s,box-shadow .3s;}
+.ao-step.active .ao-step-dot{background:#38bdf8;box-shadow:0 0 0 3px rgba(56,189,248,.25);}
+.ao-step.active{color:rgba(255,255,255,.75);}
+.ao-step.done .ao-step-dot{background:#10b981;box-shadow:0 0 0 3px rgba(16,185,129,.2);}
+.ao-step.done{color:rgba(255,255,255,.45);}
+@keyframes aoPulse{0%,100%{opacity:.85;transform:scale(1)}50%{opacity:1;transform:scale(1.06)}}
+
+/* Header */
+.header-container{position:sticky!important;top:0!important;z-index:1000!important;width:100%!important;background:linear-gradient(135deg,#0c1e3a 0%,#1a3a6b 55%,#1e5799 100%)!important;border-bottom:1px solid rgba(255,255,255,.08)!important;box-shadow:0 2px 20px rgba(12,30,58,.35)!important;}
+.navbar{max-width:1440px;margin:0 auto;padding:13px 22px;display:flex;align-items:center;justify-content:space-between;}
+.brand-area{display:flex;align-items:center;gap:11px;text-decoration:none;}
+.brand-logo{width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.15);box-shadow:0 0 0 1px rgba(255,255,255,.2),0 4px 12px rgba(0,0,0,.2);object-fit:cover;}
+.brand-title{font-size:1.25rem;font-weight:700;color:#fff;letter-spacing:-.3px;}
+.nav-links{display:flex;gap:2px;align-items:center;}
+.nav-links a{display:inline-flex;align-items:center;gap:5px;padding:6px 10px;font-size:13.5px;font-weight:500;color:rgba(255,255,255,.78);text-decoration:none;border-radius:8px;white-space:nowrap;transition:all .18s;}
+.nav-links a:hover{background:rgba(255,255,255,.12);color:#fff;}
+.nav-active{background:rgba(255,255,255,.16)!important;color:#fff!important;}
+#nav-login{padding:7px 16px!important;border-radius:999px!important;border:1px solid rgba(255,255,255,.25)!important;background:rgba(255,255,255,.1)!important;color:#fff!important;font-weight:600!important;}
+/* ── UMD ── */
+.umd-wrap{position:relative;z-index:1100;}
+.umd-toggle{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:5px 12px 5px 5px;cursor:pointer;transition:background .18s;color:#fff;}
+.umd-toggle:hover{background:rgba(255,255,255,.18);}
+.umd-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#38bdf8,#1a3a6b);display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:700;color:#fff;flex-shrink:0;}
+.umd-name{font-size:.8rem;color:#fff;font-weight:600;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.umd-caret{font-size:.6rem;color:rgba(255,255,255,.7);}
+.umd-dropdown{display:none;position:absolute;right:0;top:calc(100% + 8px);background:#fff;border:1px solid #e2e8f0;border-radius:12px;box-shadow:0 8px 32px rgba(12,30,58,.18);min-width:220px;overflow:hidden;z-index:1200;}
+.umd-dropdown.open{display:block;}
+.umd-user-row{padding:14px 16px 10px;border-bottom:1px solid #f1f5f9;}
+.umd-user-name{font-size:.88rem;font-weight:700;color:#0c1e3a;}
+.umd-user-email{font-size:.75rem;color:#64748b;margin-top:2px;}
+.umd-section{display:flex;flex-direction:column;padding:6px;border-bottom:1px solid #f1f5f9;}
+.umd-section:last-child{border-bottom:none;}
+.umd-link{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:8px;font-size:.84rem;font-weight:600;color:#0c1e3a;text-decoration:none;background:none;border:none;cursor:pointer;width:100%;font-family:'DM Sans',sans-serif;transition:background .15s;}
+.umd-link:hover{background:#f8faff;}
+.umd-link.danger{color:#dc2626;}
+.umd-link.danger:hover{background:#fef2f2;}
+@media(min-width:861px){body.auth-ready .umd-wrap{display:inline-flex!important;}}
+body.auth-guest .umd-wrap{display:none!important;}
+body.auth-ready #nav-login{display:none!important;}
+.hamburger{display:none;}
+@media(max-width:860px){.nav-links{display:none;}.hamburger{display:block;}.umd-wrap{display:none!important;}#nav-login{display:none!important;}}
+body.auth-ready #mobileLogin{display:none!important;}
+body.auth-ready #mobileAccountLink{display:flex!important;}
+body.auth-ready #mobileLogoutContainer{display:block!important;}
+body.auth-guest #mobileAccountLink{display:none!important;}
+body.auth-guest #mobileLogoutContainer{display:none!important;}
+
+/* Mobile drawer */
+.drawer{display:none;position:fixed;top:70px;left:12px;right:12px;background:#fff;border:1px solid #e2e8f0;border-radius:18px;padding:0;z-index:1300;box-shadow:0 16px 48px rgba(12,30,58,.2);max-height:calc(100vh - 90px);overflow-y:auto;overflow:hidden;}
+.drawer-user-row{display:flex!important;align-items:center;gap:12px;padding:16px 16px 14px!important;border-bottom:1px solid #f1f5f9!important;border-radius:0!important;text-decoration:none;background:#fafbfc;}
+.drawer-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#1a3a6b,#1e5799);color:#fff;font-weight:700;font-size:.78rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;text-transform:uppercase;box-shadow:0 2px 8px rgba(12,30,58,.2);}
+.drawer-username{font-weight:700;font-size:.95rem;color:#0c1e3a!important;}
+.drawer-grid{display:grid;grid-template-columns:1fr 1fr;padding:8px 10px;gap:2px;}
+.drawer-grid-divider{grid-column:1/-1;height:1px;background:#f1f5f9;margin:2px 0;}
+.drawer-grid a{display:flex;align-items:center;gap:8px;padding:11px 10px;font-weight:600;font-size:.88rem;color:#0c1e3a!important;text-decoration:none;border-radius:9px;transition:background .12s;background:transparent;border:none!important;}
+.drawer-grid a:hover{background:#f1f5f9;}
+.drawer-grid a.nav-active{background:#eff4ff!important;color:#1a3a6b!important;font-weight:700!important;}
+.drawer-login{display:block;padding:11px 16px;font-weight:600;color:#0c1e3a!important;font-size:.9rem;border-top:1px solid #f1f5f9;text-decoration:none;}
+#mobileLogoutContainer{border-top:1px solid #f1f5f9;padding:6px 10px 8px;margin:0;}
+#mobileLogoutContainer button{width:100%;padding:10px;background:none;border:none;text-align:left;font-weight:700;color:#dc2626;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.9rem;border-radius:8px;}
+#mobileLogoutContainer button:hover{background:#fef2f2;}
+
+/* Page */
+main.page{flex:1 0 auto;max-width:860px;margin:0 auto;padding:28px 16px 60px;width:100%;}
+@media(max-width:600px){main.page{padding:16px 10px 60px;}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.page-fade{animation:fadeUp .35s ease both;}
+
+/* Page header */
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:24px;}
+.page-title{font-size:1.65rem;font-weight:700;color:var(--navy);letter-spacing:-.3px;display:flex;align-items:center;gap:10px;margin:0 0 4px;}
+.page-sub{font-size:.9rem;color:var(--muted);margin:0;}
+.page-actions{display:flex;gap:10px;align-items:center;}
+
+/* Stepper */
+.stepper{display:flex;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:20px;}
+.step{flex:1;padding:14px 18px;display:flex;align-items:center;gap:10px;font-weight:600;font-size:.88rem;color:var(--muted);border-right:1px solid var(--border);}
+.step:last-child{border-right:none;}
+.step-num{width:26px;height:26px;border-radius:50%;background:var(--border);color:var(--muted);font-size:.78rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.step.active{background:var(--navy);color:#fff;}
+.step.active .step-num{background:rgba(255,255,255,.25);color:#fff;}
+.step.done{color:var(--green);}
+.step.done .step-num{background:var(--green-lt);color:var(--green);}
+@media(max-width:600px){.step{padding:12px 10px;font-size:.78rem;gap:7px;}.step-num{width:22px;height:22px;font-size:.7rem;}}
+
+/* Card */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);padding:24px;margin-bottom:16px;}
+.card-title{font-size:1.05rem;font-weight:700;color:var(--navy);display:flex;align-items:center;gap:9px;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--border);}
+.card-icon{width:34px;height:34px;border-radius:9px;background:var(--sky-lt);display:flex;align-items:center;justify-content:center;font-size:1.05rem;flex-shrink:0;}
+
+/* Fields */
+.field{margin-bottom:16px;}
+.field label{font-size:.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:7px;}
+.field input,.field select,.field textarea{width:100%;padding:10px 13px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:.9rem;font-family:'DM Sans',sans-serif;background:#f8fafc;color:var(--text);transition:border-color .15s,box-shadow .15s;outline:none;appearance:none;}
+.field select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;background-size:16px;padding-right:36px;}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--sky);box-shadow:0 0 0 3px rgba(45,140,240,.12);background:#fff;}
+.field select:disabled{opacity:.55;cursor:not-allowed;}
+.field-hint{font-size:.78rem;color:var(--muted);margin-top:5px;line-height:1.45;}
+
+/* Tenant chip */
+.tenant-chip{display:none;align-items:center;gap:12px;padding:12px 14px;background:var(--sky-lt);border:1px solid #bfdbfe;border-radius:var(--radius-md);margin-bottom:16px;}
+.tenant-chip.show{display:flex;}
+.chip-avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--navy),var(--navy-lt));color:#fff;font-weight:700;font-size:.78rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.chip-name{font-weight:700;font-size:.9rem;color:var(--navy);}
+.chip-email{font-size:.78rem;color:var(--muted);margin-top:1px;}
+
+/* Buttons */
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px;justify-content:flex-end;}
+.btn{border:none;border-radius:999px;padding:10px 22px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:7px;font-family:'DM Sans',sans-serif;font-size:.88rem;transition:all .15s;text-decoration:none;white-space:nowrap;}
+.btn-primary{background:var(--navy-mid);color:#fff;box-shadow:0 2px 8px rgba(26,58,107,.3);}
+.btn-primary:hover{background:var(--navy);transform:translateY(-1px);}
+.btn-primary:disabled{opacity:.5;cursor:default;transform:none;}
+.btn-ghost{background:var(--card);border:1.5px solid var(--border);color:var(--text);}
+.btn-ghost:hover{background:var(--bg);border-color:#cbd5e1;}
+.btn-success{background:var(--green);color:#fff;}
+.btn-success:hover{background:#15803d;transform:translateY(-1px);}
+
+/* Alert */
+.alert{padding:11px 14px;border-radius:var(--radius-sm);font-size:.87rem;font-weight:500;margin-bottom:14px;display:none;}
+.alert.show{display:block;}
+.alert-danger{background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;}
+.alert-success{background:var(--green-lt);border:1px solid #bbf7d0;color:#166534;}
+.alert-info{background:var(--sky-lt);border:1px solid #bfdbfe;color:#1d4ed8;}
+
+/* Summary box */
+.summary-box{background:#f8fafc;border:1px solid var(--border);border-radius:var(--radius-md);padding:16px;margin-bottom:18px;}
+.summary-label{font-size:.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:10px;}
+.summary-row{display:flex;justify-content:space-between;font-size:.88rem;margin-bottom:6px;}
+.summary-row:last-child{margin-bottom:0;}
+.summary-key{color:var(--muted);}
+.summary-val{font-weight:600;}
+
+/* Portal link box */
+.portal-link-box{background:#f8fafc;border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;font-family:'DM Mono',monospace;font-size:.78rem;color:var(--muted);word-break:break-all;margin:10px 0;}
+
+/* Success panel */
+.success-panel{display:none;text-align:center;padding:40px 20px;}
+.success-panel.show{display:block;}
+.success-icon{font-size:3rem;margin-bottom:12px;}
+.success-panel h2{color:var(--navy);margin:0 0 8px;font-size:1.4rem;}
+.success-panel p{color:var(--muted);font-size:.9rem;margin:0 0 16px;}
+
+/* Mobile nav */
+.mobile-nav{display:none;position:fixed;left:0;right:0;bottom:0;z-index:1200;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:linear-gradient(135deg,#0c1e3a,#1a3a6b);border-top:1px solid rgba(255,255,255,.08);box-shadow:0 -4px 20px rgba(12,30,58,.28);}
+.mobile-nav-inner{max-width:1440px;margin:0 auto;display:grid;grid-template-columns:repeat(6,1fr);gap:5px;}
+.mnav{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:9px 6px;border-radius:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.07);color:rgba(255,255,255,.55);font-weight:700;font-size:10px;text-decoration:none;text-align:center;}
+.mnav .ico{font-size:22px;line-height:1;}
+.mnav.active{background:rgba(255,255,255,.18);color:#fff;}
+.mobile-pad{display:none;height:82px;}
+@media(max-width:860px){.mobile-nav{display:block;}.mobile-pad{display:block;}main.page{padding-bottom:calc(82px + env(safe-area-inset-bottom))!important;}}
+@media(max-width:600px){.site-footer{display:none!important;}}
+
+/* Footer */
+.site-footer{background:var(--navy);padding:40px 20px 24px;flex-shrink:0;}
+.footer-content{max-width:1440px;margin:0 auto;display:grid;grid-template-columns:1.6fr repeat(3,1fr);gap:32px;padding-bottom:28px;border-bottom:1px solid rgba(255,255,255,.08);}
+@media(max-width:860px){.footer-content{grid-template-columns:1fr 1fr;}}
+@media(max-width:520px){.footer-content{grid-template-columns:1fr;}}
+.footer-brand .footer-logo-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.footer-brand .footer-logo{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);}
+.footer-brand .footer-name{font-size:1.1rem;font-weight:700;color:#fff;}
+.footer-brand p{font-size:.83rem;color:rgba(255,255,255,.45);line-height:1.55;max-width:220px;margin:0;}
+.footer-section h4{font-size:.72rem;font-weight:700;color:rgba(255,255,255,.55);text-transform:uppercase;letter-spacing:1px;margin:0 0 14px;}
+.footer-section a{display:block;color:rgba(255,255,255,.5);text-decoration:none;font-size:.85rem;margin-bottom:9px;transition:color .15s;}
+.footer-section a:hover{color:rgba(255,255,255,.9);}
+.footer-bottom{max-width:1440px;margin:20px auto 0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;color:rgba(255,255,255,.3);font-size:.78rem;}
+.footer-bottom a{color:rgba(255,255,255,.4);text-decoration:none;}
+</style>
+
+<!-- Supabase Bootstrap — identical to lease-rent-center.html -->
+</head>
+
+<body class="auth-guest">
+<!-- ═══ SUPABASE BOOTSTRAP (body-first) ═══ -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function() {
+  try {
+    var _mem = new Map();
+    var _ls = null; try { _ls = window.localStorage; } catch(e) {}
+    var _store = {
+      getItem:    function(k){ try { return (_ls && _ls.getItem(k)) || _mem.get(k) || null; } catch(e) { return _mem.get(k) || null; } },
+      setItem:    function(k,v){ try { _ls && _ls.setItem(k,v); } catch(e) {} _mem.set(k,v); },
+      removeItem: function(k){ try { _ls && _ls.removeItem(k); } catch(e) {} _mem.delete(k); }
+    };
+    var _c = window._rgClient || window.supabase.createClient(
+      'https://pbojacnagutipfhcxltj.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBib2phY25hZ3V0aXBmaGN4bHRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgwMDkwODAsImV4cCI6MjA2MzU4NTA4MH0.ZLCcAzTYljoZycpBGwMtthP5VyAJ4schuIvt4HibGc0',
+      { auth: { lock: undefined, persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storage: _store } }
+    );
+    window._rgClient = _c; window.sb = _c; window.client = _c;
+    window.getSbClient = function() { return _c; };
+    window.GSClient    = { getAsync: async function() { return _c; } };
+  } catch(e) { console.error('RG bootstrap failed:', e); }
+})();
+</script>
+<!-- ══════════════════════════════════════════ -->
+
+<div id="authOverlay">
+  <div class="auth-overlay-inner">
+    <div class="ao-icon">🧞</div>
+    <div class="ao-title">Rental Genie</div>
+    <div class="ao-status" id="aoStatus">Starting up…</div>
+    <div class="ao-bar-track"><div class="ao-bar-fill" id="aoBarFill"></div></div>
+    <div class="ao-steps">
+      <div class="ao-step" id="aoStep0"><span class="ao-step-dot"></span>Connecting</div>
+      <div class="ao-step" id="aoStep1"><span class="ao-step-dot"></span>Authenticating</div>
+      <div class="ao-step" id="aoStep2"><span class="ao-step-dot"></span>Loading data</div>
+      <div class="ao-step" id="aoStep3"><span class="ao-step-dot"></span>Ready</div>
+    </div>
+  </div>
+</div>
+
+<header class="header-container">
+  <div class="navbar">
+    <a class="brand-area" href="index.html">
+      <img src="images/rg-logo.png" onerror="this.style.display='none'" class="brand-logo" alt="Rental Genie" />
+      <span class="brand-title">Rental Genie</span>
+    </a>
+    <nav class="nav-links" aria-label="Main navigation">
+      <a href="dashboard.html">📊 Dashboard</a>
+      <a href="property-management.html">🏘️ Properties</a>
+      <a href="lease-rent-center.html">💰 Lease &amp; Rent</a>
+      <a href="expense-tracking.html">💸 Expenses</a>
+      <a href="maintenance-requests.html">🛠 Maintenance</a>
+      <a href="tenant-messages.html">💬 Messages</a>
+      <a href="reports-analytics.html">📈 Reports</a>
+    </nav>
+    <!-- UMD -->
+    <div class="umd-wrap" id="userMenu" style="display:none">
+      <button class="umd-toggle" id="umdToggle" aria-haspopup="true" aria-expanded="false">
+        <div class="umd-avatar" id="umdAvatar">?</div>
+        <span class="umd-name" id="umdName">User</span>
+        <span class="umd-caret">▾</span>
+      </button>
+      <div class="umd-dropdown" id="umdDropdown">
+        <div class="umd-user-row">
+          <div class="umd-user-name" id="umdFullName">—</div>
+          <div class="umd-user-email" id="umdEmail">—</div>
+        </div>
+        <div class="umd-section">
+          <a class="umd-link" href="dashboard.html">📊 Dashboard</a>
+          <a class="umd-link" href="account.html">⚙️ Account Settings</a>
+          <a class="umd-link" href="invite-tenant.html">✉️ Invite Tenant</a>
+          <a class="umd-link" href="tenant-portal.html">🏠 Tenant Portal</a>
+        </div>
+        <div class="umd-section">
+          <a class="umd-link" href="reports-analytics.html">📈 Reports &amp; Analytics</a>
+          <a class="umd-link" href="contact-us.html">💬 Contact Support</a>
+        </div>
+        <div class="umd-section">
+          <button class="umd-link danger" id="logoutBtn">🚪 Sign Out</button>
+        </div>
+      </div>
+    </div>
+    <a id="nav-login" href="login.html">Log in</a>
+    <button class="hamburger" id="hamburgerBtn" aria-label="Open menu">☰</button>
+  </div>
+</header>
+
+<div class="drawer" id="mobileDrawer">
+  <a href="account.html" id="mobileAccountLink" style="display:none;" class="drawer-user-row">
+    <span class="drawer-avatar" id="drawerAvatar">?</span>
+    <span class="drawer-username" id="mobileUsernameLabel">Account</span>
+  </a>
+  <div class="drawer-grid">
+    <a href="dashboard.html">📊 Dashboard</a>
+    <a href="property-management.html">🏘️ Properties</a>
+    <div class="drawer-grid-divider"></div>
+    <a href="lease-rent-center.html">💰 Lease &amp; Rent</a>
+    <a href="expense-tracking.html">💸 Expenses</a>
+    <div class="drawer-grid-divider"></div>
+    <a href="maintenance-requests.html">🛠 Maintenance</a>
+    <a href="tenant-messages.html">💬 Messages</a>
+    <a href="reports-analytics.html">📈 Reports</a>
+  </div>
+  <a href="login.html" id="mobileLogin" class="drawer-login" style="display:none;">Log in</a>
+  <div id="mobileLogoutContainer" style="display:none;">
+    <button id="mobileLogoutBtn">Sign Out</button>
+  </div>
+</div>
+
+<main class="page page-fade">
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">✉️ Invite Tenant</h1>
+      <p class="page-sub">Send a secure magic link — your tenant gets instant portal access, no password needed.</p>
+    </div>
+    <div class="page-actions">
+      <a class="btn btn-ghost" id="backBtn" href="lease-rent-center.html">← Back</a>
+    </div>
+  </div>
+
+  <div class="stepper">
+    <div class="step active" id="step1Tab"><span class="step-num">1</span> Select Property &amp; Lease</div>
+    <div class="step" id="step2Tab"><span class="step-num">2</span> Tenant Details</div>
+    <div class="step" id="step3Tab"><span class="step-num">3</span> Send Invite</div>
+  </div>
+
+  <!-- Step 1 -->
+  <div id="step1">
+    <div class="card">
+      <div class="card-title"><div class="card-icon">🏠</div>Select Property &amp; Lease</div>
+      <div class="alert" id="alertStep1"></div>
+      <div class="field">
+        <label for="propertySelect">Property</label>
+        <select id="propertySelect"><option value="">— Select a property —</option></select>
+        <div class="field-hint" id="propHint">Choose the property to invite the tenant to.</div>
+      </div>
+      <div class="field">
+        <label for="leaseSelect">Lease <span style="font-weight:400;text-transform:none;font-size:.85em;">(optional — auto-fills tenant info)</span></label>
+        <select id="leaseSelect" disabled><option value="">— Select a lease —</option></select>
+        <div class="field-hint" id="leaseHint">Select a property first to load leases.</div>
+      </div>
+      <div class="tenant-chip" id="tenantChip">
+        <div class="chip-avatar" id="chipAvatar">?</div>
+        <div><div class="chip-name" id="chipName">—</div><div class="chip-email" id="chipEmail">—</div></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="nextStep1Btn">Next: Tenant Details →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 2 -->
+  <div id="step2" style="display:none;">
+    <div class="card">
+      <div class="card-title"><div class="card-icon">👤</div>Tenant Details</div>
+      <div class="alert" id="alertStep2"></div>
+      <div class="field">
+        <label for="tenantName">Full Name</label>
+        <input type="text" id="tenantName" placeholder="e.g. Robin Smith" />
+      </div>
+      <div class="field">
+        <label for="tenantEmail">Email Address *</label>
+        <input type="email" id="tenantEmail" placeholder="tenant@example.com" />
+      </div>
+      <div class="field">
+        <label for="tenantPhone">Phone (optional)</label>
+        <input type="tel" id="tenantPhone" placeholder="e.g. (555) 123-4567" />
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-ghost" id="backStep2Btn">← Back</button>
+        <button class="btn btn-primary" id="nextStep2Btn">Next: Send Invite →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 3 -->
+  <div id="step3" style="display:none;">
+    <div class="card" id="step3Card">
+      <div class="card-title"><div class="card-icon">📨</div>Send Invite</div>
+      <div class="alert" id="alertStep3"></div>
+      <div class="summary-box">
+        <div class="summary-label">Invite Summary</div>
+        <div class="summary-row"><span class="summary-key">Property</span><span class="summary-val" id="summaryProperty">—</span></div>
+        <div class="summary-row"><span class="summary-key">Tenant</span><span class="summary-val" id="summaryName">—</span></div>
+        <div class="summary-row"><span class="summary-key">Email</span><span class="summary-val" id="summaryEmail">—</span></div>
+        <div class="summary-row"><span class="summary-key">Method</span><span class="summary-val">Magic Link (OTP)</span></div>
+      </div>
+      <div class="field">
+        <label>Portal Link (auto-generated)</label>
+        <div class="portal-link-box" id="linkText">—</div>
+        <div class="field-hint">Your tenant will land here after clicking the magic link.</div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-ghost" id="backStep3Btn">← Back</button>
+        <button class="btn btn-success" id="sendBtn">📨 Send Magic Link</button>
+      </div>
+    </div>
+    <div class="success-panel" id="successPanel">
+      <div class="success-icon">✅</div>
+      <h2>Invite Sent!</h2>
+      <p id="successMsg">Magic link sent. Your tenant can click it to access the portal — no password needed.</p>
+      <div class="portal-link-box" id="successLinkBox"></div>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:16px;">
+        <button class="btn btn-ghost" id="inviteAnotherBtn">✉️ Invite Another</button>
+        <a class="btn btn-primary" id="viewAllBtn" href="lease-rent-center.html">📋 Lease &amp; Rent Center</a>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<div class="mobile-pad"></div>
+
+<nav class="mobile-nav" aria-label="Mobile navigation">
+  <div class="mobile-nav-inner">
+    <a class="mnav" href="dashboard.html"><div class="ico">📊</div></a>
+    <a class="mnav" href="property-management.html"><div class="ico">🏘️</div></a>
+    <a class="mnav" href="lease-rent-center.html"><div class="ico">💰</div></a>
+    <a class="mnav" href="expense-tracking.html"><div class="ico">💸</div></a>
+    <a class="mnav" href="maintenance-requests.html"><div class="ico">🛠</div></a>
+    <a class="mnav active" href="invite-tenant.html"><div class="ico">✉️</div></a>
+  </div>
+</nav>
+
+<footer class="site-footer">
+  <div class="footer-content">
+    <div class="footer-brand">
+      <div class="footer-logo-row">
+        <img src="images/rg-logo.png" onerror="this.style.display='none'" class="footer-logo" alt="Rental Genie" />
+        <span class="footer-name">Rental Genie</span>
+      </div>
+      <p>Smart property management for independent landlords.</p>
+    </div>
+    <div class="footer-section">
+      <h4>Navigate</h4>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="property-management.html">Properties</a>
+      <a href="lease-rent-center.html">Lease &amp; Rent</a>
+      <a href="expense-tracking.html">Expenses</a>
+      <a href="maintenance-requests.html">Maintenance</a>
+      <a href="reports-analytics.html">Reports</a>
+    </div>
+    <div class="footer-section">
+      <h4>Account</h4>
+      <a href="account.html">My Account</a>
+      <a href="tenant-portal.html">Tenant Portal</a>
+      <a href="invite-tenant.html">Invite Tenant</a>
+    </div>
+    <div class="footer-section">
+      <h4>Support</h4>
+      <a href="contact-us.html">Contact Us</a>
+      <a href="terms.html">Terms of Service</a>
+      <a href="privacy.html">Privacy Policy</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© <span class="footer-year"></span> Rental Genie. All rights reserved.</span>
+    <span><a href="terms.html">Terms</a> · <a href="privacy.html">Privacy</a></span>
+  </div>
+</footer>
+
+<script>
+/* ── Helpers ── */
+function $(id){ return document.getElementById(id); }
+function qp(n){ return new URLSearchParams(window.location.search).get(n)||''; }
+
+function setProgress(pct,txt,step){
+  var b=$('aoBarFill'),s=$('aoStatus');
+  if(b)b.style.width=pct+'%';
+  if(s&&txt){s.style.opacity='0';setTimeout(function(){s.textContent=txt;s.style.opacity='1';},120);}
+  for(var i=0;i<=3;i++){var el=$('aoStep'+i);if(!el)continue;el.className='ao-step'+(i<step?' done':i===step?' active':'');}
+}
+function hideOverlay(){
+  var ov=$('authOverlay');
+  if(ov){ov.style.opacity='0';setTimeout(function(){if(ov.parentNode)ov.parentNode.removeChild(ov);},400);}
+}
+function showAlert(id,type,msg){
+  var el=$(id); if(!el)return;
+  el.className='alert'+(type?' alert-'+type:'');
+  el.textContent=msg||'';
+  if(type)el.classList.add('show'); else el.classList.remove('show');
+}
+
+/* ── waitForClientReady — identical to lease-rent-center ── */
+async function waitForClientReady(){
+  if(window.sb?.auth) return window.sb;
+  var sb=window._rgClient||window.supabase.createClient(
+    'https://pbojacnagutipfhcxltj.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBib2phY25hZ3V0aXBmaGN4bHRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgwMDkwODAsImV4cCI6MjA2MzU4NTA4MH0.ZLCcAzTYljoZycpBGwMtthP5VyAJ4schuIvt4HibGc0',
+    {auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,lock:undefined}}
+  );
+  window._rgClient=sb; window.sb=sb; window.client=sb;
+  return sb;
+}
+
+/* ── State ── */
+var currentPortalLink='', currentStep=1;
+
+/* ── Build portal link ── */
+function buildPortalLink(propName,propId){
+  var base=window.location.origin+window.location.pathname.replace(/\/[^\/]*$/,'/');
+  var q=new URLSearchParams();
+  if(propName) q.set('property',propName);
+  if(propId)   q.set('property_id',propId);
+  return base+'tenant-portal.html?'+q.toString();
+}
+
+/* ── Stepper ── */
+function goStep(n){
+  if(n>1&&!$('propertySelect').value){
+    showAlert('alertStep1','danger','⚠️ Please select a property first.');
+    $('propertySelect').focus(); return;
+  }
+  if(n>2){
+    var email=($('tenantEmail').value||'').trim();
+    if(!email||!email.includes('@')){
+      showAlert('alertStep2','danger','⚠️ Please enter a valid email address.');
+      $('tenantEmail').focus(); return;
+    }
+    $('summaryProperty').textContent=$('propertySelect').options[$('propertySelect').selectedIndex]?.text||'—';
+    $('summaryName').textContent=($('tenantName').value||'').trim()||'—';
+    $('summaryEmail').textContent=email;
+    $('linkText').textContent=currentPortalLink||'—';
+  }
+  currentStep=n;
+  ['step1','step2','step3'].forEach(function(id,i){ $(id).style.display=(i+1===n)?'':'none'; });
+  for(var i=1;i<=3;i++){
+    var t=$('step'+i+'Tab'); if(!t) continue;
+    t.className='step'+(i<n?' done':i===n?' active':'');
+  }
+}
+
+/* ── Load properties ── */
+async function loadProperties(){
+  var sel=$('propertySelect');
+  sel.innerHTML='<option value="">— Loading… —</option>';
+  try{
+    var cid=qp('company_id');
+    var q=window.sb.from('properties').select('id,name,address,company_id').order('name');
+    if(cid) q=q.eq('company_id',cid);
+    var {data,error}=await q;
+    if(error) throw error;
+    sel.innerHTML='<option value="">— Select a property —</option>';
+    (data||[]).forEach(function(p){
+      var o=document.createElement('option');
+      o.value=p.name;
+      o.dataset.propertyId=p.id||'';
+      o.dataset.companyId=p.company_id||'';
+      o.textContent=p.address?p.name+' — '+p.address:p.name;
+      sel.appendChild(o);
+    });
+    // Pre-select: UUID first, name fallback
+    var pid=qp('property_id'), pname=qp('property'), matched=false;
+    if(pid){ Array.from(sel.options).forEach(function(o){ if(o.dataset.propertyId===pid){sel.value=o.value;matched=true;} }); }
+    if(!matched&&pname){ sel.value=pname; matched=sel.value===pname; }
+    if(matched&&sel.value){
+      var opt=sel.options[sel.selectedIndex];
+      $('propHint').textContent='Selected: '+sel.value;
+      currentPortalLink=buildPortalLink(sel.value,opt.dataset.propertyId);
+      $('linkText').textContent=currentPortalLink;
+      $('backBtn').href='lease-rent-center.html?property='+encodeURIComponent(sel.value);
+      await loadLeases(sel.value);
+    }
+  }catch(e){
+    sel.innerHTML='<option value="">— Could not load properties —</option>';
+    console.error('loadProperties:',e);
+  }
+}
+
+/* ── Load leases ── */
+async function loadLeases(propName){
+  var sel=$('leaseSelect');
+  sel.innerHTML='<option value="">— Loading… —</option>';
+  sel.disabled=true;
+  $('leaseHint').textContent='Loading leases…';
+  $('tenantChip').classList.remove('show');
+  if(!propName){sel.innerHTML='<option value="">— Select a property first —</option>';$('leaseHint').textContent='Select a property to load leases.';return;}
+  try{
+    var {data,error}=await window.sb.from('leases')
+      .select('id,tenant_name,tenant_email,tenant_phone,lease_start,lease_end,status')
+      .eq('property_name',propName)
+      .order('lease_start',{ascending:false}).limit(10);
+    if(error) throw error;
+    var leases=data||[];
+    sel.innerHTML='<option value="">— No lease (send link only) —</option>';
+    if(!leases.length){$('leaseHint').textContent='No leases found for this property.';sel.disabled=false;return;}
+    leases.forEach(function(l){
+      var o=document.createElement('option');
+      o.value=l.id;
+      var s=l.lease_start?new Date(l.lease_start).toLocaleDateString():'—';
+      var e=l.lease_end  ?new Date(l.lease_end).toLocaleDateString():'—';
+      o.textContent=s+' → '+e+' • '+(l.tenant_name||'Tenant')+' • '+(l.status||'—');
+      o.dataset.name=l.tenant_name||''; o.dataset.email=l.tenant_email||''; o.dataset.phone=l.tenant_phone||'';
+      sel.appendChild(o);
+    });
+    sel.disabled=false;
+    sel.value=leases[0].id;
+    prefillTenant({tenant_name:leases[0].tenant_name,tenant_email:leases[0].tenant_email,tenant_phone:leases[0].tenant_phone});
+    $('leaseHint').textContent='Latest lease selected — tenant info pre-filled.';
+  }catch(e){
+    sel.innerHTML='<option value="">— Error loading leases —</option>';
+    $('leaseHint').textContent='Could not load leases.';
+    console.error('loadLeases:',e);
+  }
+}
+
+/* ── Prefill ── */
+function prefillTenant(l){
+  if(!l) return;
+  $('tenantName').value =l.tenant_name||'';
+  $('tenantEmail').value=l.tenant_email||'';
+  $('tenantPhone').value=l.tenant_phone||'';
+  var name=l.tenant_name||'Tenant';
+  var ini=name.split(' ').map(function(w){return w[0]||'';}).join('').toUpperCase().slice(0,2)||'?';
+  $('chipAvatar').textContent=ini; $('chipName').textContent=name; $('chipEmail').textContent=l.tenant_email||'No email on file';
+  $('tenantChip').classList.add('show');
+}
+
+/* ── Send invite ── */
+async function sendInvite(){
+  showAlert('alertStep3','','');
+  var email=($('tenantEmail').value||'').trim();
+  var prop=$('propertySelect').value||'';
+  if(!email||!email.includes('@')){showAlert('alertStep3','danger','⚠️ Invalid email address.');return;}
+  if(!prop){showAlert('alertStep3','danger','⚠️ No property selected.');return;}
+  var sendBtn=$('sendBtn');
+  sendBtn.disabled=true; sendBtn.textContent='Sending…';
+  var selOpt=$('propertySelect').options[$('propertySelect').selectedIndex];
+  var pid=selOpt?selOpt.dataset.propertyId||'':'';
+  var redirectTo=buildPortalLink(prop,pid);
+  try{
+    var {error}=await window.sb.auth.signInWithOtp({email:email,options:{emailRedirectTo:redirectTo}});
+    if(error) throw error;
+    currentPortalLink=redirectTo;
+    $('successLinkBox').textContent=redirectTo;
+    $('successMsg').textContent='Magic link sent to '+email+'. Your tenant can click it to access their portal instantly.';
+    $('step3Card').style.display='none';
+    $('successPanel').classList.add('show');
+    var backUrl=prop?'lease-rent-center.html?property='+encodeURIComponent(prop):'lease-rent-center.html';
+    $('viewAllBtn').href=backUrl; $('backBtn').href=backUrl;
+  }catch(e){
+    showAlert('alertStep3','danger','❌ Failed to send: '+(e.message||e));
+    console.error('sendInvite:',e);
+  }finally{
+    sendBtn.disabled=false; sendBtn.textContent='📨 Send Magic Link';
+  }
+}
+
+/* ── Wire events ── */
+$('propertySelect').addEventListener('change',function(){
+  var p=this.value||'';
+  var opt=this.options[this.selectedIndex];
+  showAlert('alertStep1','','');
+  $('tenantChip').classList.remove('show');
+  $('propHint').textContent=p?'Selected: '+p:'Choose the property to invite the tenant to.';
+  if(p){
+    currentPortalLink=buildPortalLink(p,opt.dataset.propertyId||'');
+    $('linkText').textContent=currentPortalLink;
+    $('backBtn').href='lease-rent-center.html?property='+encodeURIComponent(p);
+    loadLeases(p);
+  }else{
+    $('leaseSelect').innerHTML='<option value="">— Select a property first —</option>';
+    $('leaseSelect').disabled=true;
+    $('leaseHint').textContent='Select a property to load leases.';
+    currentPortalLink=''; $('linkText').textContent='—';
+    $('backBtn').href='lease-rent-center.html';
+  }
+});
+$('leaseSelect').addEventListener('change',function(){
+  var o=this.options[this.selectedIndex];
+  if(!o||!o.value){$('tenantChip').classList.remove('show');return;}
+  prefillTenant({tenant_name:o.dataset.name,tenant_email:o.dataset.email,tenant_phone:o.dataset.phone});
+});
+$('nextStep1Btn').addEventListener('click',function(){goStep(2);});
+$('backStep2Btn').addEventListener('click',function(){goStep(1);});
+$('nextStep2Btn').addEventListener('click',function(){goStep(3);});
+$('backStep3Btn').addEventListener('click',function(){goStep(2);});
+$('sendBtn').addEventListener('click',sendInvite);
+$('inviteAnotherBtn').addEventListener('click',function(){
+  $('step3Card').style.display=''; $('successPanel').classList.remove('show');
+  $('tenantName').value=''; $('tenantEmail').value=''; $('tenantPhone').value='';
+  $('tenantChip').classList.remove('show'); showAlert('alertStep3','',''); goStep(1);
+});
+
+/* Pre-fill back button from URL */
+(function(){ var p=qp('property'); if(p) $('backBtn').href='lease-rent-center.html?property='+encodeURIComponent(p); })();
+
+/* ── Boot — identical pattern to lease-rent-center ── */
+document.addEventListener('DOMContentLoaded', async function(){
+  setProgress(5,'Connecting…',0);
+  document.querySelectorAll('.footer-year').forEach(function(el){el.textContent=new Date().getFullYear();});
+
+  // 1) Wait for client
+  const sbReady = await waitForClientReady();
+  if(!sbReady){ console.error('Supabase not ready'); return; }
+  window.sb=sbReady; window.client=sbReady;
+
+  setProgress(25,'Connected — verifying session…',0);
+  setProgress(40,'Authenticating…',1);
+
+  // 2) getUser() — server-validated, avoids getSession null on tracking-prevention browsers
+  var _authUser=null;
+  try{ var _gu=await sbReady.auth.getUser(); _authUser=(!_gu.error&&_gu.data?.user)?_gu.data.user:null; }catch(e){}
+  if(!_authUser){ try{ var _gs=await sbReady.auth.getSession(); _authUser=_gs.data?.session?.user||null; }catch(e){} }
+
+  if(_authUser){
+    const _name=_authUser.user_metadata?.full_name||_authUser.user_metadata?.name||(_authUser.email?_authUser.email.split('@')[0]:'Account');
+    const _p=_name.split(' ');
+    const _ini=(_p.length>=2?_p[0][0]+_p[_p.length-1][0]:_name.slice(0,2)).toUpperCase();
+
+    // Desktop nav
+    const _navLogin=document.getElementById('nav-login');
+    const _userMenu=document.getElementById('userMenu');
+    const _userLabel=document.getElementById('usernameLabel');
+    if(_navLogin)  _navLogin.style.display='none';
+    if(_userMenu && window.innerWidth > 860) _userMenu.style.display='inline-flex';
+    if(_userLabel) _userLabel.textContent=_name;
+    var _uN=document.getElementById('umdName');   if(_uN) _uN.textContent=_name;
+    var _uFN=document.getElementById('umdFullName'); if(_uFN) _uFN.textContent=_name;
+    var _uEM=document.getElementById('umdEmail'); if(_uEM) _uEM.textContent=_authUser.email||'';
+    var _uA=document.getElementById('umdAvatar'); if(_uA) _uA.textContent=_ini;
+    var _dA=document.getElementById('drawerAvatar'); if(_dA) _dA.textContent=_ini;
+
+    // Mobile drawer
+    const _mLogin=document.getElementById('mobileLogin');
+    const _mAccount=document.getElementById('mobileAccountLink');
+    const _mLabel=document.getElementById('mobileUsernameLabel');
+    const _mLogout=document.getElementById('mobileLogoutContainer');
+    const _da=document.getElementById('drawerAvatar');
+    if(_mLogin)   _mLogin.style.display='none';
+    if(_mAccount) _mAccount.style.display='flex';
+    if(_mLabel)   _mLabel.textContent=_name;
+    if(_mLogout)  _mLogout.style.display='block';
+    if(_da)       _da.textContent=_ini;
+
+    // CSS class
+    document.body.classList.remove('auth-guest');
+    document.body.classList.add('auth-ready');
+
+    // Logout
+    var _lb=document.getElementById('logoutBtn');  if(_lb)  _lb.onclick=async function(){await sbReady.auth.signOut();location.href='login.html';};
+    var _mlb=document.getElementById('mobileLogoutBtn'); if(_mlb) _mlb.onclick=async function(){await sbReady.auth.signOut();location.href='login.html';};
+
+    // User menu
+    const _menuBtn=document.getElementById('umdToggle');
+    const _menuDd=document.getElementById('umdDropdown');
+    if(_menuBtn&&_menuDd){
+      _menuBtn.onclick=function(e){e.stopPropagation();_menuDd.classList.toggle('open');};
+      document.addEventListener('click',function(){_menuDd.classList.remove('open');});
+    }
+
+    // Hamburger
+    const _ham=document.getElementById('hamburgerBtn');
+    const _drw=document.getElementById('mobileDrawer');
+    if(_ham&&_drw){
+      _ham.onclick=function(e){e.stopPropagation();_drw.style.display=_drw.style.display==='block'?'none':'block';};
+      _drw.addEventListener('click',function(e){e.stopPropagation();if(e.target.tagName==='A')_drw.style.display='none';});
+      document.addEventListener('click',function(e){if(_drw.style.display==='block'&&!_drw.contains(e.target)&&!_ham.contains(e.target))_drw.style.display='none';});
+    }
+
+    // Auth state listener
+    sbReady.auth.onAuthStateChange(function(_e,sess){if(!sess)location.href='login.html';});
+
+  }else{
+    // Not logged in — redirect with returnTo
+    const _returnTo=encodeURIComponent(location.pathname+location.search+location.hash);
+    location.href='login.html?returnTo='+_returnTo;
+    return;
+  }
+
+  // 3) Load data
+  setProgress(65,'Loading properties…',2);
+  await loadProperties();
+  setProgress(100,'Ready!',3);
+  hideOverlay();
+});
+</script>
+</body>
+</html>

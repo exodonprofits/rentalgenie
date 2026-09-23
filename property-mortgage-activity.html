@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Mortgage Activity – Rental Genie</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap">
+<link rel="dns-prefetch" href="https://pbojacnagutipfhcxltj.supabase.co">
+
+<style>
+:root {
+  --navy:        #0c1e3a;
+  --navy-mid:    #1a3a6b;
+  --navy-light:  #1e5799;
+  --sky:         #2d8cf0;
+  --sky-soft:    #e8f0fe;
+  --border:      #e2e8f0;
+  --bg:          #f1f4f8;
+  --card:        #ffffff;
+  --text:        #0c1e3a;
+  --muted:       #64748b;
+  --success:     #10b981;
+  --radius-md:   12px;
+  --radius-lg:   16px;
+  --shadow-sm:   0 1px 4px rgba(12,30,58,.06);
+  --shadow-md:   0 4px 16px rgba(12,30,58,.09);
+  --header-grad: linear-gradient(135deg,#0c1e3a 0%,#1a3a6b 55%,#1e5799 100%);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: 'DM Sans', -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+#authOverlay {
+  position: fixed; inset: 0; z-index: 9999;
+  background: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column; gap: 16px;
+  transition: opacity .35s;
+}
+#authOverlay.hidden { opacity: 0; pointer-events: none; }
+.spinner-ring {
+  width: 44px; height: 44px; border-radius: 50%;
+  border: 3px solid rgba(12,30,58,.1);
+  border-top-color: var(--sky);
+  animation: spin .75s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.header-container {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  width: 100%;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  background: linear-gradient(135deg, #0c1e3a, #1a3a6b, #1e5799);
+  border-bottom: 1px solid rgba(255,255,255,0.25);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.navbar {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 14px 22px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.brand-area {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.brand-logo {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%,#f0faff,#bae6fd 40%,#0ea5e9 75%);
+  box-shadow: 0px 0px 0px 2px rgba(14,165,233,0.25),0px 8px 16px rgba(0,0,0,0.15);
+}
+
+.brand-title {
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: #e2e8f0;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.12);
+}
+
+.nav-links {
+  display: flex;
+  gap: 2px;
+  flex: 1;
+  justify-content: center;
+  margin: 0 20px;
+}
+
+.nav-links a {
+  padding: 8px 14px;
+  border-radius: 8px;
+  color: rgba(255,255,255,0.75);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.18s;
+  cursor: pointer;
+}
+
+.nav-links a:hover {
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+}
+
+#nav-login {
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid #cbd5e1;
+  font-weight: 700;
+  background: white;
+  text-decoration: none;
+  color: #0c1e3a;
+  cursor: pointer;
+  transition: all 0.18s;
+  display: none;
+}
+
+#nav-login:hover {
+  background: rgba(255,255,255,.2);
+}
+
+body.auth-ready #nav-login { display: none !important; }
+body.auth-ready #userMenu { display: block !important; }
+body.auth-ready #navBell { display: flex !important; }
+body.auth-guest #nav-login { display: inline-flex !important; }
+body.auth-guest #userMenu { display: none !important; }
+body.auth-guest #navBell { display: none !important; }
+
+.hamburger {
+  display: none;
+  font-size: 1.5rem;
+  padding: 6px 12px;
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 7px;
+  background: rgba(255,255,255,0.1);
+  cursor: pointer;
+  color: #fff;
+}
+
+@media(max-width: 860px) {
+  .nav-links { display: none; }
+  .hamburger { display: block; }
+  .umd-wrap { display: none !important; }
+  #nav-login { display: none !important; }
+  #navBell { display: none !important; }
+}
+
+.umd-wrap { position: relative; }
+.umd-toggle {
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.22);
+  border-radius: 999px; padding: 5px 12px 5px 5px;
+  cursor: pointer; transition: background .18s;
+}
+.umd-toggle:hover { background: rgba(255,255,255,.18); }
+.umd-avatar {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--sky), var(--navy-mid));
+  display: flex; align-items: center; justify-content: center;
+  font-size: .68rem; font-weight: 700; color: #fff; flex-shrink: 0;
+}
+.umd-name  { font-size: .8rem; color: #fff; font-weight: 600; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.umd-caret { font-size: .6rem; color: rgba(255,255,255,.7); }
+.nav-bell {
+  display: flex; align-items: center; justify-content: center;
+  width: 34px; height: 34px; border-radius: 999px; flex-shrink: 0;
+  background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.22);
+  color: #fff; font-size: 1rem; text-decoration: none; margin-right: 8px;
+  transition: background .18s;
+}
+.nav-bell:hover { background: rgba(255,255,255,.18); }
+.umd-dropdown {
+  display: none; position: absolute; right: 0; top: calc(100% + 8px);
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); box-shadow: var(--shadow-lg);
+  min-width: 220px; overflow: hidden; z-index: 200;
+}
+.umd-dropdown.open { display: block; }
+.umd-user-row { padding: 14px 16px 10px; border-bottom: 1px solid var(--border); }
+.umd-user-name  { font-size: .88rem; font-weight: 700; color: var(--navy); }
+.umd-user-email { font-size: .75rem; color: var(--muted); margin-top: 2px; }
+.umd-section { display: flex; flex-direction: column; padding: 6px; border-bottom: 1px solid var(--border); }
+.umd-section:last-child { border-bottom: none; }
+.umd-link {
+  display: flex; align-items: center; gap: 9px;
+  padding: 9px 10px; border-radius: var(--radius-sm);
+  font-size: .84rem; font-weight: 600; color: var(--text);
+  text-decoration: none; background: none; border: none;
+  cursor: pointer; width: 100%; font-family: 'DM Sans', sans-serif;
+  transition: background .15s;
+}
+.umd-link:hover { background: var(--bg); }
+.umd-link.danger { color: #ef4444; }
+.umd-link.danger:hover { background: var(--danger-bg); }
+
+main { flex: 1; max-width: 1440px; margin: 0 auto; padding: 28px 22px; width: 100%; }
+
+/* ── Section Titles ──────────────────────────────────────────── */
+.section-title {
+  font-size: .75rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .4px; color: var(--muted); margin: 24px 0 14px 0;
+}
+.section-title:first-child { margin-top: 0; }
+
+/* ── Button Groups ───────────────────────────────────────────– */
+.button-group {
+  display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px;
+}
+.button-group button {
+  padding: 10px 16px; border: 1px solid var(--border);
+  border-radius: 10px; font-size: .9rem; font-weight: 600;
+  background: #fff; color: var(--navy);
+  cursor: pointer; transition: all .18s;
+}
+.button-group button:hover {
+  background: var(--sky-soft); border-color: var(--sky);
+}
+.button-group button.primary {
+  background: linear-gradient(135deg, var(--navy), var(--navy-light));
+  color: #fff; border-color: transparent;
+}
+.button-group button.primary:hover {
+  background: linear-gradient(135deg, var(--navy-mid), var(--navy-light));
+}
+
+/* ── Cards ──────────────────────────────────────────────────── */
+.card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 20px;
+  box-shadow: var(--shadow-sm); margin-bottom: 20px;
+}
+.card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 16px; }
+
+/* ── KPI Cards (snapshot values) ────────────────────────────── */
+.kpi-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
+  margin-bottom: 20px;
+}
+@media(max-width:900px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } }
+@media(max-width:600px) { .kpi-grid { grid-template-columns: 1fr; } }
+
+.kpi-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius-md); padding: 16px; text-align: center;
+}
+.kpi-card .label {
+  font-size: .75rem; font-weight: 600; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 6px;
+}
+.kpi-card .value {
+  font-size: 1.4rem; font-weight: 700; color: var(--navy);
+}
+
+/* ── Form Elements ──────────────────────────────────────────– */
+.form-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;
+}
+@media(max-width:600px) { .form-grid { grid-template-columns: 1fr; } }
+
+.form-group { display: flex; flex-direction: column; }
+label {
+  font-size: .8rem; font-weight: 600; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .3px; margin-bottom: 8px;
+}
+input, textarea, select {
+  padding: 10px 12px; border: 1px solid var(--border);
+  border-radius: 10px; font-size: .9rem; font-family: inherit;
+  background: #fff;
+}
+input:focus, textarea:focus, select:focus {
+  outline: none; border-color: var(--sky);
+  box-shadow: 0 0 0 3px rgba(45,140,240,.1);
+}
+
+/* ── Mode Toggle ────────────────────────────────────────────– */
+.mode-toggle {
+  display: flex; gap: 10px; margin-bottom: 20px;
+}
+.mode-btn {
+  flex: 1; padding: 10px 14px; border: 2px solid var(--border);
+  border-radius: 8px; font-weight: 600; background: #fff;
+  cursor: pointer; transition: all .18s; font-size: .9rem;
+}
+.mode-btn.active {
+  background: var(--sky-soft); border-color: var(--sky);
+  color: var(--navy);
+}
+
+/* ── Info Box ───────────────────────────────────────────────– */
+.info-box {
+  background: var(--sky-soft); border: 1px solid #bfdbfe;
+  border-radius: var(--radius-md); padding: 16px; margin-bottom: 16px;
+  color: #1e40af; font-size: .9rem; line-height: 1.5;
+}
+
+/* ── Collapsible Sections ───────────────────────────────────– */
+.section-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px; background: var(--sky-soft); border: 1px solid #bfdbfe;
+  border-radius: var(--radius-md); cursor: pointer; user-select: none;
+}
+.section-header:hover { background: #e0ebff; }
+.section-header h4 { font-size: .95rem; font-weight: 700; color: var(--navy); }
+.section-toggle { font-size: 1.2rem; transition: transform .2s; }
+.section-header.collapsed .section-toggle { transform: rotate(-90deg); }
+.section-body { display: none; padding: 16px 0; }
+.section-header.active + .section-body { display: block; }
+
+footer { margin-top: auto; padding: 20px 22px; text-align: center; color: var(--muted); font-size: .8rem; }
+
+@media(max-width:600px) {
+  .navbar { height: 56px; padding: 0 16px; }
+  main { padding: 16px; }
+  .kpi-grid { grid-template-columns: 1fr; }
+}
+
+/* ── Page Header ──────────────────────────────────────────────── */
+.page-header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap; margin-bottom: 22px;
+}
+.page-header .page-title {
+  font-size: 1.5rem; font-weight: 800; color: var(--navy);
+  display: flex; align-items: center; gap: 10px;
+}
+.page-header .page-sub {
+  color: var(--muted); font-size: .9rem; margin-top: 4px;
+}
+.page-header .page-back {
+  color: var(--sky); font-weight: 600; font-size: .85rem;
+  text-decoration: none; white-space: nowrap;
+}
+.page-header .page-back:hover { text-decoration: underline; }
+
+/* ── Card / KPI hover polish ─────────────────────────────────── */
+.card, .kpi-card { transition: box-shadow .18s, transform .18s; }
+.kpi-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+
+/* ── KPI accent variants ──────────────────────────────────────── */
+.kpi-card.accent-green { border-color: #bbf0da; }
+.kpi-card.accent-green .value { color: var(--success); }
+.kpi-card.accent-blue .value { color: var(--sky); }
+
+/* ── Payoff Progress Bar ──────────────────────────────────────── */
+.progress-wrap { margin-top: 16px; }
+.progress-label {
+  display: flex; justify-content: space-between; align-items: baseline;
+  font-size: .8rem; color: var(--muted); margin-bottom: 6px;
+}
+.progress-label strong { color: var(--navy); font-weight: 700; }
+.progress-track {
+  width: 100%; height: 10px; border-radius: 999px;
+  background: var(--sky-soft); overflow: hidden;
+}
+.progress-fill {
+  height: 100%; border-radius: 999px;
+  background: linear-gradient(90deg, var(--sky), var(--navy-light));
+  transition: width .5s ease;
+}
+.progress-note { font-size: .72rem; color: var(--muted); margin-top: 6px; }
+
+/* ── History table extras ─────────────────────────────────────── */
+.icon-btn {
+  border: 1px solid var(--border); background: #fff; border-radius: 8px;
+  width: 30px; height: 30px; display: inline-flex; align-items: center;
+  justify-content: center; cursor: pointer; transition: all .15s; font-size: .85rem;
+}
+.icon-btn:hover { background: #fee2e2; border-color: #fca5a5; }
+.total-row td {
+  padding: 12px; font-weight: 700; color: var(--navy);
+  border-top: 2px solid var(--border); background: var(--bg);
+}
+.table-toolbar {
+  display: flex; justify-content: space-between; align-items: center;
+  flex-wrap: wrap; gap: 10px; margin-bottom: 14px;
+}
+.table-count { font-size: .8rem; color: var(--muted); }
+</style>
+</head>
+<body class="auth-guest">
+
+<div id="authOverlay">
+  <div class="spinner-ring"></div>
+  <p>Loading mortgage data...</p>
+</div>
+
+<div class="header-container">
+  <div class="navbar">
+    <a href="index.html" class="brand-area">
+      <img src="images/rg-logo.png" onerror="this.style.display='none'" class="brand-logo" alt="Rental Genie" />
+      <span class="brand-title">Rental Genie</span>
+    </a>
+    <nav class="nav-links" aria-label="Main navigation">
+      <a href="dashboard.html">📊 Dashboard</a>
+      <a href="property-management.html">🏘️ Properties</a>
+      <a href="lease-rent-center.html">💰 Lease & Rent</a>
+      <a href="expense-tracking.html">💸 Expenses</a>
+      <a href="maintenance-requests.html">🛠 Maintenance</a>
+      <a href="reports-analytics.html">📈 Reports</a>
+    </nav>
+    <a class="nav-bell" id="navBell" href="tenant-messages.html" title="Messages" aria-label="Messages" style="display:none">🔔</a>
+    <div class="umd-wrap" id="userMenu" style="display:none">
+      <button class="umd-toggle" id="umdToggle" aria-haspopup="true" aria-expanded="false">
+        <div class="umd-avatar" id="umdAvatar">?</div>
+        <span class="umd-name" id="umdName">User</span>
+        <span class="umd-caret">▾</span>
+      </button>
+      <div class="umd-dropdown" id="umdDropdown">
+        <div class="umd-user-row">
+          <div class="umd-user-name"  id="umdFullName">—</div>
+          <div class="umd-user-email" id="umdEmail">—</div>
+        </div>
+        <div class="umd-section">
+          <a class="umd-link" href="dashboard.html">📊 Dashboard</a>
+          <a class="umd-link" href="property-management.html">🏠 Properties</a>
+        </div>
+        <div class="umd-section">
+          <button class="umd-link danger" id="logoutBtn">🚪 Sign Out</button>
+        </div>
+      </div>
+    </div>
+
+    <a id="nav-login" href="login.html">Log in</a>
+    <button class="hamburger" id="hamburgerBtn" aria-label="Open menu">☰</button>
+  </div>
+</div>
+
+<main>
+  <!-- Page Header -->
+  <div class="page-header">
+    <div>
+      <div class="page-title" id="pageTitle">🏦 Mortgage Activity</div>
+      <div class="page-sub" id="pageSub">Loading property…</div>
+    </div>
+    <a class="page-back" id="pageBackLink" href="property-management.html">← Back to Properties</a>
+  </div>
+
+  <!-- LENDER Section (Collapsible) -->
+  <div class="section-title">🏦 LENDER</div>
+  <div class="section-header collapsed" id="loanSectionHeader">
+    <h4>Loan Details</h4>
+    <span class="section-toggle">❯</span>
+  </div>
+  <div class="section-body">
+    <div class="card">
+      <div id="loanDetailsCard">
+        <p style="color: var(--muted); text-align: center; padding: 20px;">Select a property to view loan details.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Payment Insights Section -->
+  <div class="section-title">📊 PAYMENT INSIGHTS</div>
+  <div class="card">
+    <div id="insightsCard">
+      <p style="color: var(--muted); text-align: center; padding: 20px;">Insights will appear once payment activity is logged.</p>
+    </div>
+  </div>
+
+  <!-- Payment Form Section -->
+  <div class="section-title">➕ ADD / UPDATE PAYMENT ACTIVITY</div>
+
+  <div class="card">
+    <div class="button-group">
+      <button onclick="parseSnapshot()">📋 Parse Snapshot</button>
+      <button onclick="importCSV()">📥 Import CSV</button>
+    </div>
+
+    <!-- Mode Toggle -->
+    <div class="mode-toggle">
+      <button class="mode-btn active" id="modeStdBtn" onclick="setMode('standard')">⚡ Standard Payment</button>
+      <button class="mode-btn" id="modeCustomBtn" onclick="setMode('custom')">🔧 Custom Payment</button>
+    </div>
+
+    <!-- Smart Autofill (Standard Mode Only) -->
+    <div id="autofillBox" style="display: none;">
+      <div class="info-box">
+        <strong>💡 Smart autofill</strong><br>
+        Rental Genie will use the property snapshot or latest mortgage activity to estimate balances and prefill the standard monthly payment.
+      </div>
+
+      <h4 style="font-size: .95rem; font-weight: 700; margin-bottom: 12px; margin-top: 16px;">Estimated Changes</h4>
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="label">Starting Principal</div>
+          <div class="value" id="startPrincipal">—</div>
+        </div>
+        <div class="kpi-card">
+          <div class="label">Estimated New Principal</div>
+          <div class="value" id="estNewPrincipal">—</div>
+        </div>
+        <div class="kpi-card">
+          <div class="label">Estimated New Escrow</div>
+          <div class="value" id="estNewEscrow">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Standard Payment Form -->
+    <div id="stdPaymentForm" style="display: none;">
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="appliedDate">📅 Applied Date</label>
+          <input type="date" id="appliedDate">
+        </div>
+        <div class="form-group">
+          <label for="effectiveDate">📅 Effective Date (optional)</label>
+          <input type="date" id="effectiveDate">
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="paymentAmount">💵 Payment Amount</label>
+          <input type="number" id="paymentAmount" placeholder="1356.21" step="0.01">
+        </div>
+        <div class="form-group">
+          <label for="escrowAmt">💰 Escrow (part of payment)</label>
+          <input type="number" id="escrowAmt" placeholder="298.68" step="0.01">
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="confirmNum">✓ Confirmation # (optional)</label>
+          <input type="text" id="confirmNum" placeholder="ABC123...">
+        </div>
+        <div class="form-group">
+          <label for="notes">📝 Notes (optional)</label>
+          <textarea id="notes" rows="2" placeholder="Escrow adjusted, partial payment, etc."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- Custom Payment Form -->
+    <div id="customPaymentForm" style="display: none;">
+      <p style="color: var(--muted); margin-bottom: 16px;">Log special charges, escrow adjustments, or other non-standard payments.</p>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="customDate">📅 Date</label>
+          <input type="date" id="customDate">
+        </div>
+        <div class="form-group">
+          <label for="customAmount">💵 Amount</label>
+          <input type="number" id="customAmount" placeholder="0.00" step="0.01">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="customDesc">📝 Description</label>
+        <textarea id="customDesc" rows="3" placeholder="e.g., HOA payment, property tax, insurance adjustment"></textarea>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="button-group" style="margin-top: 20px;">
+      <button class="primary" onclick="savePayment()">💾 Save Payment</button>
+      <button onclick="resetForm()">🔄 Reset</button>
+    </div>
+  </div>
+
+  <!-- History Table -->
+  <div class="section-title">📋 RECENT ACTIVITY</div>
+  <div class="card">
+    <div class="table-toolbar">
+      <span class="table-count" id="historyCount">No activity yet</span>
+      <button onclick="exportCSV()">⬇ Export CSV</button>
+    </div>
+    <div style="overflow-x: auto;">
+      <table style="width: 100%; border-collapse: collapse; font-size: .9rem;">
+        <thead>
+          <tr style="border-bottom: 2px solid var(--border);">
+            <th style="text-align: left; padding: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; font-size: .75rem;">Date</th>
+            <th style="text-align: right; padding: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; font-size: .75rem;">Amount</th>
+            <th style="text-align: right; padding: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; font-size: .75rem;">Principal</th>
+            <th style="text-align: right; padding: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; font-size: .75rem;">Interest</th>
+            <th style="text-align: right; padding: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; font-size: .75rem;">Escrow</th>
+            <th style="text-align: center; padding: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; font-size: .75rem;">Notes</th>
+            <th style="text-align: center; padding: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; font-size: .75rem;">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="historyBody">
+          <tr style="border-bottom: 1px solid var(--border);">
+            <td colspan="7" style="padding: 20px; text-align: center; color: var(--muted);">No activity yet. Add your first payment above.</td>
+          </tr>
+        </tbody>
+        <tfoot id="historyFoot"></tfoot>
+      </table>
+    </div>
+  </div>
+</main>
+
+<footer id="footerYear"></footer>
+
+<!-- Supabase CDN - MUST be first in body -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function(){
+  var _m = new Map(), _l = null;
+  try { _l = window.localStorage; } catch(e) {}
+  var _s = {
+    getItem: function(k) { try { return (_l && _l.getItem(k)) || _m.get(k) || null; } catch(e) { return _m.get(k) || null; } },
+    setItem: function(k,v) { try { _l && _l.setItem(k,v); } catch(e) {} _m.set(k,v); },
+    removeItem: function(k) { try { _l && _l.removeItem(k); } catch(e) {} _m.delete(k); }
+  };
+  if (!window._rgClient) {
+    window._rgClient = window.supabase.createClient(
+      "https://pbojacnagutipfhcxltj.supabase.co",
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBib2phY25hZ3V0aXBmaGN4bHRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgwMDkwODAsImV4cCI6MjA2MzU4NTA4MH0.ZLCcAzTYljoZycpBGwMtthP5VyAJ4schuIvt4HibGc0",
+      { auth: { storage: _s, persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } }
+    );
+  }
+  window.sb = window._rgClient;
+  window.client = window._rgClient;
+})();
+</script>
+
+<script>
+let currentMode = 'standard';
+let currentPropertyId = null;
+let currentProperty = null;
+const authOverlay = document.getElementById('authOverlay');
+
+// ═══ INIT ═══
+async function initPage() {
+  try {
+    const { data, error } = await window._rgClient.auth.getUser();
+    if (error || !data?.user) {
+      window.location.href = 'login-select.html';
+      return;
+    }
+
+    const user = data.user;
+    const name = user.user_metadata?.full_name || user.user_metadata?.name ||
+                 (user.email ? user.email.split('@')[0] : '') || 'Account';
+    const email = user.email || '';
+    const initials = (function(n){var p=n.split(' ');return(p.length>=2?p[0][0]+p[p.length-1][0]:n.slice(0,2)).toUpperCase();})(name);
+
+    // Show user menu
+    const userMenu = document.getElementById('userMenu');
+    if (userMenu) userMenu.style.display = '';
+    const navBell = document.getElementById('navBell');
+    if (navBell) navBell.style.display = 'flex';
+
+    // Populate user menu
+    document.getElementById('umdName').textContent = name;
+    document.getElementById('umdAvatar').textContent = initials;
+    document.getElementById('umdFullName').textContent = name;
+    document.getElementById('umdEmail').textContent = email;
+
+    const params = new URLSearchParams(window.location.search);
+    currentPropertyId = params.get('property_id');
+    if (!currentPropertyId) {
+      authOverlay.classList.add('hidden');
+      return;
+    }
+
+    await Promise.all([loadHistory(), loadLoanDetails()]);
+    expandLoanSection();
+    authOverlay.classList.add('hidden');
+    document.body.classList.remove('auth-guest');
+    document.body.classList.add('auth-ready');
+  } catch (e) {
+    console.error('Init error:', e);
+    authOverlay.classList.add('hidden');
+  }
+}
+
+function escapeHtml(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function money(n) {
+  if (n === null || n === undefined || n === '') return '—';
+  const v = Number(n);
+  if (isNaN(v)) return '—';
+  return '$' + v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+// Pulls a loan number out of free-text notes like "Conventional Loan
+// Loan Number: 8018535438" when there's no structured field to read it from.
+function extractLoanNumber(notes) {
+  if (!notes) return null;
+  const m = String(notes).match(/loan\s*(?:#|number)\s*[:#]?\s*([A-Za-z0-9-]{3,})/i);
+  return m ? m[1] : null;
+}
+
+function expandLoanSection() {
+  const header = document.getElementById('loanSectionHeader');
+  if (!header) return;
+  header.classList.remove('collapsed');
+  header.classList.add('active');
+}
+
+// ═══ LOAN DETAILS (LENDER section) ═══
+// Previously this section only ever showed the static "No loan details
+// loaded yet" placeholder — nothing in this file ever queried the
+// property's financing info, regardless of which property was open.
+// This pulls the loan fields that add-property.html / property-finance.html
+// already save on the `properties` row and renders them here, and also
+// drives the "Smart autofill" Estimated Changes KPIs + prefills the
+// Standard Payment form instead of leaving it on generic placeholder text.
+async function loadLoanDetails() {
+  const card = document.getElementById('loanDetailsCard');
+  try {
+    const { data: prop, error } = await window._rgClient
+      .from('properties')
+      .select('*')
+      .eq('id', currentPropertyId)
+      .single();
+    if (error) throw error;
+
+    currentProperty = prop || null;
+
+    // Loan Number isn't a column on `properties` itself — it lives on the
+    // finance-change-history table (property-finance.html). Pull the most
+    // recent record's loan number so it can sit next to Lender here.
+    let loanNumber = null;
+    try {
+      const { data: history } = await window._rgClient
+        .from('property_finance_history')
+        .select('loan_number')
+        .eq('property_id', currentPropertyId)
+        .order('effective_date', { ascending: false })
+        .limit(1);
+      loanNumber = (history && history[0] && history[0].loan_number) || null;
+    } catch (histErr) {
+      console.warn('Could not load loan number from finance history:', histErr);
+    }
+    // Fallback: some properties (like this one) never got a structured
+    // finance-history record — their loan number was only ever typed into
+    // the free-text Financing Notes field, e.g. "Loan Number: 8018535438".
+    if (!loanNumber) {
+      loanNumber = extractLoanNumber(prop && prop.financing_notes);
+    }
+
+    updatePageHeader(currentProperty);
+    renderLoanDetails(currentProperty, loanNumber);
+    prefillAutofill(currentProperty);
+  } catch (e) {
+    console.error('Load loan details error:', e);
+    if (card) {
+      card.innerHTML = '<p style="color: var(--muted); text-align: center; padding: 20px;">Couldn\'t load loan details for this property.</p>';
+    }
+  }
+}
+
+function updatePageHeader(prop) {
+  const title = document.getElementById('pageTitle');
+  const sub = document.getElementById('pageSub');
+  const back = document.getElementById('pageBackLink');
+  if (!prop) {
+    if (sub) sub.textContent = 'Property not found.';
+    return;
+  }
+  const name = prop.name || 'Property';
+  if (title) title.innerHTML = `🏦 Mortgage Activity <span style="font-weight:500;color:var(--muted);font-size:1rem;">: ${escapeHtml(name)}</span>`;
+  if (sub) sub.textContent = prop.address || '';
+  if (back) back.href = `property-overview.html?property_id=${encodeURIComponent(currentPropertyId)}`;
+}
+
+function renderLoanDetails(prop, loanNumber) {
+  const card = document.getElementById('loanDetailsCard');
+  if (!card) return;
+
+  if (!prop) {
+    card.innerHTML = '<p style="color: var(--muted); text-align: center; padding: 20px;">Property not found.</p>';
+    return;
+  }
+
+  if (!prop.is_financed) {
+    card.innerHTML = `
+      <p style="color: var(--muted); text-align: center; padding: 20px;">
+        This property is marked <strong>Paid Off / Free &amp; Clear</strong> — no active mortgage on file.<br>
+        <a href="add-property.html?edit=1&property_id=${encodeURIComponent(currentPropertyId)}" style="color:var(--sky);font-weight:600;text-decoration:none;">✏️ Update financing details →</a>
+      </p>`;
+    return;
+  }
+
+  const rows = [
+    ['🏦 Lender', escapeHtml(prop.lender_name) || '—'],
+    ['🔢 Loan Number', loanNumber ? escapeHtml(loanNumber) : '—'],
+    ['📈 Interest Rate', prop.interest_rate ? escapeHtml(prop.interest_rate) + '%' : '—'],
+    ['🧾 Loan Term', escapeHtml(prop.loan_term) || '—'],
+    ['🏦 Loan Balance', money(prop.loan_balance)],
+    ['💵 Monthly Payment', money(prop.monthly_payment)],
+    ['📆 Loan Start', prop.loan_start_date || '—'],
+    ['📆 Maturity', prop.loan_end_date || '—'],
+  ];
+
+  // Folded into the KPI grid as its own tile (instead of a plain link below)
+  // so it fills out the row rather than leaving the grid looking uneven.
+  if (prop.lender_portal_url) {
+    rows.push(['🔗 Lender Portal', `<a href="${escapeHtml(prop.lender_portal_url)}" target="_blank" rel="noopener" style="color:var(--sky);text-decoration:none;">Open Portal →</a>`]);
+  }
+
+  // Rough payoff-progress estimate: original loan ≈ purchase price − down payment.
+  // This is an estimate (not the lender's true original principal), so it's labeled as such.
+  let progressHtml = '';
+  const origLoanEst = (prop.purchase_price != null && prop.down_payment != null)
+    ? Number(prop.purchase_price) - Number(prop.down_payment)
+    : null;
+  const balance = Number(prop.loan_balance) || 0;
+  if (origLoanEst && origLoanEst > 0 && prop.loan_balance != null) {
+    const paidPct = Math.max(0, Math.min(100, ((origLoanEst - balance) / origLoanEst) * 100));
+    progressHtml = `
+      <div class="progress-wrap">
+        <div class="progress-label"><span>Estimated Payoff Progress</span><strong>${paidPct.toFixed(1)}%</strong></div>
+        <div class="progress-track"><div class="progress-fill" style="width:${paidPct.toFixed(1)}%;"></div></div>
+        <div class="progress-note">Based on purchase price minus down payment as an estimated original loan amount — not the lender's official figure.</div>
+      </div>`;
+  }
+
+  card.innerHTML = `
+    <div class="kpi-grid">
+      ${rows.map(([label, val]) => `
+        <div class="kpi-card">
+          <div class="label">${label}</div>
+          <div class="value" style="font-size:1.05rem;">${val}</div>
+        </div>
+      `).join('')}
+    </div>
+    ${progressHtml}
+  `;
+}
+
+// Drives the "Estimated Changes" KPIs (previously always "—") and prefills
+// the Standard Payment form's Payment Amount / Escrow inputs from the
+// property's saved financing info, instead of leaving generic example
+// placeholder text ("1356.21" / "298.68") as if it were real data.
+function prefillAutofill(prop) {
+  const startEl = document.getElementById('startPrincipal');
+  const newPrincipalEl = document.getElementById('estNewPrincipal');
+  const newEscrowEl = document.getElementById('estNewEscrow');
+  const paymentInput = document.getElementById('paymentAmount');
+  const escrowInput = document.getElementById('escrowAmt');
+
+  if (!prop || !prop.is_financed) {
+    if (startEl) startEl.textContent = '—';
+    if (newPrincipalEl) newPrincipalEl.textContent = '—';
+    if (newEscrowEl) newEscrowEl.textContent = '—';
+    return;
+  }
+
+  const startingPrincipal = Number(prop.loan_balance) || 0;
+  const escrowMonthly = ['tax_monthly', 'insurance_monthly', 'hoa_monthly', 'pmi_monthly']
+    .reduce((sum, k) => sum + (Number(prop[k]) || 0), 0);
+  const paymentAmount = Number(prop.monthly_payment) ||
+    (prop.mortgage_pi ? Number(prop.mortgage_pi) + escrowMonthly : 0);
+  const rate = Number(prop.interest_rate) || 0;
+
+  if (startEl) startEl.textContent = startingPrincipal ? money(startingPrincipal) : '—';
+  if (newEscrowEl) newEscrowEl.textContent = escrowMonthly ? money(escrowMonthly) : '—';
+
+  if (startingPrincipal && paymentAmount) {
+    // Rough amortization estimate: this month's interest = balance × (annual rate / 12);
+    // whatever's left of the payment (after escrow + interest) goes to principal.
+    const monthlyInterest = startingPrincipal * (rate / 100 / 12);
+    const principalPortion = Math.max(paymentAmount - escrowMonthly - monthlyInterest, 0);
+    const estNewPrincipal = Math.max(startingPrincipal - principalPortion, 0);
+    if (newPrincipalEl) newPrincipalEl.textContent = money(estNewPrincipal);
+  } else if (newPrincipalEl) {
+    newPrincipalEl.textContent = '—';
+  }
+
+  // Only prefill if the user hasn't already typed something in.
+  if (paymentInput && !paymentInput.value && paymentAmount) paymentInput.value = paymentAmount.toFixed(2);
+  if (escrowInput && !escrowInput.value && escrowMonthly) escrowInput.value = escrowMonthly.toFixed(2);
+}
+
+let historyRows = [];
+
+async function loadHistory() {
+  try {
+    // Pulls the full ledger (not just the last 20) so the Payment Insights
+    // totals below and the CSV export reflect the property's real history.
+    const { data, error } = await window._rgClient
+      .from('property_mortgage_activity')
+      .select('*')
+      .eq('property_id', currentPropertyId)
+      .order('applied_date', { ascending: false })
+      .limit(1000);
+    if (error) throw error;
+
+    historyRows = data || [];
+    renderHistoryTable(historyRows);
+    renderInsights(historyRows);
+  } catch (e) {
+    console.error('Load history error:', e);
+  }
+}
+
+function renderHistoryTable(rows) {
+  const tbody = document.getElementById('historyBody');
+  const tfoot = document.getElementById('historyFoot');
+  const countEl = document.getElementById('historyCount');
+
+  if (!rows || rows.length === 0) {
+    tbody.innerHTML = `
+      <tr style="border-bottom: 1px solid var(--border);">
+        <td colspan="7" style="padding: 20px; text-align: center; color: var(--muted);">No activity yet. Add your first payment above.</td>
+      </tr>`;
+    if (tfoot) tfoot.innerHTML = '';
+    if (countEl) countEl.textContent = 'No activity yet';
+    return;
+  }
+
+  tbody.innerHTML = rows.map(row => `
+    <tr style="border-bottom: 1px solid var(--border);">
+      <td style="padding: 12px;">${row.applied_date || '—'}</td>
+      <td style="padding: 12px; text-align: right;">$${(row.payment_amount || 0).toFixed(2)}</td>
+      <td style="padding: 12px; text-align: right;">$${(row.principal_amount || 0).toFixed(2)}</td>
+      <td style="padding: 12px; text-align: right;">$${(row.interest_amount || 0).toFixed(2)}</td>
+      <td style="padding: 12px; text-align: right;">$${(row.escrow_amount || 0).toFixed(2)}</td>
+      <td style="padding: 12px; text-align: center; font-size: .8rem; color: var(--muted);" title="${escapeHtml(row.notes || '')}">${row.notes ? '📝' : '—'}</td>
+      <td style="padding: 12px; text-align: center;">
+        <button class="icon-btn" title="Delete entry" onclick="deleteActivity('${row.id}')">🗑️</button>
+      </td>
+    </tr>
+  `).join('');
+
+  const totals = rows.reduce((acc, row) => {
+    acc.amount += Number(row.payment_amount) || 0;
+    acc.principal += Number(row.principal_amount) || 0;
+    acc.interest += Number(row.interest_amount) || 0;
+    acc.escrow += Number(row.escrow_amount) || 0;
+    return acc;
+  }, { amount: 0, principal: 0, interest: 0, escrow: 0 });
+
+  if (tfoot) {
+    tfoot.innerHTML = `
+      <tr class="total-row">
+        <td style="padding:12px;">Total</td>
+        <td style="padding:12px; text-align:right;">$${totals.amount.toFixed(2)}</td>
+        <td style="padding:12px; text-align:right;">$${totals.principal.toFixed(2)}</td>
+        <td style="padding:12px; text-align:right;">$${totals.interest.toFixed(2)}</td>
+        <td style="padding:12px; text-align:right;">$${totals.escrow.toFixed(2)}</td>
+        <td></td><td></td>
+      </tr>`;
+  }
+  if (countEl) countEl.textContent = `${rows.length} payment${rows.length === 1 ? '' : 's'} logged`;
+}
+
+// ═══ PAYMENT INSIGHTS ═══
+// Was previously nonexistent — this rolls the payment ledger up into
+// at-a-glance totals so an owner doesn't have to eyeball the raw table.
+function renderInsights(rows) {
+  const card = document.getElementById('insightsCard');
+  if (!card) return;
+
+  if (!rows || rows.length === 0) {
+    card.innerHTML = '<p style="color: var(--muted); text-align: center; padding: 20px;">Insights will appear once payment activity is logged.</p>';
+    return;
+  }
+
+  const currentYear = new Date().getFullYear();
+  const totals = rows.reduce((acc, row) => {
+    const amt = Number(row.payment_amount) || 0;
+    const principal = Number(row.principal_amount) || 0;
+    const interest = Number(row.interest_amount) || 0;
+    acc.totalPaid += amt;
+    acc.totalPrincipal += principal;
+    acc.totalInterest += interest;
+    if (row.applied_date && row.applied_date.slice(0, 4) === String(currentYear)) {
+      acc.ytdPaid += amt;
+    }
+    return acc;
+  }, { totalPaid: 0, totalPrincipal: 0, totalInterest: 0, ytdPaid: 0 });
+
+  const sorted = [...rows].sort((a, b) => (b.applied_date || '').localeCompare(a.applied_date || ''));
+  const last = sorted[0];
+
+  const cards = [
+    ['💰 Total Paid to Date', money(totals.totalPaid), ''],
+    ['🏦 Principal Paid', money(totals.totalPrincipal), 'accent-green'],
+    ['📈 Interest Paid', money(totals.totalInterest), ''],
+    [`📅 Paid in ${currentYear}`, money(totals.ytdPaid), 'accent-blue'],
+    ['🕓 Last Payment', last ? `${money(last.payment_amount)}` : '—', ''],
+    ['🧾 Payments Logged', String(rows.length), ''],
+  ];
+
+  card.innerHTML = `
+    <div class="kpi-grid">
+      ${cards.map(([label, val, accent]) => `
+        <div class="kpi-card ${accent || ''}">
+          <div class="label">${label}</div>
+          <div class="value" style="font-size:1.05rem;">${val}</div>
+        </div>
+      `).join('')}
+    </div>
+    ${last ? `<div style="margin-top:14px;font-size:.8rem;color:var(--muted);">Last payment logged on ${escapeHtml(last.applied_date || '—')}${last.notes ? ' — ' + escapeHtml(last.notes) : ''}</div>` : ''}
+  `;
+}
+
+async function deleteActivity(id) {
+  if (!id) return;
+  if (!confirm('Delete this payment entry? This cannot be undone.')) return;
+  try {
+    const { error } = await window._rgClient
+      .from('property_mortgage_activity')
+      .delete()
+      .eq('id', id);
+    if (error) throw error;
+    await loadHistory();
+  } catch (e) {
+    console.error('Delete activity error:', e);
+    alert('❌ Could not delete this entry: ' + e.message);
+  }
+}
+
+function exportCSV() {
+  if (!historyRows || historyRows.length === 0) {
+    alert('No activity to export yet.');
+    return;
+  }
+  const header = ['Date', 'Amount', 'Principal', 'Interest', 'Escrow', 'Notes'];
+  const lines = [header.join(',')];
+  historyRows.forEach(row => {
+    const cells = [
+      row.applied_date || '',
+      (Number(row.payment_amount) || 0).toFixed(2),
+      (Number(row.principal_amount) || 0).toFixed(2),
+      (Number(row.interest_amount) || 0).toFixed(2),
+      (Number(row.escrow_amount) || 0).toFixed(2),
+      `"${(row.notes || '').replace(/"/g, '""')}"`
+    ];
+    lines.push(cells.join(','));
+  });
+  const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `mortgage-activity-${currentPropertyId || 'export'}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function setMode(mode) {
+  currentMode = mode;
+  const stdForm = document.getElementById('stdPaymentForm');
+  const customForm = document.getElementById('customPaymentForm');
+  const autofill = document.getElementById('autofillBox');
+  const stdBtn = document.getElementById('modeStdBtn');
+  const customBtn = document.getElementById('modeCustomBtn');
+
+  if (mode === 'standard') {
+    stdForm.style.display = 'block';
+    customForm.style.display = 'none';
+    autofill.style.display = 'block';
+    stdBtn.classList.add('active');
+    customBtn.classList.remove('active');
+  } else {
+    stdForm.style.display = 'none';
+    customForm.style.display = 'block';
+    autofill.style.display = 'none';
+    stdBtn.classList.remove('active');
+    customBtn.classList.add('active');
+  }
+}
+
+function parseSnapshot() {
+  alert('Parse Snapshot feature coming soon');
+}
+
+function importCSV() {
+  alert('Import CSV feature coming soon');
+}
+
+async function savePayment() {
+  try {
+    if (currentMode === 'standard') {
+      const appliedDate = document.getElementById('appliedDate').value;
+      const paymentAmount = parseFloat(document.getElementById('paymentAmount').value);
+      const escrowAmt = parseFloat(document.getElementById('escrowAmt').value) || 0;
+      const confirmNum = document.getElementById('confirmNum').value || null;
+      const notes = document.getElementById('notes').value || null;
+
+      if (!appliedDate || !paymentAmount) {
+        alert('Please fill in Applied Date and Payment Amount.');
+        return;
+      }
+
+      const { error } = await window._rgClient
+        .from('property_mortgage_activity')
+        .insert([{
+          property_id: currentPropertyId,
+          applied_date: appliedDate,
+          payment_amount: paymentAmount,
+          escrow_amount: escrowAmt,
+          notes: notes
+        }]);
+
+      if (error) throw error;
+      alert('✅ Payment saved!');
+      resetForm();
+      await loadHistory();
+    } else {
+      const customDate = document.getElementById('customDate').value;
+      const customAmount = parseFloat(document.getElementById('customAmount').value);
+      const customDesc = document.getElementById('customDesc').value;
+
+      if (!customDate || !customAmount || !customDesc) {
+        alert('Please fill in all required fields.');
+        return;
+      }
+
+      const { error } = await window._rgClient
+        .from('property_mortgage_activity')
+        .insert([{
+          property_id: currentPropertyId,
+          applied_date: customDate,
+          payment_amount: customAmount,
+          notes: `[${customDesc}]`
+        }]);
+
+      if (error) throw error;
+      alert('✅ Payment saved!');
+      resetForm();
+      await loadHistory();
+    }
+  } catch (e) {
+    console.error('Save error:', e);
+    alert('❌ Error: ' + e.message);
+  }
+}
+
+function resetForm() {
+  document.getElementById('appliedDate').value = '';
+  document.getElementById('effectiveDate').value = '';
+  document.getElementById('paymentAmount').value = '';
+  document.getElementById('escrowAmt').value = '';
+  document.getElementById('confirmNum').value = '';
+  document.getElementById('notes').value = '';
+  document.getElementById('customDate').value = '';
+  document.getElementById('customAmount').value = '';
+  document.getElementById('customDesc').value = '';
+}
+
+// ═══ Collapsible Sections ═══
+document.querySelectorAll('.section-header').forEach(header => {
+  header.addEventListener('click', function() {
+    this.classList.toggle('collapsed');
+    this.classList.toggle('active');
+  });
+});
+
+document.getElementById('footerYear').textContent = '© ' + new Date().getFullYear() + ' Rental Genie. All rights reserved.';
+
+// ═══ UMD (User Menu) Setup ═══
+function setupUMD() {
+  var toggle = document.getElementById('umdToggle');
+  var drop   = document.getElementById('umdDropdown');
+  if (toggle && drop) {
+    toggle.addEventListener('click', function (e) {
+      e.stopPropagation();
+      drop.classList.toggle('open');
+      toggle.setAttribute('aria-expanded', drop.classList.contains('open'));
+    });
+    document.addEventListener('click', function () { drop.classList.remove('open'); });
+  }
+  var lb = document.getElementById('logoutBtn');
+  if (lb) lb.addEventListener('click', doSignOut);
+}
+
+async function doSignOut() {
+  try { await window._rgClient.auth.signOut(); } catch(e) {}
+  location.href='login.html';
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  initPage();
+  setupUMD();
+  setMode('standard');
+});
+</script>
+
+</body>
+</html>

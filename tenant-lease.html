@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Lease – Rental Genie</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap">
+  <link rel="dns-prefetch" href="https://pbojacnagutipfhcxltj.supabase.co">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+  /* ── Design Tokens ──────────────────────────────────────────── */
+  :root {
+    --navy:        #0c1e3a;
+    --navy-mid:    #1a3a6b;
+    --navy-light:  #1e5799;
+    --sky:         #2d8cf0;
+    --sky-soft:    #e8f0fe;
+    --border:      #e2e8f0;
+    --bg:          #f1f4f8;
+    --card:        #ffffff;
+    --text:        #0c1e3a;
+    --muted:       #64748b;
+    --success:     #10b981;
+    --success-bg:  #ecfdf5;
+    --success-bdr: #a7f3d0;
+    --warn-bg:     #fffbeb;
+    --warn-bdr:    #fde68a;
+    --warn-text:   #92400e;
+    --danger-bg:   #fef2f2;
+    --danger-bdr:  #fecaca;
+    --danger-text: #7f1d1d;
+    --info-bg:     #eff6ff;
+    --info-bdr:    #bfdbfe;
+    --info-text:   #1e40af;
+    --radius-sm:   8px;
+    --radius-md:   12px;
+    --radius-lg:   16px;
+    --radius-xl:   20px;
+    --shadow-sm:   0 1px 4px rgba(12,30,58,.06);
+    --shadow-md:   0 4px 16px rgba(12,30,58,.09);
+    --shadow-lg:   0 8px 32px rgba(12,30,58,.14);
+    --header-grad: linear-gradient(135deg,#0c1e3a 0%,#1a3a6b 55%,#1e5799 100%);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: 'DM Sans', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── Auth Loading Overlay ───────────────────────────────────── */
+  #authOverlay {
+    position: fixed; inset: 0; z-index: 9999;
+    background: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column; gap: 16px;
+    transition: opacity .35s;
+  }
+  #authOverlay.hidden { opacity: 0; pointer-events: none; }
+  .spinner-ring {
+    width: 44px; height: 44px; border-radius: 50%;
+    border: 3px solid rgba(12,30,58,.1);
+    border-top-color: var(--sky);
+    animation: spin .75s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #authOverlay p { font-size: .88rem; color: var(--muted); font-weight: 500; }
+
+  /* ── Header ─────────────────────────────────────────────────── */
+  .header-container {
+    position: sticky; top: 0; z-index: 1000;
+    background: var(--header-grad);
+    border-bottom: 1px solid rgba(255,255,255,.08);
+    box-shadow: 0 2px 20px rgba(12,30,58,.35);
+  }
+  .navbar {
+    max-width: 1280px; margin: 0 auto; padding: 0 22px;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 64px; gap: 12px;
+  }
+  .brand-area { display: flex; align-items: center; gap: 11px; text-decoration: none; flex-shrink: 0; }
+  .brand-logo {
+    width: 38px; height: 38px; border-radius: 9px;
+    background: rgba(255,255,255,.12);
+    box-shadow: 0 0 0 1px rgba(255,255,255,.2), 0 2px 8px rgba(0,0,0,.2);
+    object-fit: cover; flex-shrink: 0;
+  }
+  .brand-title { font-size: 1.1rem; font-weight: 700; color: #fff; letter-spacing: -.2px; }
+  .brand-badge {
+    display: inline-block; font-size: .65rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .5px;
+    background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.2);
+    color: rgba(255,255,255,.8); border-radius: 999px;
+    padding: 2px 8px; margin-left: 2px;
+  }
+  .nav-links { display: flex; gap: 2px; align-items: center; }
+  .nav-links a {
+    display: flex; align-items: center; gap: 5px;
+    text-decoration: none; font-size: .82rem; font-weight: 600;
+    padding: 7px 11px; color: rgba(255,255,255,.75);
+    border-radius: var(--radius-sm); transition: all .18s; white-space: nowrap;
+  }
+  .nav-links a:hover { color: #fff; background: rgba(255,255,255,.1); }
+  .nav-links a.nav-active { color: #fff; background: rgba(255,255,255,.15); }
+
+  /* User menu dropdown */
+  .umd-wrap { position: relative; flex-shrink: 0; }
+  .umd-toggle {
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.18);
+    border-radius: 999px; padding: 5px 12px 5px 5px;
+    cursor: pointer; color: #fff; font-family: inherit; font-size: .82rem; font-weight: 600;
+    transition: background .18s;
+  }
+  .umd-toggle:hover { background: rgba(255,255,255,.18); }
+  .umd-avatar {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--sky), var(--navy-mid));
+    display: flex; align-items: center; justify-content: center;
+    font-size: .68rem; font-weight: 700; color: #fff; flex-shrink: 0;
+  }
+  .umd-name { font-size: .78rem; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: rgba(255,255,255,.9); }
+  .umd-caret { font-size: .7rem; opacity: .7; margin-left: 2px; color: rgba(255,255,255,.7); }
+  .umd-dropdown {
+    display: none; position: absolute; top: calc(100% + 10px); right: 0;
+    background: #fff; border: 1px solid #e2e8f0;
+    border-radius: 16px; min-width: 220px;
+    box-shadow: 0 8px 32px rgba(12,30,58,.18);
+    z-index: 1001; overflow: hidden; padding: 6px;
+  }
+  .umd-dropdown.open { display: block; animation: umdFadeIn .15s ease; }
+  @keyframes umdFadeIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
+  .umd-user-row { padding: 10px 12px 8px; border-bottom: 1px solid #e2e8f0; margin-bottom: 4px; }
+  .umd-user-name { font-weight: 700; font-size: .9rem; color: #0c1e3a; }
+  .umd-user-email { font-size: .78rem; color: #64748b; margin-top: 2px; }
+  .umd-section { padding: 4px 0; border-bottom: 1px solid #f1f4f8; margin-bottom: 2px; }
+  .umd-section:last-child { border-bottom: none; margin-bottom: 0; }
+  .umd-link {
+    display: flex; align-items: center; gap: 9px;
+    width: 100%; padding: 9px 12px; border-radius: 10px;
+    font-size: .85rem; font-weight: 600; color: #0c1e3a;
+    text-decoration: none; background: none; border: none;
+    cursor: pointer; font-family: inherit; text-align: left;
+  }
+  .umd-link:hover { background: #f1f4f8; }
+  .umd-link.danger { color: #ef4444; }
+  .umd-link.danger:hover { background: #fef2f2; }
+  .hamburger {
+    display: none; padding: 7px 10px;
+    border: 1px solid rgba(255,255,255,.25); border-radius: var(--radius-sm);
+    background: rgba(255,255,255,.1); cursor: pointer;
+    color: #fff; font-size: 1rem; font-weight: 700; transition: background .18s;
+  }
+  .hamburger:hover { background: rgba(255,255,255,.2); }
+  @media(max-width:880px) {
+    .nav-links { display: none; }
+    .umd-wrap { display: none; }
+    .hamburger { display: block; }
+  }
+
+  .drawer {
+    display: none; position: fixed;
+    top: 72px; left: 12px; right: 12px;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 8px;
+    z-index: 999; box-shadow: var(--shadow-lg);
+  }
+  .drawer a {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 14px; border-radius: var(--radius-sm);
+    font-weight: 600; font-size: .9rem;
+    text-decoration: none; color: var(--text); transition: background .15s;
+  }
+  .drawer a:hover { background: var(--bg); }
+  .drawer a.nav-active { background: var(--sky-soft); color: var(--navy-mid); }
+  .drawer-signout { color: #ef4444 !important; }
+  .drawer-divider { height: 1px; background: var(--border); margin: 4px 0; }
+
+  /* ── Main ───────────────────────────────────────────────────── */
+  main {
+    flex: 1; max-width: 1280px; width: 100%;
+    margin: 0 auto; padding: 28px 22px 48px;
+  }
+
+  /* ── Page header ────────────────────────────────────────────── */
+  .page-header {
+    display: flex; align-items: flex-start;
+    justify-content: space-between; gap: 16px;
+    flex-wrap: wrap; margin-bottom: 24px;
+    animation: fadeUp .4s ease both;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .page-title { font-size: 1.65rem; font-weight: 700; color: var(--navy); letter-spacing: -.4px; line-height: 1.2; }
+  .page-sub   { font-size: .88rem; color: var(--muted); margin-top: 4px; font-weight: 500; }
+  .page-header-right { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+
+  /* ── Alert ──────────────────────────────────────────────────── */
+  .alert-banner {
+    display: none; padding: 13px 16px;
+    border-radius: var(--radius-md); font-size: .88rem; font-weight: 600;
+    line-height: 1.45; margin-bottom: 20px; border: 1px solid transparent;
+    animation: fadeUp .3s ease both;
+  }
+  .alert-banner.danger { background: var(--danger-bg); border-color: var(--danger-bdr); color: var(--danger-text); display: block; }
+  .alert-banner.info   { background: var(--info-bg);   border-color: var(--info-bdr);   color: var(--info-text);   display: block; }
+  .alert-banner.warn   { background: var(--warn-bg);   border-color: var(--warn-bdr);   color: var(--warn-text);   display: block; }
+
+  /* ── Lease status hero ──────────────────────────────────────── */
+  .lease-hero {
+    background: var(--header-grad);
+    border-radius: var(--radius-xl);
+    padding: 28px 28px 24px;
+    margin-bottom: 20px;
+    position: relative; overflow: hidden;
+    animation: fadeUp .4s ease .05s both;
+  }
+  .lease-hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(45,140,240,.08) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(45,140,240,.08) 1px, transparent 1px);
+    background-size: 36px 36px;
+    pointer-events: none;
+  }
+  .lease-hero::after {
+    content: '📄';
+    position: absolute; right: 28px; top: 50%; transform: translateY(-50%);
+    font-size: 4rem; opacity: .12; pointer-events: none;
+  }
+  .lease-hero-inner { position: relative; z-index: 1; }
+  .lease-hero-top {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    gap: 16px; flex-wrap: wrap; margin-bottom: 20px;
+  }
+  .lease-hero-property { font-size: 1.3rem; font-weight: 700; color: #fff; letter-spacing: -.3px; margin-bottom: 4px; }
+  .lease-hero-tenant   { font-size: .88rem; color: rgba(255,255,255,.65); font-weight: 500; }
+  .lease-status-badge {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 7px 16px; border-radius: 999px;
+    font-size: .78rem; font-weight: 700;
+    background: rgba(16,185,129,.2); border: 1px solid rgba(16,185,129,.4);
+    color: #6ee7b7;
+    flex-shrink: 0;
+  }
+  .lease-status-badge.warn   { background: rgba(245,158,11,.2); border-color: rgba(245,158,11,.4); color: #fcd34d; }
+  .lease-status-badge.muted  { background: rgba(255,255,255,.1); border-color: rgba(255,255,255,.2); color: rgba(255,255,255,.6); }
+  .status-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+
+  /* Lease hero stats row */
+  .lease-hero-stats {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+  }
+  @media(max-width:720px) { .lease-hero-stats { grid-template-columns: repeat(2, 1fr); } }
+  @media(max-width:400px) { .lease-hero-stats { grid-template-columns: 1fr 1fr; } }
+
+  .hero-stat-item { display: flex; flex-direction: column; gap: 3px; }
+  .hero-stat-label {
+    font-size: .67rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .5px; color: rgba(255,255,255,.45);
+  }
+  .hero-stat-value { font-size: 1rem; font-weight: 700; color: #fff; font-family: 'DM Mono', monospace; }
+  .hero-stat-value.text { font-family: 'DM Sans', sans-serif; font-size: .92rem; }
+
+  /* ── Section cards ──────────────────────────────────────────── */
+  .section-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius-xl); box-shadow: var(--shadow-sm);
+    margin-bottom: 20px; overflow: hidden;
+    animation: fadeUp .4s ease .1s both;
+  }
+  .section-card:nth-child(2) { animation-delay: .15s; }
+  .section-card:nth-child(3) { animation-delay: .2s; }
+
+  .card-head {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; flex-wrap: wrap; padding: 18px 22px 0;
+  }
+  .card-head-left { display: flex; flex-direction: column; }
+  .card-title { font-size: 1rem; font-weight: 700; color: var(--navy); display: flex; align-items: center; gap: 8px; }
+  .card-sub   { font-size: .8rem; color: var(--muted); margin-top: 3px; font-weight: 500; }
+  .card-body  { padding: 16px 22px 22px; }
+
+  /* ── Info grid ──────────────────────────────────────────────── */
+  .info-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+  }
+  @media(max-width:720px) { .info-grid { grid-template-columns: 1fr 1fr; } }
+  @media(max-width:480px) { .info-grid { grid-template-columns: 1fr; } }
+
+  .info-cell {
+    background: #f8fafc; border: 1px solid var(--border);
+    border-radius: var(--radius-md); padding: 13px 14px;
+    transition: border-color .15s;
+  }
+  .info-cell:hover { border-color: #cbd5e1; }
+  .info-cell-label {
+    font-size: .68rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .4px; color: var(--muted); margin-bottom: 5px;
+  }
+  .info-cell-value { font-size: .92rem; font-weight: 600; color: var(--navy); line-height: 1.35; }
+  .info-cell-value.mono { font-family: 'DM Mono', monospace; font-size: .88rem; }
+
+  /* ── Timeline bar ───────────────────────────────────────────── */
+  .timeline-wrap { margin-top: 4px; }
+  .timeline-label-row {
+    display: flex; justify-content: space-between;
+    font-size: .72rem; color: var(--muted); font-weight: 600; margin-bottom: 7px;
+  }
+  .timeline-bar-track {
+    height: 8px; background: var(--border); border-radius: 999px; overflow: hidden;
+  }
+  .timeline-bar-fill {
+    height: 100%; background: linear-gradient(90deg, var(--sky), var(--success));
+    border-radius: 999px; transition: width .6s ease;
+  }
+  .timeline-bar-fill.warn   { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+  .timeline-bar-fill.danger { background: linear-gradient(90deg, #ef4444, #f87171); }
+  .timeline-days-left {
+    font-size: .75rem; color: var(--muted); margin-top: 6px; font-weight: 500;
+  }
+
+  /* ── Expiry notice ──────────────────────────────────────────── */
+  .expiry-notice {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 14px 16px; border-radius: var(--radius-md);
+    background: var(--warn-bg); border: 1px solid var(--warn-bdr);
+    margin-top: 14px;
+  }
+  .expiry-notice-icon { font-size: 1.2rem; flex-shrink: 0; }
+  .expiry-notice-text { font-size: .85rem; color: var(--warn-text); font-weight: 600; line-height: 1.5; }
+
+  /* ── Late fee / policy box ──────────────────────────────────── */
+  .policy-row {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 14px 16px; border-radius: var(--radius-md);
+    background: var(--info-bg); border: 1px solid var(--info-bdr);
+    margin-top: 4px;
+  }
+  .policy-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: 1px; }
+  .policy-text { font-size: .83rem; color: var(--info-text); line-height: 1.55; }
+  .policy-text strong { font-weight: 700; }
+
+  /* ── History table ──────────────────────────────────────────── */
+  .table-wrap {
+    overflow: auto; border: 1px solid var(--border);
+    border-radius: var(--radius-lg); margin-top: 4px; background: var(--card);
+  }
+  table { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 480px; }
+  thead th {
+    padding: 11px 16px; background: #f8fafc;
+    font-size: .7rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .4px; color: var(--muted); text-align: left;
+    border-bottom: 1px solid var(--border); position: sticky; top: 0;
+  }
+  tbody td {
+    padding: 13px 16px; font-size: .88rem; color: var(--text);
+    border-bottom: 1px solid var(--border); vertical-align: middle;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr { transition: background .15s; }
+  tbody tr:hover { background: #f8fafc; }
+
+  /* ── Status chips ───────────────────────────────────────────── */
+  .chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 11px; border-radius: 999px;
+    font-weight: 700; font-size: .75rem;
+    border: 1px solid var(--border); background: #f8fafc; color: var(--text);
+    white-space: nowrap;
+  }
+  .chip.good   { background: var(--success-bg); border-color: var(--success-bdr); color: #065f46; }
+  .chip.warn   { background: var(--warn-bg);    border-color: var(--warn-bdr);    color: var(--warn-text); }
+  .chip.danger { background: var(--danger-bg);  border-color: var(--danger-bdr);  color: var(--danger-text); }
+  .chip.info   { background: var(--info-bg);    border-color: var(--info-bdr);    color: var(--info-text); }
+
+  /* ── Buttons ────────────────────────────────────────────────── */
+  .btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 9px 16px; border-radius: var(--radius-md);
+    border: 1.5px solid var(--border); background: var(--card);
+    color: var(--navy); font-family: 'DM Sans', sans-serif;
+    font-size: .83rem; font-weight: 600; text-decoration: none; cursor: pointer;
+    transition: all .16s; white-space: nowrap;
+  }
+  .btn:hover { background: var(--bg); border-color: #cbd5e1; transform: translateY(-1px); }
+  .btn.primary {
+    background: var(--header-grad); border-color: transparent; color: #fff;
+    box-shadow: 0 2px 10px rgba(12,30,58,.2);
+  }
+  .btn.primary:hover { filter: brightness(1.1); box-shadow: 0 4px 16px rgba(12,30,58,.28); }
+  .btn.disabled { opacity: .45; pointer-events: none; }
+
+  /* ── Empty state ────────────────────────────────────────────── */
+  .empty-state {
+    text-align: center; padding: 48px 20px;
+    color: var(--muted);
+  }
+  .empty-state-icon { font-size: 2.5rem; margin-bottom: 12px; }
+  .empty-state p { font-size: .9rem; font-weight: 500; line-height: 1.6; }
+
+  /* ── Footer ─────────────────────────────────────────────────── */
+  .site-footer {
+    background: var(--navy); padding: 20px 24px;
+    border-top: 1px solid rgba(255,255,255,.06);
+  }
+  .footer-inner {
+    max-width: 1280px; margin: 0 auto;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; flex-wrap: wrap;
+  }
+  .footer-inner p { color: rgba(255,255,255,.3); font-size: .8rem; }
+  .footer-user {
+    display: flex; align-items: center; gap: 8px;
+    font-size: .78rem; color: rgba(255,255,255,.4); font-weight: 500;
+  }
+  .footer-user-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--success); flex-shrink: 0; }
+
+  .hidden { display: none !important; }
+
+  @media(max-width:600px) {
+    main { padding: 20px 14px 40px; }
+    .page-title { font-size: 1.35rem; }
+    .lease-hero { padding: 20px; }
+    .lease-hero::after { display: none; }
+    .card-head { padding: 16px 16px 0; }
+    .card-body { padding: 14px 16px 20px; }
+  }
+  </style>
+</head>
+<body>
+
+<!-- ── Loading overlay ───────────────────────────────────────── -->
+<div id="authOverlay">
+  <div class="spinner-ring"></div>
+  <p>Loading your lease…</p>
+</div>
+
+<!-- ── Header ────────────────────────────────────────────────── -->
+<header class="header-container">
+  <div class="navbar">
+    <a class="brand-area" href="tenant-portal.html">
+      <img class="brand-logo" src="images/rg-logo.png" alt="Rental Genie"
+           onerror="this.style.display='none'" />
+      <div>
+        <span class="brand-title">Rental Genie</span>
+        <span class="brand-badge">Tenant</span>
+      </div>
+    </a>
+
+    <nav class="nav-links" aria-label="Tenant navigation">
+      <a id="navHome"     href="tenant-portal.html">🏠 Home</a>
+      <a id="navLease"    href="tenant-lease.html" class="nav-active">📄 Lease</a>
+      <a id="navPayments" href="tenant-payments.html">💵 Payments</a>
+      <a id="navRepairs"  href="tenant-repair-requests.html">🛠️ Repairs</a>
+      <a id="navDocs"     href="tenant-documents.html">📁 Docs</a>
+      <a id="navContact"  href="tenant-contact.html">💬 Contact</a>
+    </nav>
+
+    <div class="umd-wrap" id="userChip" style="display:none">
+      <button class="umd-toggle" id="umdToggle" aria-haspopup="true" aria-expanded="false">
+        <div class="umd-avatar" id="userAvatar">?</div>
+        <span class="umd-name" id="userEmail">—</span>
+        <span class="umd-caret">▾</span>
+      </button>
+      <div class="umd-dropdown" id="umdDropdown">
+        <div class="umd-user-row">
+          <div class="umd-user-name" id="umdFullName">Tenant</div>
+          <div class="umd-user-email" id="umdEmail">—</div>
+        </div>
+        <div class="umd-section">
+          <a class="umd-link" href="tenant-account.html">👤 My Account</a>
+        </div>
+        <div class="umd-section">
+          <button class="umd-link danger" id="navSignOut">🚪 Sign Out</button>
+        </div>
+      </div>
+    </div>
+
+    <button class="hamburger" id="hamburgerBtn" aria-label="Toggle menu">☰</button>
+  </div>
+</header>
+
+<!-- Mobile drawer -->
+<div class="drawer" id="mobileDrawer">
+  <a id="drawerHome"     href="tenant-portal.html">🏠 Portal Home</a>
+  <a id="drawerLease"    href="tenant-lease.html"           class="nav-active">📄 My Lease</a>
+  <a id="drawerPayments" href="tenant-payments.html">💵 Payments</a>
+  <a id="drawerRepairs"  href="tenant-repair-requests.html">🛠️ Repairs</a>
+  <a id="drawerDocs"     href="tenant-documents.html">📁 Documents</a>
+  <a id="drawerContact"  href="tenant-contact.html">💬 Contact</a>
+  <a id="drawerAccount" href="tenant-account.html">👤 My Account</a>
+
+  <div class="drawer-divider"></div>
+
+  <a id="drawerSignOut"  href="#" class="drawer-signout">🚪 Sign Out</a>
+</div>
+
+<!-- ── Main ──────────────────────────────────────────────────── -->
+<main>
+
+  <!-- Page header -->
+  <div class="page-header">
+    <div>
+      <div class="page-title">📄 My Lease</div>
+      <div class="page-sub" id="leaseSub">Loading your lease details…</div>
+    </div>
+    <div class="page-header-right">
+      <a class="btn primary disabled" id="btnRequestRenewal" href="#">🔁 Request Renewal</a>
+    </div>
+  </div>
+
+  <!-- Alert -->
+  <div class="alert-banner" id="alertBox" role="alert"></div>
+
+  <!-- ── Lease hero panel ────────────────────────────────────── -->
+  <div class="lease-hero" id="leaseHero" style="display:none">
+    <div class="lease-hero-inner">
+      <div class="lease-hero-top">
+        <div>
+          <div class="lease-hero-property" id="heroProperty">—</div>
+          <div class="lease-hero-tenant" id="heroTenant">—</div>
+        </div>
+        <div class="lease-status-badge" id="heroStatusBadge">
+          <span class="status-dot"></span>
+          <span id="heroStatusText">—</span>
+        </div>
+      </div>
+      <div class="lease-hero-stats">
+        <div class="hero-stat-item">
+          <div class="hero-stat-label">Monthly Rent</div>
+          <div class="hero-stat-value" id="heroRent">—</div>
+        </div>
+        <div class="hero-stat-item">
+          <div class="hero-stat-label">Rent Due Day</div>
+          <div class="hero-stat-value text" id="heroDueDay">—</div>
+        </div>
+        <div class="hero-stat-item">
+          <div class="hero-stat-label">Lease Start</div>
+          <div class="hero-stat-value text" id="heroStart">—</div>
+        </div>
+        <div class="hero-stat-item">
+          <div class="hero-stat-label">Lease End</div>
+          <div class="hero-stat-value text" id="heroEnd">—</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Lease timeline card ─────────────────────────────────── -->
+  <div class="section-card" id="timelineCard" style="display:none">
+    <div class="card-head">
+      <div class="card-head-left">
+        <div class="card-title">⏳ Lease Timeline</div>
+        <div class="card-sub">How far through your lease term you are</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="timeline-wrap">
+        <div class="timeline-label-row">
+          <span id="tlStart">—</span>
+          <span id="tlEnd">—</span>
+        </div>
+        <div class="timeline-bar-track">
+          <div class="timeline-bar-fill" id="tlBar" style="width:0%"></div>
+        </div>
+        <div class="timeline-days-left" id="tlDaysLeft"></div>
+      </div>
+      <div class="expiry-notice hidden" id="expiryNotice">
+        <div class="expiry-notice-icon">⚠️</div>
+        <div class="expiry-notice-text" id="expiryNoticeText">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Lease details card ──────────────────────────────────── -->
+  <div class="section-card" id="detailsCard" style="display:none">
+    <div class="card-head">
+      <div class="card-head-left">
+        <div class="card-title">📋 Lease Details</div>
+        <div class="card-sub">Full breakdown of your current lease terms</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="info-grid">
+        <div class="info-cell">
+          <div class="info-cell-label">Tenant Name</div>
+          <div class="info-cell-value" id="detTenant">—</div>
+        </div>
+        <div class="info-cell">
+          <div class="info-cell-label">Property</div>
+          <div class="info-cell-value" id="detProperty">—</div>
+        </div>
+        <div class="info-cell">
+          <div class="info-cell-label">Lease Status</div>
+          <div class="info-cell-value" id="detStatus">—</div>
+        </div>
+        <div class="info-cell">
+          <div class="info-cell-label">Monthly Rent</div>
+          <div class="info-cell-value mono" id="detRent">—</div>
+        </div>
+        <div class="info-cell">
+          <div class="info-cell-label">Rent Due Day</div>
+          <div class="info-cell-value" id="detDueDay">—</div>
+        </div>
+        <div class="info-cell">
+          <div class="info-cell-label">Lease Term</div>
+          <div class="info-cell-value" id="detTerm">—</div>
+        </div>
+      </div>
+
+      <!-- Late fee policy notice -->
+      <div class="policy-row" id="policyRow" style="margin-top:14px">
+        <div class="policy-icon">ℹ️</div>
+        <div class="policy-text" id="policyText">Loading payment policy…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Lease history card ──────────────────────────────────── -->
+  <div class="section-card">
+    <div class="card-head">
+      <div class="card-head-left">
+        <div class="card-title">🕘 Lease History</div>
+        <div class="card-sub">All leases on record for your account</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Property</th>
+              <th>Lease Period</th>
+              <th>Monthly Rent</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="leaseHistoryBody">
+            <tr>
+              <td colspan="4" style="text-align:center;padding:32px;color:var(--muted)">
+                Loading lease history…
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ── Footer ────────────────────────────────────────────────── -->
+<footer class="site-footer">
+  <div class="footer-inner">
+    <p>© <span id="footerYear"></span> Rental Genie. All rights reserved.</p>
+    <div class="footer-user">
+      <div class="footer-user-dot"></div>
+      <span id="footerWhoami">—</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function () {
+  /* ── safeStorage bootstrap ──────────────────────────────── */
+  var mem = new Map();
+  var wrap = function (s) {
+    return {
+      getItem:    function (k) { try { return (s && s.getItem(k)) || mem.get(k) || null; } catch (e) { return mem.get(k) || null; } },
+      setItem:    function (k, v) { try { s && s.setItem(k, v); } catch (e) {} mem.set(k, v); },
+      removeItem: function (k) { try { s && s.removeItem(k); } catch (e) {} mem.delete(k); }
+    };
+  };
+  var ls = null; try { ls = window.localStorage; } catch (e) {}
+
+  var sb = window.supabase.createClient(
+    'https://pbojacnagutipfhcxltj.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBib2phY25hZ3V0aXBmaGN4bHRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgwMDkwODAsImV4cCI6MjA2MzU4NTA4MH0.ZLCcAzTYljoZycpBGwMtthP5VyAJ4schuIvt4HibGc0',
+    { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, lock: undefined, storage: wrap(ls) } }
+  );
+
+  /* ── Helpers ────────────────────────────────────────────── */
+  var params         = new URLSearchParams(location.search);
+  var propertyFilter = (params.get('property') || '').trim();
+
+  function $(id) { return document.getElementById(id); }
+  function setText(id, val) { var e = $(id); if (e) e.textContent = val ?? '—'; }
+
+  function fmtMoney(v) {
+    var n = Number(v);
+    return isNaN(n) ? '—' : n.toLocaleString(undefined, { style: 'currency', currency: 'USD' });
+  }
+  function fmtDate(iso) {
+    if (!iso) return '—';
+    var d = new Date(iso);
+    return isNaN(d.getTime()) ? String(iso) : d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: '2-digit' });
+  }
+  function escapeHtml(s) {
+    return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function hideOverlay() {
+    var o = $('authOverlay');
+    if (o) { o.classList.add('hidden'); setTimeout(function () { o.style.display = 'none'; }, 380); }
+  }
+  function setAlert(type, msg) {
+    var el = $('alertBox'); if (!el) return;
+    if (!msg) { el.style.display = 'none'; el.className = 'alert-banner'; el.textContent = ''; return; }
+    el.className = 'alert-banner ' + (type || 'info');
+    el.textContent = msg;
+  }
+
+  /* ── Nav context passthrough ─────────────────────────────── */
+  function withProp(url) {
+    if (!propertyFilter) return url;
+    return url + (url.includes('?') ? '&' : '?') + 'property=' + encodeURIComponent(propertyFilter);
+  }
+  function applyNavContext() {
+    var links = [
+      ['navHome',     'tenant-portal.html'],
+      ['navLease',    'tenant-lease.html'],
+      ['navPayments', 'tenant-payments.html'],
+      ['navRepairs',  'tenant-repair-requests.html'],
+      ['navDocs',     'tenant-documents.html'],
+      ['navContact',  'tenant-contact.html'],
+      ['drawerHome',     'tenant-portal.html'],
+      ['drawerLease',    'tenant-lease.html'],
+      ['drawerPayments', 'tenant-payments.html'],
+      ['drawerRepairs',  'tenant-repair-requests.html'],
+      ['drawerDocs',     'tenant-documents.html'],
+      ['drawerContact',  'tenant-contact.html'],
+    ];
+    links.forEach(function (p) { var e = $(p[0]); if (e) e.setAttribute('href', withProp(p[1])); });
+  }
+
+  /* ── Hamburger ──────────────────────────────────────────── */
+  function wireNav() {
+    var btn    = $('hamburgerBtn');
+    var drawer = $('mobileDrawer');
+    if (btn && drawer && !btn.__wired) {
+      btn.__wired = true;
+      btn.addEventListener('click', function () {
+        drawer.style.display = (drawer.style.display === 'block') ? 'none' : 'block';
+      });
+      document.addEventListener('click', function (e) {
+        if (drawer.style.display === 'block' && !drawer.contains(e.target) && e.target !== btn)
+          drawer.style.display = 'none';
+      });
+    }
+    function doSignOut() { try { sb.auth.signOut(); } catch (e) {} location.href = 'tenant-login.html'; }
+    var so = $('navSignOut');    if (so) so.addEventListener('click',    function (e) { e.preventDefault(); doSignOut(); });
+    var ds = $('drawerSignOut'); if (ds) ds.addEventListener('click', function (e) { e.preventDefault(); doSignOut(); });
+
+    // User menu dropdown
+    var umdBtn = $('umdToggle');
+    var umdDrop = $('umdDropdown');
+    if (umdBtn && umdDrop && !umdBtn.__wired) {
+      umdBtn.__wired = true;
+      umdBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        umdDrop.classList.toggle('open');
+        umdBtn.setAttribute('aria-expanded', umdDrop.classList.contains('open'));
+      });
+      document.addEventListener('click', function () { umdDrop.classList.remove('open'); });
+    }
+  }
+
+  /* ── Auth ───────────────────────────────────────────────── */
+  function requireAuth() {
+    return sb.auth.getUser().then(function (r) {
+      if (r.data && r.data.user) return r.data.user;
+      return sb.auth.getSession().then(function (s) {
+        return (s.data && s.data.session && s.data.session.user) ? s.data.session.user : null;
+      });
+    }).catch(function () { return null; });
+  }
+
+  /* ── Lease status chip class ─────────────────────────────── */
+  function statusChipClass(status) {
+    var s = (status || '').toLowerCase();
+    if (s.includes('active') || s.includes('signed')) return 'good';
+    if (s.includes('expired') || s.includes('terminated')) return 'danger';
+    if (s.includes('pending') || s.includes('draft')) return 'warn';
+    return 'info';
+  }
+
+  /* ── Timeline ───────────────────────────────────────────── */
+  function renderTimeline(lease) {
+    if (!lease.lease_start || !lease.lease_end) return;
+    var card = $('timelineCard');
+    if (card) card.style.display = 'block';
+
+    var start    = new Date(lease.lease_start);
+    var end      = new Date(lease.lease_end);
+    var now      = new Date();
+    var total    = end - start;
+    var elapsed  = now - start;
+    var pct      = Math.min(Math.max((elapsed / total) * 100, 0), 100);
+    var daysLeft = Math.ceil((end - now) / (1000 * 60 * 60 * 24));
+
+    setText('tlStart', fmtDate(lease.lease_start));
+    setText('tlEnd',   fmtDate(lease.lease_end));
+
+    var bar = $('tlBar');
+    if (bar) {
+      setTimeout(function () { bar.style.width = pct.toFixed(1) + '%'; }, 120);
+      bar.classList.remove('warn', 'danger');
+      if (daysLeft <= 0)  bar.classList.add('danger');
+      else if (daysLeft <= 60) bar.classList.add('warn');
+    }
+
+    var daysMsg;
+    if (daysLeft <= 0)        daysMsg = 'Lease has ended (' + Math.abs(daysLeft) + ' days ago)';
+    else if (daysLeft === 1)  daysMsg = '1 day remaining';
+    else                      daysMsg = daysLeft + ' days remaining · ' + pct.toFixed(0) + '% through term';
+    setText('tlDaysLeft', daysMsg);
+
+    // Expiry notice
+    var notice = $('expiryNotice');
+    if (notice) {
+      if (daysLeft <= 0) {
+        notice.classList.remove('hidden');
+        setText('expiryNoticeText', 'Your lease has ended. Please contact your landlord about renewal or move-out arrangements.');
+      } else if (daysLeft <= 45) {
+        notice.classList.remove('hidden');
+        setText('expiryNoticeText', 'Your lease expires in ' + daysLeft + ' day(s) on ' + fmtDate(lease.lease_end) + '. Consider reaching out to your landlord about renewal.');
+      }
+    }
+  }
+
+  /* ── Hero status badge ──────────────────────────────────── */
+  function applyHeroBadge(status) {
+    var badge = $('heroStatusBadge');
+    if (!badge) return;
+    var s = (status || '').toLowerCase();
+    badge.classList.remove('warn', 'muted');
+    if (!s || s.includes('unknown')) badge.classList.add('muted');
+    else if (!s.includes('active') && !s.includes('signed')) badge.classList.add('warn');
+  }
+
+  /* ── Renewal mailto ─────────────────────────────────────── */
+  function buildRenewalContactUrl(tenantName, propertyName, leaseEnd) {
+    var subject = 'Lease Renewal Request';
+    var endStr = leaseEnd ? fmtDate(leaseEnd) : '';
+    var body = 'Hi,\n\nI would like to discuss renewing my lease' +
+      (endStr ? ' (currently ending ' + endStr + ')' : '') +
+      '.\n\nTenant: ' + (tenantName || '') +
+      '\nProperty: ' + (propertyName || '') +
+      '\n\nThank you!';
+    var url = 'tenant-contact.html?subject=' + encodeURIComponent(subject) + '&message=' + encodeURIComponent(body);
+    if (propertyName) url += '&property=' + encodeURIComponent(propertyName);
+    return url;
+  }
+
+  /* ── History table row ──────────────────────────────────── */
+  function historyRow(l) {
+    var period  = fmtDate(l.lease_start) + ' → ' + fmtDate(l.lease_end);
+    var rent    = fmtMoney(l.rent_amount);
+    var status  = l.status || '—';
+    var cls     = statusChipClass(status);
+    return '<tr>'
+      + '<td style="font-weight:600">' + escapeHtml(l.property_name || '—') + '</td>'
+      + '<td style="font-family:\'DM Mono\',monospace;font-size:.83rem">' + escapeHtml(period) + '</td>'
+      + '<td style="font-family:\'DM Mono\',monospace;font-weight:600">' + escapeHtml(rent) + '</td>'
+      + '<td><span class="chip ' + cls + '">' + escapeHtml(status) + '</span></td>'
+      + '</tr>';
+  }
+
+  /* ── Resolve tenant identity via auth_user_id (not email) ── */
+  function resolveTenant(user) {
+    return sb.from('tenants').select('id, auth_user_id, email, tenant_name, phone')
+      .eq('auth_user_id', user.id).maybeSingle()
+      .then(function (r1) {
+        if (r1.data) { if (r1.data.email !== user.email) { sb.from('tenants').update({ email: user.email }).eq('id', r1.data.id).then(function(){}, function(){}); } return r1.data; }
+        return sb.from('tenants').select('id, auth_user_id, email, tenant_name, phone')
+          .ilike('email', user.email).maybeSingle()
+          .then(function (r2) {
+            if (r2.data && !r2.data.auth_user_id) {
+              sb.from('tenants').update({ auth_user_id: user.id }).eq('id', r2.data.id).then(function(){}, function(){});
+            }
+            return r2.data || null;
+          });
+      })
+      .catch(function () { return null; });
+  }
+
+  /* ── Main init ──────────────────────────────────────────── */
+  function init() {
+    wireNav();
+    applyNavContext();
+    setText('footerYear', new Date().getFullYear());
+    setTimeout(hideOverlay, 4000);
+
+    requireAuth().then(function (user) {
+      if (!user) { hideOverlay(); location.href = 'tenant-login.html'; return; }
+
+      hideOverlay();
+
+      // User chip
+      var chip = $('userChip'), avatarEl = $('userAvatar'), emailEl = $('userEmail');
+      if (chip && avatarEl && emailEl && user.email) {
+        avatarEl.textContent = user.email.substring(0, 2).toUpperCase();
+        emailEl.textContent  = user.email;
+      var _umdFN=document.getElementById('umdFullName'); if(_umdFN) _umdFN.textContent=user.email||'Tenant';
+      var _umdEM=document.getElementById('umdEmail'); if(_umdEM) _umdEM.textContent=user.email||'';
+        chip.style.display   = 'flex';
+      }
+      setText('footerWhoami', user.email || 'Tenant');
+
+      // Lease query — resolve tenant identity first (auth_user_id, not email)
+      resolveTenant(user).then(function (tenant) {
+
+      if (tenant && tenant.tenant_name) {
+        var _parts = tenant.tenant_name.trim().split(/\s+/).filter(Boolean);
+        var _init = _parts.length >= 2 ? (_parts[0][0] + _parts[_parts.length-1][0]).toUpperCase() : (_parts[0] ? _parts[0].slice(0,2).toUpperCase() : '');
+        var _av = document.getElementById('userAvatar'); if (_av && _init) _av.textContent = _init;
+        var _em = document.getElementById('userEmail'); if (_em) _em.textContent = _parts[0];
+        var _fn = document.getElementById('umdFullName'); if (_fn) _fn.textContent = tenant.tenant_name;
+      }
+      var q = tenant
+        ? sb.from('leases')
+            .select('id, property_name, tenant_name, tenant_email, tenant_phone, lease_start, lease_end, rent_amount, status, rent_due_day, due_day, grace_period, late_fee_grace_days, late_fee_amount, late_fee')
+            .eq('tenant_id', tenant.id)
+            .order('lease_start', { ascending: false })
+        : sb.from('leases')
+            .select('id, property_name, tenant_name, tenant_email, tenant_phone, lease_start, lease_end, rent_amount, status, rent_due_day, due_day, grace_period, late_fee_grace_days, late_fee_amount, late_fee')
+            .ilike('tenant_email', user.email)
+            .order('lease_start', { ascending: false });
+      if (propertyFilter) q = q.eq('property_name', propertyFilter);
+
+      q.limit(25).then(function (res) {
+        if (res.error) {
+          setAlert('danger', 'Could not load lease info. Please contact your landlord.');
+          console.error(res.error);
+          return;
+        }
+
+        var list = res.data || [];
+        setText('leaseSub', propertyFilter ? 'Property: ' + propertyFilter : 'Your lease details');
+
+        if (!list.length) {
+          setText('leaseSub', 'No lease found for your account.');
+          $('leaseHistoryBody').innerHTML =
+            '<tr><td colspan="4"><div class="empty-state"><div class="empty-state-icon">📭</div>'
+            + '<p>No leases found for your account.<br>Please contact your landlord if this is unexpected.</p></div></td></tr>';
+          return;
+        }
+
+        var lease = list[0];
+
+        /* Hero panel */
+        var heroEl = $('leaseHero');
+        if (heroEl) heroEl.style.display = 'block';
+        setText('heroProperty', lease.property_name || '—');
+        setText('heroTenant',   'Tenant: ' + (lease.tenant_name || user.email));
+        setText('heroStatusText', lease.status || 'Unknown');
+        applyHeroBadge(lease.status);
+
+        var rentAmt = Number(lease.rent_amount || 0);
+        setText('heroRent',   rentAmt ? fmtMoney(rentAmt) : '—');
+        var dueDay = lease.rent_due_day || lease.due_day || '';
+        setText('heroDueDay', dueDay ? 'Day ' + dueDay : '—');
+        setText('heroStart',  fmtDate(lease.lease_start));
+        setText('heroEnd',    fmtDate(lease.lease_end));
+
+        /* Timeline */
+        renderTimeline(lease);
+
+        /* Details card */
+        var detCard = $('detailsCard');
+        if (detCard) detCard.style.display = 'block';
+        setText('detTenant',   lease.tenant_name || user.email);
+        setText('detProperty', lease.property_name || '—');
+        setText('detStatus',   lease.status || '—');
+        setText('detRent',     rentAmt ? fmtMoney(rentAmt) + ' / month' : '—');
+        setText('detDueDay',   dueDay ? 'Day ' + dueDay + ' of each month' : '—');
+        setText('detTerm',     fmtDate(lease.lease_start) + ' → ' + fmtDate(lease.lease_end));
+
+        /* Late fee policy */
+        var grace   = lease.grace_period ?? lease.late_fee_grace_days;
+        var lateFee = lease.late_fee_amount ?? lease.late_fee;
+        var graceStr   = (grace   == null || grace   === '') ? 'not specified' : grace + ' day(s)';
+        var lateFeeStr = (lateFee == null || lateFee === '') ? 'not specified' : fmtMoney(lateFee);
+        setText('policyText',
+          'Grace period: ' + graceStr + ' after due date. ' +
+          'Late fee: ' + lateFeeStr + '. ' +
+          'Please contact your landlord for any payment questions.'
+        );
+
+        /* Renewal button */
+        var renewBtn = $('btnRequestRenewal');
+        if (renewBtn) {
+          renewBtn.href = buildRenewalContactUrl(lease.tenant_name, lease.property_name, lease.lease_end);
+          renewBtn.classList.remove('disabled');
+        }
+
+        /* History table */
+        $('leaseHistoryBody').innerHTML = list.map(historyRow).join('') ||
+          '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:24px">No history.</td></tr>';
+
+      }).catch(function (err) {
+        console.error(err);
+        setAlert('danger', 'Error loading lease data. Please try refreshing.');
+      });
+      }); // end resolveTenant().then()
+
+    }).catch(function (err) {
+      console.error(err);
+      hideOverlay();
+      location.href = 'tenant-login.html';
+    });
+
+    /* Auth state listener */
+    sb.auth.onAuthStateChange(function (event) {
+      if (event === 'SIGNED_OUT') location.href = 'tenant-login.html';
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', init);
+}());
+</script>
+</body>
+</html>

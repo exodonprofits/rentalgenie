@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>🏘️ HOA Info – Rental Genie</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap">
+<link rel="dns-prefetch" href="https://pbojacnagutipfhcxltj.supabase.co">
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<style>
+:root{--navy:#0c1e3a;--navy-mid:#1a3a6b;--navy-light:#1e5799;--sky:#2d8cf0;--sky-soft:#e8f0fe;--border:#e2e8f0;--bg:#f1f4f8;--card:#ffffff;--text:#0c1e3a;--muted:#64748b;--success:#10b981;--success-bg:#ecfdf5;--success-bdr:#a7f3d0;--warn-bg:#fffbeb;--warn-bdr:#fde68a;--warn-text:#92400e;--danger-bg:#fef2f2;--danger-bdr:#fecaca;--danger-text:#7f1d1d;--info-bg:#eff6ff;--info-bdr:#bfdbfe;--info-text:#1e40af;--radius-sm:8px;--radius-md:12px;--radius-lg:16px;--radius-xl:20px;--shadow-sm:0 1px 4px rgba(12,30,58,.06);--shadow-md:0 4px 16px rgba(12,30,58,.09);--shadow-lg:0 8px 32px rgba(12,30,58,.14);--header-grad:linear-gradient(135deg,#0c1e3a 0%,#1a3a6b 55%,#1e5799 100%);}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;}
+body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+#authOverlay{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;transition:opacity .35s;}
+#authOverlay.hidden{opacity:0;pointer-events:none;}
+.spinner-ring{width:44px;height:44px;border-radius:50%;border:3px solid rgba(12,30,58,.1);border-top-color:var(--sky);animation:spin .75s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+#authOverlay p{font-size:.88rem;color:var(--muted);font-weight:500;}
+.header-container{position:sticky;top:0;z-index:1000;background:var(--header-grad);border-bottom:1px solid rgba(255,255,255,.08);box-shadow:0 2px 20px rgba(12,30,58,.35);}
+.navbar{max-width:1440px;margin:0 auto;padding:0 22px;display:flex;align-items:center;justify-content:space-between;height:64px;gap:12px;}
+.brand-area{display:flex;align-items:center;gap:11px;text-decoration:none;flex-shrink:0;}
+.brand-logo{width:38px;height:38px;border-radius:9px;background:rgba(255,255,255,.12);box-shadow:0 0 0 1px rgba(255,255,255,.2),0 2px 8px rgba(0,0,0,.2);object-fit:cover;flex-shrink:0;}
+.brand-title{font-size:1.15rem;font-weight:700;color:#fff;letter-spacing:-.2px;}
+.nav-links{display:flex;gap:2px;align-items:center;}
+.nav-links a{display:flex;align-items:center;gap:5px;text-decoration:none;font-size:.8rem;font-weight:600;padding:6px 10px;color:rgba(255,255,255,.72);border-radius:var(--radius-sm);transition:all .18s;white-space:nowrap;}
+.nav-links a:hover{color:#fff;background:rgba(255,255,255,.1);}
+.nav-links a.nav-active{color:#fff;background:rgba(255,255,255,.15);}
+.umd-wrap{position:relative;}
+.umd-toggle{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:5px 12px 5px 5px;cursor:pointer;transition:background .18s;}
+.umd-toggle:hover{background:rgba(255,255,255,.18);}
+.umd-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--sky),var(--navy-mid));display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:700;color:#fff;flex-shrink:0;}
+.umd-name{font-size:.8rem;color:#fff;font-weight:600;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.umd-caret{font-size:.6rem;color:rgba(255,255,255,.7);}
+.umd-dropdown{display:none;position:absolute;right:0;top:calc(100% + 8px);background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);min-width:220px;overflow:hidden;z-index:200;}
+.umd-dropdown.open{display:block;}
+.umd-user-row{padding:14px 16px 10px;border-bottom:1px solid var(--border);}
+.umd-user-name{font-size:.88rem;font-weight:700;color:var(--navy);}
+.umd-user-email{font-size:.75rem;color:var(--muted);margin-top:2px;}
+.umd-section{display:flex;flex-direction:column;padding:6px;border-bottom:1px solid var(--border);}
+.umd-section:last-child{border-bottom:none;}
+.umd-link{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:var(--radius-sm);font-size:.84rem;font-weight:600;color:var(--text);text-decoration:none;background:none;border:none;cursor:pointer;width:100%;font-family:'DM Sans',sans-serif;transition:background .15s;}
+.umd-link:hover{background:var(--bg);}
+.umd-link.danger{color:#ef4444;}
+.umd-link.danger:hover{background:var(--danger-bg);}
+#nav-login{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.25);color:#fff;padding:7px 14px;border-radius:999px;font-weight:600;text-decoration:none;font-size:.82rem;}
+.hamburger{display:none;padding:7px 10px;border:1px solid rgba(255,255,255,.25);border-radius:var(--radius-sm);background:rgba(255,255,255,.1);cursor:pointer;color:#fff;font-size:1rem;transition:background .18s;}
+.hamburger:hover{background:rgba(255,255,255,.2);}
+@media(max-width:900px){.nav-links{display:none;}.hamburger{display:block;}}
+.drawer{display:none;position:fixed;top:72px;left:12px;right:12px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:8px;z-index:999;box-shadow:var(--shadow-lg);}
+.drawer a,.drawer button{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:var(--radius-sm);font-weight:600;font-size:.88rem;text-decoration:none;color:var(--text);background:none;border:none;cursor:pointer;width:100%;font-family:'DM Sans',sans-serif;transition:background .15s;}
+.drawer a:hover,.drawer button:hover{background:var(--bg);}
+.drawer a.nav-active{background:var(--sky-soft);color:var(--navy-mid);}
+.drawer-divider{height:1px;background:var(--border);margin:4px 0;}
+.drawer-signout{color:#ef4444!important;}
+main{flex:1;max-width:1440px;width:100%;margin:0 auto;padding:28px 22px 64px;animation:fadeUp .35s ease both;}
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:22px;}
+.page-title{font-size:1.65rem;font-weight:700;color:var(--navy);letter-spacing:-.4px;line-height:1.2;}
+.page-sub{font-size:.88rem;color:var(--muted);margin-top:4px;font-weight:500;}
+.page-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center;flex-shrink:0;}
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 16px;border-radius:var(--radius-md);border:1.5px solid var(--border);background:var(--card);color:var(--navy);font-family:'DM Sans',sans-serif;font-size:.83rem;font-weight:600;text-decoration:none;cursor:pointer;transition:all .16s;white-space:nowrap;}
+.btn:hover{background:var(--bg);border-color:#cbd5e1;transform:translateY(-1px);}
+.btn.primary{background:var(--header-grad);border-color:transparent;color:#fff;box-shadow:0 2px 10px rgba(12,30,58,.2);}
+.btn.primary:hover{filter:brightness(1.1);box-shadow:0 4px 16px rgba(12,30,58,.28);}
+.btn.sm{padding:6px 12px;font-size:.76rem;}
+.property-hero{background:var(--header-grad);border-radius:var(--radius-xl);padding:22px 28px 20px;margin-bottom:20px;position:relative;overflow:hidden;}
+.property-hero::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(45,140,240,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(45,140,240,.07) 1px,transparent 1px);background-size:36px 36px;pointer-events:none;}
+.property-hero::after{content:'🏘️';position:absolute;right:28px;top:50%;transform:translateY(-50%);font-size:4rem;opacity:.1;pointer-events:none;}
+.property-hero-inner{position:relative;z-index:1;}
+.property-hero-top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:16px;}
+.property-hero-name{font-size:1.3rem;font-weight:700;color:#fff;letter-spacing:-.3px;margin-bottom:4px;}
+.property-hero-address{font-size:.88rem;color:rgba(255,255,255,.65);font-weight:500;}
+.property-hero-actions{display:flex;gap:8px;flex-wrap:wrap;flex-shrink:0;}
+.hero-action-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:999px;font-size:.78rem;font-weight:700;cursor:pointer;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.12);color:#fff;font-family:'DM Sans',sans-serif;transition:background .18s;text-decoration:none;}
+.hero-action-btn:hover{background:rgba(255,255,255,.22);}
+.property-hero-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+@media(max-width:720px){.property-hero-stats{grid-template-columns:1fr 1fr;}}
+.hero-stat-label{font-size:.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.45);margin-bottom:4px;}
+.hero-stat-value{font-size:1rem;font-weight:700;color:#fff;font-family:'DM Mono',monospace;}
+.hero-stat-value.text-val{font-family:'DM Sans',sans-serif;font-size:.92rem;}
+.kpi-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px;}
+@media(max-width:720px){.kpi-strip{grid-template-columns:1fr 1fr;}}
+@media(max-width:460px){.kpi-strip{grid-template-columns:1fr;}}
+.kpi-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px 18px 16px;box-shadow:var(--shadow-sm);position:relative;overflow:hidden;transition:transform .18s,box-shadow .18s;}
+.kpi-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--header-grad);border-radius:var(--radius-lg) var(--radius-lg) 0 0;}
+.kpi-card.good-accent::before{background:linear-gradient(90deg,var(--success),#34d399);}
+.kpi-card.warn-accent::before{background:linear-gradient(90deg,#f59e0b,#fbbf24);}
+.kpi-card.sky-accent::before{background:linear-gradient(90deg,var(--sky),#38bdf8);}
+.kpi-label{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:8px;}
+.kpi-main{font-size:1.25rem;font-weight:700;color:var(--navy);letter-spacing:-.3px;font-family:'DM Mono',monospace;margin-bottom:4px;}
+.kpi-main.text-val{font-family:'DM Sans',sans-serif;font-size:1rem;}
+.kpi-meta{font-size:.78rem;color:var(--muted);font-weight:500;margin-top:3px;line-height:1.4;}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;}
+@media(max-width:720px){.detail-grid{grid-template-columns:1fr;}}
+.snapshot-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-xl);box-shadow:var(--shadow-sm);overflow:hidden;}
+.snapshot-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:16px 20px 0;flex-wrap:wrap;}
+.snapshot-title{font-size:.95rem;font-weight:700;color:var(--navy);display:flex;align-items:center;gap:7px;}
+.snapshot-body{padding:12px 20px 18px;}
+.snapshot-list{list-style:none;}
+.snapshot-list li{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:9px 0;border-bottom:1px solid #f1f5f9;font-size:.88rem;}
+.snapshot-list li:last-child{border-bottom:none;}
+.sl-key{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.35px;color:var(--muted);white-space:nowrap;flex-shrink:0;}
+.sl-val{font-family:'DM Mono',monospace;font-size:.85rem;color:var(--navy);text-align:right;font-weight:500;}
+.sl-val.text-val{font-family:'DM Sans',sans-serif;font-size:.88rem;font-weight:600;}
+.status-pill{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:999px;font-size:.75rem;font-weight:700;border:1px solid var(--border);background:#f8fafc;color:var(--muted);}
+.status-dot{width:8px;height:8px;border-radius:50%;background:#94a3b8;flex-shrink:0;}
+.status-dot.ok{background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.18);}
+.status-dot.warn{background:#f59e0b;box-shadow:0 0 0 3px rgba(245,158,11,.18);}
+.error-banner{display:none;margin-bottom:16px;padding:12px 16px;border-radius:var(--radius-md);border:1px solid var(--danger-bdr);background:var(--danger-bg);color:var(--danger-text);font-weight:600;font-size:.88rem;}
+.actions-section-title{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:12px;}
+.actions-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin-bottom:20px;}
+.action-card{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius-lg);padding:18px 12px 14px;cursor:pointer;transition:all .18s;text-decoration:none;color:var(--navy);}
+.action-card:hover{border-color:var(--sky);background:var(--sky-soft);transform:translateY(-3px);box-shadow:var(--shadow-md);}
+.action-icon{width:44px;height:44px;border-radius:11px;background:var(--card);border:1px solid var(--border);box-shadow:var(--shadow-sm);display:flex;align-items:center;justify-content:center;font-size:1.4rem;transition:transform .18s;}
+.action-card:hover .action-icon{transform:scale(1.1);}
+.action-label{font-size:.8rem;font-weight:700;color:var(--navy);line-height:1.3;}
+.section-title{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.section-title small{font-size:.72rem;font-weight:600;color:var(--muted);text-transform:none;letter-spacing:0;}
+.history-list{list-style:none;}
+.history-item{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px 16px;margin-bottom:8px;font-size:.88rem;transition:box-shadow .15s;}
+.history-item:hover{box-shadow:var(--shadow-sm);}
+.history-item-head{font-weight:700;color:var(--navy);margin-bottom:5px;}
+.history-item-meta{display:flex;flex-wrap:wrap;gap:10px;color:var(--muted);font-size:.78rem;font-weight:500;}
+.rg-badge{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:999px;font-size:11px;font-weight:700;background:#ef4444;color:#fff;margin-left:4px;line-height:1;}
+.rg-badge.hidden{display:none;}
+.mobile-nav{position:fixed;left:0;right:0;bottom:0;display:none;z-index:1200;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:var(--header-grad);border-top:1px solid rgba(255,255,255,.08);box-shadow:0 -4px 20px rgba(12,30,58,.25);}
+.mobile-nav-inner{max-width:1440px;margin:0 auto;display:grid;grid-template-columns:repeat(6,1fr);gap:5px;}
+.mnav{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:10px 8px;border-radius:8px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.07);color:rgba(255,255,255,.6);font-size:11px;font-weight:700;text-decoration:none;text-align:center;}
+.mnav .ico{font-size:22px;line-height:1;}
+.mnav.active{background:rgba(255,255,255,.18);color:#fff;border-color:rgba(255,255,255,.25);}
+.mobile-pad{display:none;height:86px;}
+@media(max-width:860px){.mobile-nav{display:block;}.mobile-pad{display:block;}}
+.site-footer{background:var(--navy);padding:28px 20px 20px;margin-top:40px;}
+.footer-content{max-width:1440px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:28px;padding-bottom:18px;}
+.footer-section h4{font-size:.75rem;font-weight:700;color:rgba(255,255,255,.75);text-transform:uppercase;letter-spacing:.8px;margin:0 0 12px;}
+.footer-section a,.footer-section p{display:block;color:rgba(255,255,255,.4);text-decoration:none;margin-bottom:8px;font-size:.82rem;}
+.footer-section a:hover{color:rgba(255,255,255,.85);}
+.footer-bottom{text-align:center;padding-top:14px;border-top:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.28);font-size:.82rem;}
+@media(max-width:600px){.site-footer{display:none;}}
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:999px;}
+@media(max-width:600px){main{padding:20px 14px 40px;}.page-title{font-size:1.35rem;}.property-hero{padding:16px 16px 14px;}.property-hero::after{display:none;}}
+</style>
+</head>
+<body>
+
+<div id="authOverlay">
+  <div class="spinner-ring"></div>
+  <p>Loading HOA info…</p>
+</div>
+
+<header class="header-container">
+  <div class="navbar">
+    <a class="brand-area" href="index.html">
+      <img src="images/rg-logo.png" class="brand-logo" alt="Rental Genie" onerror="this.style.display='none'" />
+      <span class="brand-title">Rental Genie</span>
+    </a>
+    <nav class="nav-links" aria-label="Main navigation">
+      <a href="dashboard.html">📊 Dashboard</a>
+      <a href="property-management.html" class="nav-active">🏘️ Properties <span class="rg-badge hidden" data-rg-badge="1"></span></a>
+      <a href="lease-rent-center.html">💰 Lease &amp; Rent <span class="rg-badge hidden" data-rg-badge="1"></span></a>
+      <a href="expense-tracking.html">💸 Expenses</a>
+      <a href="maintenance-requests.html">🛠 Maintenance <span class="rg-badge hidden" data-rg-badge="1"></span></a>
+      <a href="tenant-messages.html">💬 Messages</a>
+      <a href="reports-analytics.html">📈 Reports</a>
+    </nav>
+    <div class="umd-wrap" id="userMenu" style="display:none">
+      <button class="umd-toggle" id="umdToggle" aria-haspopup="true" aria-expanded="false">
+        <div class="umd-avatar" id="umdAvatar">?</div>
+        <span class="umd-name" id="umdName">User</span>
+        <span class="umd-caret">▾</span>
+      </button>
+      <div class="umd-dropdown" id="umdDropdown">
+        <div class="umd-user-row">
+          <div class="umd-user-name" id="umdFullName">—</div>
+          <div class="umd-user-email" id="umdEmail">—</div>
+        </div>
+        <div class="umd-section">
+          <a class="umd-link" href="dashboard.html">📊 Dashboard</a>
+          <a class="umd-link" id="overviewLink" href="property-overview.html">📋 Property Overview</a>
+          <a class="umd-link" href="account.html">⚙️ Account Settings</a>
+        </div>
+        <div class="umd-section">
+          <button class="umd-link danger" id="logoutBtn">🚪 Sign Out</button>
+        </div>
+      </div>
+    </div>
+    <a id="nav-login" href="login.html">Log in</a>
+    <button class="hamburger" id="hamburgerBtn" aria-label="Open menu">☰</button>
+  </div>
+</header>
+
+<div class="drawer" id="mobileDrawer">
+  <a href="dashboard.html">📊 Dashboard</a>
+  <a href="property-management.html" class="nav-active">🏘️ Property Management</a>
+  <a href="lease-rent-center.html">💰 Lease &amp; Rent</a>
+  <a href="expense-tracking.html">💸 Expenses</a>
+  <a href="maintenance-requests.html">🛠 Maintenance</a>
+  <a href="tenant-messages.html">💬 Messages</a>
+  <a href="reports-analytics.html">📈 Reports</a>
+  <div class="drawer-divider"></div>
+  <a href="account.html">⚙️ Account Settings</a>
+  <button class="drawer-signout" id="mobileLogoutBtn">🚪 Sign Out</button>
+</div>
+
+<main>
+  <div class="page-header">
+    <div>
+      <div class="page-title">🏘️ HOA Info</div>
+      <div class="page-sub">Homeowners Association details and payment history for your property.</div>
+    </div>
+    <div class="page-actions">
+      <a class="btn" id="backOverviewBtn" href="property-overview.html">← Overview</a>
+      <a class="btn primary" id="editHoaBtn" href="hoa-form.html">✏️ Edit HOA Info</a>
+    </div>
+  </div>
+
+  <div class="error-banner" id="errorBanner">⚠️ Couldn't load HOA data. Please refresh or try again.</div>
+
+  <div class="property-hero" id="propertyHero" style="display:none">
+    <div class="property-hero-inner">
+      <div class="property-hero-top">
+        <div>
+          <div class="property-hero-name" id="heroName">—</div>
+          <div class="property-hero-address" id="heroAddress">—</div>
+        </div>
+        <div class="property-hero-actions">
+          <a class="hero-action-btn" id="heroLeaseBtn" href="#">📄 Lease Center</a>
+          <a class="hero-action-btn" id="heroOverviewBtn" href="#">📋 Overview</a>
+        </div>
+      </div>
+      <div class="property-hero-stats">
+        <div><div class="hero-stat-label">HOA Name</div><div class="hero-stat-value text-val" id="heroHoaName">—</div></div>
+        <div><div class="hero-stat-label">Monthly Fee</div><div class="hero-stat-value" id="heroFee">—</div></div>
+        <div><div class="hero-stat-label">Annual Fee</div><div class="hero-stat-value" id="heroAnnual">—</div></div>
+        <div><div class="hero-stat-label">Due Day</div><div class="hero-stat-value text-val" id="heroDue">—</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="kpi-strip">
+    <div class="kpi-card sky-accent">
+      <div class="kpi-label">💵 Monthly Fee</div>
+      <div class="kpi-main" id="kpiMonthly">—</div>
+      <div class="kpi-meta" id="kpiAnnual">Annual: —</div>
+    </div>
+    <div class="kpi-card" id="kpiStatusCard">
+      <div class="kpi-label">🏘️ HOA</div>
+      <div class="kpi-main text-val" id="kpiHoaName">—</div>
+      <div class="kpi-meta" style="margin-top:6px">
+        <span class="status-pill"><span class="status-dot" id="statusDot"></span><span id="statusText">Loading…</span></span>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">📅 Next Due</div>
+      <div class="kpi-main text-val" id="kpiNextDue">—</div>
+      <div class="kpi-meta" id="kpiDueDay">Due day: —</div>
+    </div>
+  </div>
+
+  <div class="detail-grid">
+    <div class="snapshot-card">
+      <div class="snapshot-head">
+        <div class="snapshot-title">🏘️ HOA Details</div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <span class="status-pill" id="statusPill2" style="display:none"><span class="status-dot" id="statusDot2"></span><span id="statusText2">—</span></span>
+          <a class="btn sm" id="portalBtn" href="#" target="_blank" rel="noopener" style="display:none">🌐 Portal</a>
+        </div>
+      </div>
+      <div class="snapshot-body">
+        <ul class="snapshot-list">
+          <li><span class="sl-key">HOA Name</span><span class="sl-val text-val" id="hoaNameDisplay">—</span></li>
+          <li><span class="sl-key">Monthly Fee</span><span class="sl-val" id="feeDisplay">—</span></li>
+          <li><span class="sl-key">Annual Fee</span><span class="sl-val" id="annualDisplay">—</span></li>
+          <li><span class="sl-key">Due Day</span><span class="sl-val text-val" id="dueDayDisplay">—</span></li>
+          <li><span class="sl-key">Portal URL</span><span class="sl-val text-val" id="websiteDisplay">—</span></li>
+          <li><span class="sl-key">Notes</span><span class="sl-val text-val" id="notesDisplay">—</span></li>
+        </ul>
+      </div>
+    </div>
+    <div class="snapshot-card">
+      <div class="snapshot-head">
+        <div class="snapshot-title">👤 HOA Contact</div>
+        <button class="btn sm" id="copyAllBtn" type="button">📋 Copy All</button>
+      </div>
+      <div class="snapshot-body">
+        <ul class="snapshot-list">
+          <li><span class="sl-key">Contact Name</span><span class="sl-val text-val" id="contactNameDisplay">—</span></li>
+          <li><span class="sl-key">Phone</span><span class="sl-val text-val" id="contactPhoneDisplay">—</span></li>
+          <li><span class="sl-key">Email</span><span class="sl-val text-val" id="contactEmailDisplay">—</span></li>
+          <li><span class="sl-key">Address</span><span class="sl-val text-val" id="contactAddressDisplay">—</span></li>
+          <li><span class="sl-key">Office Hours</span><span class="sl-val text-val" id="officeHoursDisplay">—</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="actions-section-title">Quick Actions</div>
+  <div class="actions-grid">
+    <a class="action-card" id="actionEditHoa" href="hoa-form.html"><div class="action-icon">✏️</div><div class="action-label">Edit HOA Info</div></a>
+    <a class="action-card" id="actionPortal" href="#" target="_blank" rel="noopener" style="display:none"><div class="action-icon">🌐</div><div class="action-label">HOA Portal</div></a>
+    <a class="action-card" id="actionOverview" href="property-overview.html"><div class="action-icon">📋</div><div class="action-label">Property Overview</div></a>
+    <a class="action-card" id="actionLease" href="lease-rent-center.html"><div class="action-icon">📄</div><div class="action-label">Lease Center</div></a>
+    <a class="action-card" id="actionExpense" href="expense-tracking.html"><div class="action-icon">💸</div><div class="action-label">Expense Tracking</div></a>
+    <a class="action-card" id="actionMaintenance" href="maintenance-requests.html"><div class="action-icon">🛠️</div><div class="action-label">Maintenance</div></a>
+  </div>
+
+  <div>
+    <div class="section-title">
+      <span>📜 HOA History</span>
+      <small id="historyMeta">—</small>
+    </div>
+    <ul class="history-list" id="historyList">
+      <li class="history-item"><div class="history-item-head" style="color:var(--muted)">Loading history…</div></li>
+    </ul>
+  </div>
+</main>
+
+<div class="mobile-pad" aria-hidden="true"></div>
+
+<nav class="mobile-nav" aria-label="Mobile navigation">
+  <div class="mobile-nav-inner">
+    <a class="mnav" href="dashboard.html"><div class="ico">📊</div></a>
+    <a class="mnav active" href="property-management.html"><div class="ico">🏘️</div></a>
+    <a class="mnav" href="lease-rent-center.html"><div class="ico">💰</div></a>
+    <a class="mnav" href="expense-tracking.html"><div class="ico">💸</div></a>
+    <a class="mnav" href="maintenance-requests.html"><div class="ico">🛠️</div></a>
+    <a class="mnav" href="reports-analytics.html"><div class="ico">📈</div></a>
+  </div>
+</nav>
+
+<footer class="site-footer">
+  <div class="footer-content">
+    <div class="footer-section">
+      <h4>Navigate</h4>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="property-management.html">Property Management</a>
+      <a href="lease-rent-center.html">Lease &amp; Rent Center</a>
+      <a href="expense-tracking.html">Expense Tracking</a>
+    </div>
+    <div class="footer-section">
+      <h4>Support &amp; Legal</h4>
+      <a href="contact-us.html">Contact Us</a>
+      <a href="contact-us.html">Help Center</a>
+      <a href="terms.html">Terms of Service</a>
+      <a href="privacy.html">Privacy Policy</a>
+    </div>
+    <div class="footer-section">
+      <h4>Account</h4>
+      <a href="account.html">My Account</a>
+      <a href="invite-tenant.html">Invite Tenant</a>
+      <a href="tenant-portal.html">Tenant Portal</a>
+    </div>
+  </div>
+  <div class="footer-bottom">© <span id="footerYear"></span> Rental Genie. All rights reserved.</div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function(){
+  var mem=new Map(),ls=null;try{ls=window.localStorage;}catch(e){}
+  var wrap=function(s){return{getItem:function(k){try{return(s&&s.getItem(k))||mem.get(k)||null;}catch(e){return mem.get(k)||null;}},setItem:function(k,v){try{s&&s.setItem(k,v);}catch(e){}mem.set(k,v);},removeItem:function(k){try{s&&s.removeItem(k);}catch(e){}mem.delete(k);}};};
+  window._rgClient=window.supabase.createClient('https://pbojacnagutipfhcxltj.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBib2phY25hZ3V0aXBmaGN4bHRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgwMDkwODAsImV4cCI6MjA2MzU4NTA4MH0.ZLCcAzTYljoZycpBGwMtthP5VyAJ4schuIvt4HibGc0',{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,lock:undefined,storage:wrap(ls)}});
+}());
+var client=window._rgClient;
+
+function getParams(){return new URLSearchParams(location.search);}
+function getCompanyId(){return getParams().get('company_id')||'';}
+function getPropertyId(){return getParams().get('property_id')||getParams().get('id')||'';}
+function safe(v){return(v==null||v==='')?'—':String(v);}
+function money(v){var n=Number(v||0);if(!Number.isFinite(n))return'—';return n.toLocaleString(undefined,{style:'currency',currency:'USD'});}
+function setText(id,val){var e=document.getElementById(id);if(e)e.textContent=safe(val);}
+function hideOverlay(){var o=document.getElementById('authOverlay');if(o){o.classList.add('hidden');setTimeout(function(){o.style.display='none';},380);}}
+
+var propertyId=getPropertyId(),companyId=getCompanyId(),currentPropertyData=null;
+
+function navUrl(page){
+  var u=new URL(page,location.origin);
+  if(propertyId)u.searchParams.set('property_id',propertyId);
+  if(companyId)u.searchParams.set('company_id',companyId);
+  if(currentPropertyData&&currentPropertyData.name)u.searchParams.set('property',currentPropertyData.name);
+  return u.pathname+u.search;
+}
+function computeNextDue(d){
+  d=Number(d);if(!d||d<1||d>31)return null;
+  var now=new Date(),c=new Date(now.getFullYear(),now.getMonth(),d);
+  if(c>=new Date(now.getFullYear(),now.getMonth(),now.getDate()))return c;
+  return new Date(now.getFullYear(),now.getMonth()+1,d);
+}
+function fmtDate(dt){if(!dt)return'';try{return dt.toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'});}catch(e){return'';}}
+
+function setupAuth(){
+  return client.auth.getUser().then(function(res){
+    var user=res.data&&res.data.user;
+    var loginBtn=document.getElementById('nav-login'),userMenu=document.getElementById('userMenu');
+    if(!user){hideOverlay();return null;}
+    var uname=(user.user_metadata&&(user.user_metadata.full_name||user.user_metadata.name))||user.email.split('@')[0];
+    var initials=uname.substring(0,2).toUpperCase();
+    if(loginBtn)loginBtn.style.display='none';
+    if(userMenu)userMenu.style.display='block';
+    setText('umdAvatar',initials);setText('umdName',uname);setText('umdFullName',uname);
+    var em=document.getElementById('umdEmail');if(em)em.textContent=user.email||'';
+    client.auth.onAuthStateChange(function(ev){if(ev==='SIGNED_OUT')location.href='login.html';});
+    return user;
+  }).catch(function(){hideOverlay();return null;});
+}
+
+(function wireHeader(){
+  var tog=document.getElementById('umdToggle'),drop=document.getElementById('umdDropdown');
+  if(tog&&drop){
+    tog.addEventListener('click',function(e){e.stopPropagation();drop.classList.toggle('open');tog.setAttribute('aria-expanded',drop.classList.contains('open'));});
+    document.addEventListener('click',function(){drop.classList.remove('open');});
+  }
+  function doSignOut(){client.auth.signOut().catch(function(){}).then(function(){location.href='login.html';});}
+  var lb=document.getElementById('logoutBtn');if(lb)lb.addEventListener('click',doSignOut);
+  var mb=document.getElementById('mobileLogoutBtn');if(mb)mb.addEventListener('click',doSignOut);
+  var ham=document.getElementById('hamburgerBtn'),drw=document.getElementById('mobileDrawer');
+  if(ham&&drw){
+    ham.addEventListener('click',function(e){e.stopPropagation();drw.style.display=drw.style.display==='block'?'none':'block';});
+    document.addEventListener('click',function(e){if(drw.style.display==='block'&&!drw.contains(e.target)&&!ham.contains(e.target))drw.style.display='none';});
+  }
+}());
+
+function setStatus(kind,text){
+  ['statusDot','statusDot2'].forEach(function(id){var d=document.getElementById(id);if(!d)return;d.classList.remove('ok','warn');if(kind==='ok')d.classList.add('ok');if(kind==='warn')d.classList.add('warn');});
+  ['statusText','statusText2'].forEach(function(id){var e=document.getElementById(id);if(e)e.textContent=text||'—';});
+  var p2=document.getElementById('statusPill2');if(p2)p2.style.display=kind?'inline-flex':'none';
+  var kc=document.getElementById('kpiStatusCard');if(kc){kc.classList.remove('good-accent','warn-accent');if(kind==='ok')kc.classList.add('good-accent');if(kind==='warn')kc.classList.add('warn-accent');}
+}
+function showError(show){var b=document.getElementById('errorBanner');if(b)b.style.display=show?'block':'none';}
+
+function wireContextLinks(){
+  var ov=['backOverviewBtn','overviewLink','heroOverviewBtn','actionOverview'];
+  ov.forEach(function(id){var e=document.getElementById(id);if(e)e.href=navUrl('property-overview.html');});
+  var ls=['heroLeaseBtn','actionLease'];
+  ls.forEach(function(id){var e=document.getElementById(id);if(e)e.href=navUrl('lease-rent-center.html');});
+  ['editHoaBtn','actionEditHoa'].forEach(function(id){
+    var e=document.getElementById(id);if(!e)return;
+    var u=new URL('hoa-form.html',location.origin);
+    if(propertyId)u.searchParams.set('property_id',propertyId);
+    if(companyId)u.searchParams.set('company_id',companyId);
+    e.href=u.pathname+u.search;
+  });
+  var ex=document.getElementById('actionExpense');if(ex)ex.href=navUrl('expense-tracking.html');
+  var mn=document.getElementById('actionMaintenance');if(mn)mn.href=navUrl('maintenance-requests.html');
+}
+
+function setPortalLinks(url){
+  var show=url&&String(url).trim()!=='';
+  var pb=document.getElementById('portalBtn');if(pb){pb.style.display=show?'inline-flex':'none';if(show)pb.href=url;}
+  var ap=document.getElementById('actionPortal');if(ap){ap.style.display=show?'flex':'none';if(show)ap.href=url;}
+}
+
+function loadProperty(){
+  if(!propertyId){document.getElementById('propertyHero').style.display='none';return Promise.resolve();}
+  return client.from('properties').select('id,name,address,property_type,unit_type').eq('id',propertyId).single()
+    .then(function(res){
+      if(res.error||!res.data)return;
+      currentPropertyData=res.data;
+      var hero=document.getElementById('propertyHero');if(hero)hero.style.display='block';
+      setText('heroName',res.data.name);
+      setText('heroAddress',res.data.address||res.data.name);
+      wireContextLinks();
+    }).catch(function(e){console.error('loadProperty:',e);});
+}
+
+async function loadHOA(){
+  setStatus('warn','Loading…');showError(false);
+  if(!propertyId){setStatus('warn','No property selected');setText('kpiHoaName','No property');return;}
+  var res=await client.from('property_hoa').select('*').eq('property_id',propertyId).order('created_at',{ascending:false}).limit(1);
+  if((res.error||!res.data||!res.data.length)&&currentPropertyData&&currentPropertyData.name){
+    var fb=await client.from('property_hoa').select('*').eq('property_name',currentPropertyData.name).order('created_at',{ascending:false}).limit(1);
+    if(!fb.error)res=fb;
+  }
+  if(res.error){console.error('HOA load:',res.error);showError(true);setStatus('warn','Load error');return;}
+  if(!res.data||!res.data.length){
+    setStatus('warn','No HOA on file');setText('kpiHoaName','No HOA on file');setText('kpiMonthly','—');setText('kpiAnnual','Annual: —');setText('kpiNextDue','—');setText('kpiDueDay','Due day: —');
+    setText('heroHoaName','No HOA on file');setText('heroFee','—');setText('heroAnnual','—');setText('heroDue','—');
+    ['hoaNameDisplay','feeDisplay','annualDisplay','dueDayDisplay','websiteDisplay','notesDisplay','contactNameDisplay','contactPhoneDisplay','contactEmailDisplay','contactAddressDisplay','officeHoursDisplay'].forEach(function(id){setText(id,'—');});
+    setPortalLinks(null);return;
+  }
+  var info=res.data[0];
+  var fee=info.fee_amount!=null?Number(info.fee_amount):null;
+  var annual=fee!==null?fee*12:null;
+  var dueDay=info.due_day!=null?Number(info.due_day):null;
+  var nextDue=computeNextDue(dueDay);
+  setText('heroHoaName',info.hoa_name||'—');setText('heroFee',fee!==null?money(fee):'—');setText('heroAnnual',annual!==null?money(annual):'—');setText('heroDue',dueDay?'Day '+dueDay:'—');
+  setText('kpiMonthly',fee!==null?money(fee):'—');setText('kpiAnnual',annual!==null?'Annual: '+money(annual):'Annual: —');
+  setText('kpiHoaName',info.hoa_name||'—');setText('kpiNextDue',nextDue?fmtDate(nextDue):'—');setText('kpiDueDay',dueDay?'Due on day '+dueDay+' of month':'Due day: —');
+  setText('hoaNameDisplay',info.hoa_name||'—');setText('feeDisplay',fee!==null?money(fee)+'/mo':'—');setText('annualDisplay',annual!==null?money(annual)+'/yr':'—');
+  setText('dueDayDisplay',dueDay?'Day '+dueDay+' of each month':'—');setText('notesDisplay',info.notes||'—');
+  var url=(info.website||info.portal_url||info.hoa_portal_url||'').trim();
+  if(url){
+    var we=document.getElementById('websiteDisplay');
+    if(we)we.innerHTML='<a href="'+url+'" target="_blank" rel="noopener" style="color:var(--sky);text-decoration:none;font-weight:600;">'+url+'</a>';
+    setPortalLinks(url);
+  }else{setText('websiteDisplay','—');setPortalLinks(null);}
+  var phone=(info.contact_phone||'').trim(),email=(info.contact_email||'').trim();
+  var pe=document.getElementById('contactPhoneDisplay');
+  if(pe)pe.innerHTML=phone?'<a href="tel:'+phone.replace(/[^\d+]/g,'')+'" style="color:var(--sky);text-decoration:none;font-weight:600;">'+phone+'</a>':'—';
+  var ee=document.getElementById('contactEmailDisplay');
+  if(ee)ee.innerHTML=email?'<a href="mailto:'+email+'" style="color:var(--sky);text-decoration:none;font-weight:600;">'+email+'</a>':'—';
+  setText('contactNameDisplay',info.contact_name||'—');
+  setText('contactAddressDisplay',info.contact_address||info.hoa_address||'—');
+  setText('officeHoursDisplay',info.office_hours||'—');
+  setStatus('ok','Up to date');
+}
+
+async function loadHOAHistory(){
+  var listEl=document.getElementById('historyList'),metaEl=document.getElementById('historyMeta');
+  if(!listEl)return;
+  if(!propertyId){listEl.innerHTML='<li class="history-item"><div class="history-item-head" style="color:var(--muted)">No property selected.</div></li>';return;}
+  var res=await client.from('hoa_history').select('*').eq('property_id',propertyId).order('created_at',{ascending:false});
+  if((res.error||!res.data||!res.data.length)&&currentPropertyData&&currentPropertyData.name){
+    var fb=await client.from('hoa_history').select('*').eq('property_name',currentPropertyData.name).order('created_at',{ascending:false});
+    if(!fb.error)res=fb;
+  }
+  if(res.error){listEl.innerHTML='<li class="history-item"><div class="history-item-head" style="color:var(--danger-text)">Error loading history.</div></li>';return;}
+  var rows=res.data||[];
+  if(metaEl)metaEl.textContent=rows.length+' record'+(rows.length===1?'':'s');
+  if(!rows.length){listEl.innerHTML='<li class="history-item"><div class="history-item-head" style="color:var(--muted)">No HOA history recorded yet.</div></li>';return;}
+  listEl.innerHTML=rows.map(function(h){
+    var ds=h.created_at?new Date(h.created_at).toLocaleString():'Unknown date';
+    var fs=(h.fee_amount!=null&&!Number.isNaN(Number(h.fee_amount)))?money(Number(h.fee_amount)):'—';
+    var act=(h.action||'update').toString(),by=(h.updated_by||'').toString(),note=(h.notes||'').toString();
+    return '<li class="history-item"><div class="history-item-head">📅 '+ds+' — '+act+'</div><div class="history-item-meta"><span>💵 Fee: '+fs+'</span>'+(by?'<span>👤 '+by+'</span>':'')+(note?'<span>📝 '+note+'</span>':'')+'</div></li>';
+  }).join('');
+}
+
+document.getElementById('copyAllBtn').addEventListener('click',function(){
+  var parts=['contactNameDisplay','contactPhoneDisplay','contactEmailDisplay','contactAddressDisplay']
+    .map(function(id){var e=document.getElementById(id);return e?e.textContent:'';})
+    .filter(function(t){return t&&t!=='—';}).join('\n');
+  if(!parts)return;
+  navigator.clipboard.writeText(parts).then(function(){
+    var btn=document.getElementById('copyAllBtn');
+    if(btn){btn.textContent='Copied ✓';setTimeout(function(){btn.textContent='📋 Copy All';},1200);}
+  }).catch(function(){});
+});
+
+(function(){
+  var KEY='rg_genie_memory_v1';
+  function readMem(){try{return JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){return{};}}
+  function basename(href){try{return new URL(href,location.href).pathname.split('/').pop()||'';}catch(e){return(href||'').split('?')[0].split('#')[0].split('/').pop();}}
+  function setBadge(a,count){if(!a)return;var b=a.querySelector('.rg-badge[data-rg-badge="1"]');if(!b){b=document.createElement('span');b.className='rg-badge hidden';b.setAttribute('data-rg-badge','1');a.appendChild(b);}var n=Number(count||0)||0;b.textContent=n>0?(n>99?'99+':String(n)):'';b.classList.toggle('hidden',n<=0);}
+  function apply(){var mem=readMem(),badges=mem.badges||{};
+    var pA=Number(mem.property_attention_count||badges.property_attention_count||0)||0;
+    var lA=Number(mem.lease_rent_attention_count||badges.lease_rent_attention_count||0)||0;
+    var mO=Number(mem.maintenance_open_count||badges.maintenance_open_count||0)||0;
+    document.querySelectorAll('a[href]').forEach(function(a){
+      var f=basename(a.getAttribute('href')||'');
+      if(['property-management.html','property-overview.html','hoa-info.html'].includes(f))setBadge(a,pA);
+      if(['lease-rent-center.html'].includes(f))setBadge(a,lA);
+      if(['maintenance-requests.html'].includes(f))setBadge(a,mO);
+    });
+  }
+  document.addEventListener('DOMContentLoaded',apply);
+}());
+
+document.getElementById('footerYear').textContent=new Date().getFullYear();
+document.addEventListener('DOMContentLoaded',function(){
+  setTimeout(hideOverlay,5000);
+  wireContextLinks();
+  setupAuth().then(function(){
+    hideOverlay();
+    return loadProperty();
+  }).then(function(){
+    return Promise.all([loadHOA(),loadHOAHistory()]);
+  });
+});
+</script>
+</body>
+</html>

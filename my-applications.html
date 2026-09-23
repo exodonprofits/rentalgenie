@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>My Applications – Rental Genie</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap">
+<style>
+:root{
+  --navy:#0c1e3a; --navy-mid:#1a3a6b; --navy-light:#1e5799; --sky:#2d8cf0;
+  --border:#e2e8f0; --bg:#f1f4f8; --card:#ffffff; --text:#0c1e3a; --muted:#64748b;
+  --success:#10b981; --success-bg:#ecfdf5; --danger:#ef4444;
+  --header-grad: linear-gradient(135deg,#0c1e3a 0%,#1a3a6b 55%,#1e5799 100%);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{overflow-x:hidden;}
+body{font-family:'DM Sans',-apple-system,sans-serif; background:var(--bg); color:var(--text); min-height:100vh;}
+.header-container{position:sticky; top:0; z-index:1000; background:var(--header-grad); box-shadow:0 2px 20px rgba(12,30,58,.35);}
+.navbar{max-width:1100px; margin:0 auto; padding:10px 22px; display:flex; align-items:center; justify-content:space-between; min-height:64px; gap:10px; flex-wrap:wrap;}
+.brand-area{display:flex; align-items:center; gap:11px; text-decoration:none;}
+.brand-logo{width:36px; height:36px; border-radius:9px; background:rgba(255,255,255,.12);}
+.brand-title{font-size:1.1rem; font-weight:700; color:#fff;}
+.logout-btn{background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.28); color:#fff; padding:8px 16px; border-radius:999px; font-size:.82rem; font-weight:600; cursor:pointer;}
+
+.page{max-width:900px; margin:32px auto 60px; padding:0 20px;}
+h1{font-size:1.5rem; font-weight:800; color:var(--navy);}
+.subtitle{color:var(--muted); font-size:.9rem; margin:4px 0 24px;}
+
+.app-card{background:var(--card); border-radius:16px; border:1px solid var(--border); box-shadow:0 1px 4px rgba(12,30,58,.06); margin-bottom:18px; overflow:hidden;}
+.app-card-header{padding:18px 22px; display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; cursor:pointer;}
+.app-card-title{font-size:1.02rem; font-weight:700; color:var(--navy);}
+.app-card-addr{font-size:.84rem; color:var(--muted); margin-top:2px;}
+.app-card-date{font-size:.78rem; color:var(--muted); margin-top:4px;}
+
+.status-pill{padding:5px 12px; border-radius:999px; font-size:.78rem; font-weight:700; white-space:nowrap;}
+.status-pill.submitted{background:#eff6ff; color:#1e40af;}
+.status-pill.reviewed{background:#fffbeb; color:#92400e;}
+.status-pill.approved{background:var(--success-bg); color:#166534;}
+.status-pill.denied{background:#fef2f2; color:#7f1d1d;}
+
+.app-card-body{display:none; padding:0 22px 22px; border-top:1px solid var(--border);}
+.app-card-body.open{display:block;}
+
+.screening-row{display:flex; align-items:center; gap:10px; margin:16px 0; padding:12px 14px; background:var(--bg); border-radius:10px; font-size:.85rem;}
+.screening-pill{padding:3px 9px; border-radius:999px; font-size:.72rem; font-weight:700; background:#eef2ff; color:#4338ca;}
+
+.thread{margin-top:18px;}
+.thread h3{font-size:.9rem; font-weight:700; color:var(--navy); margin-bottom:10px;}
+.msg-list{display:flex; flex-direction:column; gap:8px; max-height:280px; overflow-y:auto; padding-right:4px;}
+.msg{max-width:80%; padding:9px 13px; border-radius:12px; font-size:.86rem; line-height:1.4;}
+.msg.applicant{align-self:flex-end; background:linear-gradient(135deg,var(--navy),var(--sky)); color:#fff; border-bottom-right-radius:3px;}
+.msg.landlord{align-self:flex-start; background:var(--bg); color:var(--text); border-bottom-left-radius:3px;}
+.msg-time{font-size:.68rem; opacity:.7; margin-top:3px;}
+.msg-empty{color:var(--muted); font-size:.85rem; padding:10px 0;}
+
+.msg-form{display:flex; gap:8px; margin-top:12px;}
+.msg-form input{flex:1; padding:10px 13px; border-radius:10px; border:1px solid #cbd5e1; font-family:'DM Sans',sans-serif; font-size:.88rem;}
+.msg-form button{padding:10px 18px; border-radius:10px; border:none; background:var(--navy); color:#fff; font-weight:700; font-size:.85rem; cursor:pointer;}
+.msg-form button:disabled{opacity:.6;}
+
+.empty-state{text-align:center; padding:60px 20px; color:var(--muted);}
+.empty-state h3{color:var(--navy); margin-bottom:8px;}
+.loading{text-align:center; padding:40px; color:var(--muted); font-size:.9rem;}
+</style>
+</head>
+<body>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<header class="header-container">
+  <div class="navbar">
+    <a href="listings.html" class="brand-area">
+      <img src="images/rg-logo.png" class="brand-logo" alt="" onerror="this.style.display='none'" />
+      <span class="brand-title">Rental Genie</span>
+    </a>
+    <button class="logout-btn" id="logoutBtn">Sign Out</button>
+  </div>
+</header>
+
+<main class="page">
+  <h1>My Applications</h1>
+  <p class="subtitle">Track the status of every rental application you've submitted, and message the landlord directly.</p>
+  <div id="appsContainer"><div class="loading">Loading your applications…</div></div>
+</main>
+
+<script>
+const sb = window.supabase.createClient(
+  "https://pbojacnagutipfhcxltj.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBib2phY25hZ3V0aXBmaGN4bHRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgwMDkwODAsImV4cCI6MjA2MzU4NTA4MH0.ZLCcAzTYljoZycpBGwMtthP5VyAJ4schuIvt4HibGc0"
+);
+
+function $(id){ return document.getElementById(id); }
+function escapeHtml(s){
+  return String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+
+const SCREENING_LABELS = {
+  not_requested: { text: "Not Requested", cls: "" },
+  requested: { text: "Screening In Progress", cls: "" },
+  completed: { text: "Screening Complete", cls: "" },
+  failed: { text: "Screening Failed", cls: "" },
+};
+
+async function init(){
+  const { data: sessionData } = await sb.auth.getSession();
+  if (!sessionData || !sessionData.session){
+    window.location.href = "applicant-login.html";
+    return;
+  }
+
+  // Link any past applications submitted with this email to this account.
+  try { await sb.rpc("claim_my_applications"); } catch(e){ /* non-fatal */ }
+
+  await loadApplications();
+}
+
+async function loadApplications(){
+  const container = $("appsContainer");
+
+  const { data: applications, error } = await sb
+    .from("applications")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error){
+    container.innerHTML = `<div class="empty-state"><h3>Couldn't load your applications</h3><p>${escapeHtml(error.message)}</p></div>`;
+    return;
+  }
+
+  if (!applications || !applications.length){
+    container.innerHTML = `<div class="empty-state"><h3>No applications yet</h3><p>Once you apply to a listing, it'll show up here.</p></div>`;
+    return;
+  }
+
+  container.innerHTML = applications.map(a => {
+    const screening = SCREENING_LABELS[a.screening_status] || SCREENING_LABELS.not_requested;
+    return `
+      <div class="app-card" data-id="${a.id}">
+        <div class="app-card-header" data-toggle="${a.id}">
+          <div>
+            <div class="app-card-title">${escapeHtml(a.property_name || "Property")}</div>
+            <div class="app-card-addr">${escapeHtml(a.property_address || "")}</div>
+            <div class="app-card-date">Applied ${new Date(a.created_at).toLocaleDateString()}</div>
+          </div>
+          <span class="status-pill ${a.status}">${a.status}</span>
+        </div>
+        <div class="app-card-body" id="body-${a.id}">
+          <div class="screening-row">
+            🔍 Background/credit screening:
+            <span class="screening-pill">${screening.text}</span>
+          </div>
+          <div class="thread">
+            <h3>💬 Messages with the landlord</h3>
+            <div class="msg-list" id="msgs-${a.id}"><div class="msg-empty">Loading messages…</div></div>
+            <div class="msg-form">
+              <input type="text" id="msgInput-${a.id}" placeholder="Write a message…" />
+              <button type="button" data-send="${a.id}">Send</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  container.querySelectorAll("[data-toggle]").forEach(el => {
+    el.addEventListener("click", () => {
+      const id = el.getAttribute("data-toggle");
+      const body = $("body-" + id);
+      const wasOpen = body.classList.contains("open");
+      body.classList.toggle("open");
+      if (!wasOpen) loadMessages(id);
+    });
+  });
+
+  container.querySelectorAll("[data-send]").forEach(btn => {
+    btn.addEventListener("click", () => sendMessage(btn.getAttribute("data-send")));
+  });
+}
+
+async function loadMessages(applicationId){
+  const list = $("msgs-" + applicationId);
+  const { data, error } = await sb
+    .from("application_messages")
+    .select("*")
+    .eq("application_id", applicationId)
+    .order("created_at", { ascending: true });
+
+  if (error){
+    list.innerHTML = `<div class="msg-empty">Couldn't load messages: ${escapeHtml(error.message)}</div>`;
+    return;
+  }
+  if (!data || !data.length){
+    list.innerHTML = `<div class="msg-empty">No messages yet — say hello!</div>`;
+    return;
+  }
+
+  list.innerHTML = data.map(m => `
+    <div class="msg ${m.sender_role}">
+      ${escapeHtml(m.message)}
+      <div class="msg-time">${new Date(m.created_at).toLocaleString()}</div>
+    </div>
+  `).join("");
+  list.scrollTop = list.scrollHeight;
+}
+
+async function sendMessage(applicationId){
+  const input = $("msgInput-" + applicationId);
+  const text = input.value.trim();
+  if (!text) return;
+
+  input.disabled = true;
+  const { error } = await sb.from("application_messages").insert({
+    application_id: applicationId,
+    sender_role: "applicant",
+    message: text
+  });
+  input.disabled = false;
+
+  if (error){
+    alert("Couldn't send message: " + error.message);
+    return;
+  }
+  input.value = "";
+  loadMessages(applicationId);
+}
+
+$("logoutBtn").addEventListener("click", async () => {
+  await sb.auth.signOut();
+  window.location.href = "applicant-login.html";
+});
+
+init();
+</script>
+</body>
+</html>

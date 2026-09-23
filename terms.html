@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Terms of Service – Rental Genie</title>
+<meta name="description" content="The terms that apply when you use Rental Genie." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap">
+<style>
+:root {
+  --navy:#0c1e3a; --navy-mid:#1a3a6b; --navy-light:#1e5799;
+  --sky:#2d8cf0; --border:#e2e8f0; --bg:#f1f4f8;
+  --card:#ffffff; --text:#0c1e3a; --muted:#64748b;
+  --radius-sm:8px; --radius-md:12px; --radius-lg:16px;
+  --shadow-md:0 4px 16px rgba(12,30,58,.09);
+  --shadow-lg:0 8px 32px rgba(12,30,58,.14);
+  --header-grad:linear-gradient(135deg,#0c1e3a 0%,#1a3a6b 55%,#1e5799 100%);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;}
+body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;}
+
+/* ── Header ── */
+.header-container{position:sticky;top:0;z-index:1000;background:var(--header-grad);border-bottom:1px solid rgba(255,255,255,.08);box-shadow:0 2px 20px rgba(12,30,58,.35);}
+.navbar{max-width:1440px;margin:0 auto;padding:0 22px;display:flex;align-items:center;justify-content:space-between;height:64px;gap:12px;}
+.brand-area{display:flex;align-items:center;gap:11px;text-decoration:none;flex-shrink:0;}
+.brand-logo{width:38px;height:38px;border-radius:9px;background:rgba(255,255,255,.12);box-shadow:0 0 0 1px rgba(255,255,255,.2),0 2px 8px rgba(0,0,0,.2);object-fit:cover;flex-shrink:0;}
+.brand-title{font-size:1.15rem;font-weight:700;color:#fff;letter-spacing:-.2px;}
+.nav-links{display:flex;gap:2px;align-items:center;}
+.nav-links a{display:flex;align-items:center;gap:5px;text-decoration:none;font-size:.8rem;font-weight:600;padding:6px 10px;color:rgba(255,255,255,.72);border-radius:var(--radius-sm);transition:all .18s;white-space:nowrap;}
+.nav-links a:hover{color:#fff;background:rgba(255,255,255,.1);}
+.nav-links a.nav-active{color:#fff;background:rgba(255,255,255,.15);}
+/* UMD */
+.umd-wrap{position:relative;z-index:1100;}
+.umd-toggle{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:5px 12px 5px 5px;cursor:pointer;transition:background .18s;}
+.umd-toggle:hover{background:rgba(255,255,255,.18);}
+.umd-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--sky),var(--navy-mid));display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:700;color:#fff;flex-shrink:0;}
+.umd-name{font-size:.8rem;color:#fff;font-weight:600;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.umd-caret{font-size:.6rem;color:rgba(255,255,255,.7);}
+.umd-dropdown{display:none;position:absolute;right:0;top:calc(100% + 8px);background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);min-width:220px;overflow:hidden;z-index:1200;}
+.umd-dropdown.open{display:block;}
+.umd-user-row{padding:14px 16px 10px;border-bottom:1px solid var(--border);}
+.umd-user-name{font-size:.88rem;font-weight:700;color:var(--navy);}
+.umd-user-email{font-size:.75rem;color:var(--muted);margin-top:2px;}
+.umd-section{display:flex;flex-direction:column;padding:6px;border-bottom:1px solid var(--border);}
+.umd-section:last-child{border-bottom:none;}
+.umd-link{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:var(--radius-sm);font-size:.84rem;font-weight:600;color:var(--text);text-decoration:none;background:none;border:none;cursor:pointer;width:100%;font-family:'DM Sans',sans-serif;transition:background .15s;}
+.umd-link:hover{background:var(--bg);}
+.umd-link.danger{color:#dc2626;}
+.umd-link.danger:hover{background:#fef2f2;}
+#nav-login{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.25);color:#fff;padding:7px 14px;border-radius:999px;font-weight:600;text-decoration:none;font-size:.82rem;}
+.hamburger{display:none;padding:7px 10px;border:1px solid rgba(255,255,255,.25);border-radius:var(--radius-sm);background:rgba(255,255,255,.1);cursor:pointer;color:#fff;font-size:1rem;}
+body.auth-guest .umd-wrap{display:none!important;}
+body.auth-ready #nav-login{display:none!important;}
+@media(min-width:901px){body.auth-ready .umd-wrap{display:inline-flex!important;}}
+@media(max-width:900px){.nav-links{display:none;}.hamburger{display:block;}.umd-wrap{display:none!important;}#nav-login{display:none!important;}}
+/* Drawer */
+.drawer{display:none;position:fixed;top:72px;left:12px;right:12px;background:#fff;border:1px solid var(--border);border-radius:18px;z-index:1300;box-shadow:var(--shadow-lg);overflow:hidden;}
+.drawer-user-row{display:flex!important;align-items:center;gap:12px;padding:16px 16px 14px!important;border-bottom:1px solid var(--border)!important;background:#fafbfc;text-decoration:none;}
+.drawer-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--navy-mid),var(--navy-light));color:#fff;font-weight:700;font-size:.78rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;text-transform:uppercase;}
+.drawer-username{font-weight:700;font-size:.95rem;color:var(--navy)!important;}
+.drawer-grid{display:grid;grid-template-columns:1fr 1fr;padding:8px 10px;gap:2px;}
+.drawer-grid-divider{grid-column:1/-1;height:1px;background:var(--border);margin:2px 0;}
+.drawer-grid a{display:flex;align-items:center;gap:8px;padding:11px 10px;font-weight:600;font-size:.88rem;color:var(--navy)!important;text-decoration:none;border-radius:9px;transition:background .12s;}
+.drawer-grid a:hover{background:#eff4ff;}
+.drawer-login{display:block;padding:11px 16px;font-weight:600;color:var(--navy)!important;font-size:.9rem;border-top:1px solid var(--border);text-decoration:none;}
+#mobileLogoutContainer{border-top:1px solid var(--border);padding:6px 10px 8px;}
+#mobileLogoutContainer button{width:100%;padding:10px;background:none;border:none;text-align:left;font-weight:700;color:#dc2626;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.9rem;border-radius:8px;}
+
+/* ── Main ── */
+main{flex:1;max-width:860px;margin:0 auto;padding:40px 22px 60px;width:100%;}
+.page-hero{margin-bottom:36px;}
+.page-hero h1{font-size:1.8rem;font-weight:700;color:var(--navy);letter-spacing:-.3px;margin-bottom:8px;}
+.page-hero p{color:var(--muted);font-size:.9rem;}
+.legal-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:32px;box-shadow:var(--shadow-md);margin-bottom:24px;}
+.legal-card h2{font-size:1.05rem;font-weight:700;color:var(--navy);margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border);}
+.legal-card p{font-size:.88rem;line-height:1.75;color:#334155;margin-bottom:12px;}
+.legal-card p:last-child{margin-bottom:0;}
+.legal-card ul{font-size:.88rem;line-height:1.75;color:#334155;padding-left:20px;margin-bottom:12px;}
+.legal-card ul li{margin-bottom:6px;}
+.updated{font-size:.78rem;color:var(--muted);margin-bottom:28px;}
+
+/* ── Footer ── */
+.site-footer{background:var(--navy);padding:36px 22px 20px;margin-top:auto;}
+.footer-content{max-width:1440px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:32px;margin-bottom:28px;}
+.footer-section h4{color:rgba(255,255,255,.5);font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px;}
+.footer-section a{display:block;color:rgba(255,255,255,.65);text-decoration:none;font-size:.82rem;margin-bottom:7px;transition:color .15s;}
+.footer-section a:hover{color:#fff;}
+.footer-bottom{max-width:1440px;margin:0 auto;text-align:center;color:rgba(255,255,255,.28);font-size:.78rem;border-top:1px solid rgba(255,255,255,.08);padding-top:18px;}
+@media(max-width:600px){.footer-content{grid-template-columns:1fr 1fr;}.site-footer{display:block;}}
+
+/* ── Public (guest) navigation ── */
+.nav-links a.guest-cta{background:#e3b04b;color:#0c1e3a;border-radius:999px;padding:7px 14px;margin-left:4px;}
+.nav-links a.guest-cta:hover{background:#edc066;color:#0c1e3a;}
+body.auth-guest .app-only{display:none!important;}
+body.auth-ready .guest-only{display:none!important;}
+body.auth-guest #mobileLogin{display:block!important;}
+body.auth-guest #mobileAccountLink{display:none!important;}
+/* ── Legal content ── */
+.summary-card{background:#0c1e3a;color:#fff;border-radius:var(--radius-lg);padding:26px 30px;margin-bottom:24px;}
+.summary-card h2{font-size:1.05rem;margin-bottom:10px;}
+.summary-card ul{padding-left:20px;font-size:.9rem;line-height:1.7;color:rgba(255,255,255,.85);}
+.summary-card li{margin-bottom:6px;}
+.legal-card h3{font-size:.92rem;font-weight:700;color:var(--navy);margin:16px 0 6px;}
+.legal-card a{color:var(--navy-light);font-weight:600;}
+mark.fill{background:#fff3c4;color:#7a5400;padding:0 4px;border-radius:4px;font-weight:700;}
+</style>
+</head>
+<body class="auth-guest">
+
+<!-- ═══ SUPABASE (body-first) ═══ -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function(){
+  try{
+    var _m=new Map(),_l=null;try{_l=window.localStorage;}catch(e){}
+    var _s={getItem:function(k){try{return(_l&&_l.getItem(k))||_m.get(k)||null;}catch(e){return _m.get(k)||null;}},setItem:function(k,v){try{_l&&_l.setItem(k,v);}catch(e){}_m.set(k,v);},removeItem:function(k){try{_l&&_l.removeItem(k);}catch(e){}_m.delete(k);}};
+    window._rgClient=window._rgClient||window.supabase.createClient('https://pbojacnagutipfhcxltj.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBib2phY25hZ3V0aXBmaGN4bHRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgwMDkwODAsImV4cCI6MjA2MzU4NTA4MH0.ZLCcAzTYljoZycpBGwMtthP5VyAJ4schuIvt4HibGc0',{auth:{lock:undefined,persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storage:_s}});
+    window.sb=window.client=window._rgClient;
+  }catch(e){console.error('RG bootstrap failed:',e);}
+})();
+</script>
+<!-- ═══════════════════════════════ -->
+
+<header class="header-container">
+  <div class="navbar">
+    <a class="brand-area" href="index.html">
+      <img src="images/rg-logo.png" class="brand-logo" alt="Rental Genie" onerror="this.style.display='none'" />
+      <span class="brand-title">Rental Genie</span>
+    </a>
+    <nav class="nav-links" aria-label="Main navigation">
+      <a class="app-only" href="dashboard.html">📊 Dashboard</a>
+      <a class="app-only" href="property-management.html">🏘️ Properties</a>
+      <a class="app-only" href="lease-rent-center.html">💰 Lease &amp; Rent</a>
+      <a class="app-only" href="expense-tracking.html">💸 Expenses</a>
+      <a class="app-only" href="maintenance-requests.html">🛠 Maintenance</a>
+      <a class="app-only" href="reports-analytics.html">📈 Reports</a>
+      <a class="guest-only" href="index.html">Home</a>
+      <a class="guest-only" href="index.html#pricing">Pricing</a>
+      <a class="guest-only" href="index.html#faq">FAQ</a>
+      <a class="guest-only guest-cta" href="signup.html">Create free account</a>
+    </nav>
+    <div class="umd-wrap" id="userMenu" style="display:none">
+      <button class="umd-toggle" id="umdToggle" aria-haspopup="true" aria-expanded="false">
+        <div class="umd-avatar" id="umdAvatar">?</div>
+        <span class="umd-name" id="umdName">User</span>
+        <span class="umd-caret">▾</span>
+      </button>
+      <div class="umd-dropdown" id="umdDropdown">
+        <div class="umd-user-row">
+          <div class="umd-user-name" id="umdFullName">—</div>
+          <div class="umd-user-email" id="umdEmail">—</div>
+        </div>
+        <div class="umd-section">
+          <a class="umd-link" href="dashboard.html">📊 Dashboard</a>
+          <a class="umd-link" href="account.html">⚙️ Account Settings</a>
+          <a class="umd-link" href="invite-tenant.html">✉️ Invite Tenant</a>
+        </div>
+        <div class="umd-section">
+          <a class="umd-link" href="reports-analytics.html">📈 Reports &amp; Analytics</a>
+          <a class="umd-link" href="contact-us.html">💬 Contact Support</a>
+        </div>
+        <div class="umd-section">
+          <button class="umd-link danger" id="logoutBtn">🚪 Sign Out</button>
+        </div>
+      </div>
+    </div>
+    <a id="nav-login" href="login.html">Log in</a>
+    <button class="hamburger" id="hamburgerBtn" aria-label="Open menu">☰</button>
+  </div>
+</header>
+
+<div class="drawer" id="mobileDrawer">
+  <a href="account.html" id="mobileAccountLink" style="display:none;" class="drawer-user-row">
+    <span class="drawer-avatar" id="drawerAvatar">?</span>
+    <span class="drawer-username" id="mobileUsernameLabel">Account</span>
+  </a>
+  <div class="drawer-grid app-only">
+    <a href="dashboard.html">📊 Dashboard</a>
+    <a href="property-management.html">🏘️ Properties</a>
+    <div class="drawer-grid-divider"></div>
+    <a href="lease-rent-center.html">💰 Lease &amp; Rent</a>
+    <a href="expense-tracking.html">💸 Expenses</a>
+    <div class="drawer-grid-divider"></div>
+    <a href="maintenance-requests.html">🛠 Maintenance</a>
+    <a href="reports-analytics.html">📈 Reports</a>
+  </div>
+  <div class="drawer-grid guest-only">
+    <a href="index.html">Home</a>
+    <a href="index.html#pricing">Pricing</a>
+    <div class="drawer-grid-divider"></div>
+    <a href="index.html#faq">FAQ</a>
+    <a href="signup.html">Create free account</a>
+  </div>
+  <a href="login.html" id="mobileLogin" class="drawer-login" style="display:none;">Log in</a>
+  <div id="mobileLogoutContainer" style="display:none;">
+    <button id="mobileLogoutBtn">Sign Out</button>
+  </div>
+</div>
+
+<main>
+  <div class="page-hero">
+    <h1>📋 Terms of Service</h1>
+    <p class="updated">Last updated: September 17, 2026</p>
+  </div>
+
+  <div class="summary-card">
+    <h2>The short version</h2>
+    <ul>
+      <li>Rental Genie is a record-keeping and management tool. You're responsible for how you run your rentals and for following the law.</li>
+      <li>Reports and Ask Genie answers are information, not tax, legal, or financial advice. AI answers can be wrong.</li>
+      <li>Rental Genie doesn't process rent payments yet. Recording a payment doesn't move any money.</li>
+      <li>During early access, Pro features are free. We'll email you before any billing starts, and you won't be charged unless you choose a paid plan.</li>
+      <li>You own your data and can ask us to delete it.</li>
+    </ul>
+  </div>
+  <div class="legal-card">
+    <h2>1. Agreement to these terms</h2>
+    <p>These Terms of Service ("Terms") are an agreement between you and <mark class="fill">[LEGAL ENTITY NAME]</mark>, a <mark class="fill">[STATE]</mark> limited liability company ("Rental Genie," "we," "us"). By creating an account or using Rental Genie, you agree to these Terms and to our <a href="privacy.html">Privacy Policy</a>. If you use Rental Genie on behalf of a company, you agree to these Terms for that company.</p>
+    <p>If you do not agree, please do not use Rental Genie.</p>
+  </div>
+  <div class="legal-card">
+    <h2>2. The service</h2>
+    <p>Rental Genie is software that helps independent landlords keep property records, track rent and expenses, manage leases and maintenance requests, communicate with tenants, and ask questions about their data.</p>
+    <p>Rental Genie is currently in early access. Features may be added, changed, or removed, and you may encounter bugs. We will try to give notice before removing features you rely on.</p>
+    <p>Rental Genie is not a property manager, real estate broker, bank, or payment processor, and we are not a party to any lease or agreement between landlords and tenants.</p>
+  </div>
+  <div class="legal-card">
+    <h2>3. Accounts</h2>
+    <ul>
+      <li>You must be at least 18 years old to use Rental Genie.</li>
+      <li>You must provide accurate information and keep it up to date.</li>
+      <li>You are responsible for keeping your sign-in credentials secure and for all activity under your account, including activity by team members you invite.</li>
+      <li>Tell us right away if you believe someone has accessed your account without permission.</li>
+    </ul>
+  </div>
+  <div class="legal-card">
+    <h2>4. Landlord responsibilities</h2>
+    <p>If you use Rental Genie as a landlord, you are responsible for:</p>
+    <ul>
+      <li>Following all laws that apply to your rentals, including fair housing, landlord-tenant, security deposit, notice, and privacy laws.</li>
+      <li>Having the right to enter and store the tenant information you add, and giving tenants any notices the law requires.</li>
+      <li>The accuracy of the records you enter and the decisions you make based on them.</li>
+      <li>Any communications you send to tenants through Rental Genie.</li>
+    </ul>
+  </div>
+  <div class="legal-card">
+    <h2>5. Tenants</h2>
+    <p>Tenants use the tenant portal by invitation from their landlord. A tenant's rental relationship is with the landlord, not with Rental Genie. We do not resolve disputes between landlords and tenants.</p>
+    <p>Tenants who use Rental Genie agree to these Terms, including the acceptable use rules in section 11.</p>
+  </div>
+  <div class="legal-card">
+    <h2>6. Not professional advice</h2>
+    <p>Reports, calculations (such as net operating income, cap rate, and cash-on-cash return), escrow reconciliations, and other information in Rental Genie are provided for your general information. They are not tax, legal, accounting, or investment advice. Check important figures against your own records and consult a qualified professional before making decisions.</p>
+  </div>
+  <div class="legal-card">
+    <h2>7. Ask Genie</h2>
+    <p>Ask Genie uses artificial intelligence to answer questions about the data in your account. AI-generated answers can be incomplete or wrong, even when they sound confident. You are responsible for reviewing answers before relying on them. Do not rely on Ask Genie for legal decisions, such as whether or how to serve a notice or pursue an eviction.</p>
+    <p>Ask Genie can read your records but cannot change them or contact anyone. As described in our Privacy Policy, your questions and relevant records are processed by our AI provider to generate answers.</p>
+  </div>
+  <div class="legal-card">
+    <h2>8. Payments between landlords and tenants</h2>
+    <p>Rental Genie does not currently process rent or other payments. Tenants pay landlords outside of Rental Genie, and recording a payment in Rental Genie does not transfer money. Any payment details a landlord displays in the portal are provided by the landlord, and the landlord is responsible for their accuracy.</p>
+    <p>If we add online payments, additional terms, including the terms of our payment processor, will apply to that feature.</p>
+  </div>
+  <div class="legal-card">
+    <h2>9. Plans and billing</h2>
+    <ul>
+      <li><strong>Free plan:</strong> Available for up to 3 properties, at no charge.</li>
+      <li><strong>Early access:</strong> While Rental Genie is in early access, Pro features are provided at no charge.</li>
+      <li><strong>Before any billing:</strong> We will email you before paid plans begin. You will not be charged unless you choose a paid plan and provide payment information.</li>
+      <li><strong>Price changes:</strong> We will give you advance notice of any change to the price of a plan you are paying for.</li>
+    </ul>
+    <p>Payment, renewal, cancellation, and refund terms for paid plans will be provided before you are asked to pay.</p>
+  </div>
+  <div class="legal-card">
+    <h2>10. Your content</h2>
+    <p>You keep ownership of the information and files you add to Rental Genie ("your content"). You give us permission to store, process, copy, and display your content only as needed to provide and improve the service, including sharing it with the service providers listed in our Privacy Policy.</p>
+    <p>You are responsible for your content and confirm that you have the right to add it. If you send us feedback or suggestions, we may use them without any obligation to you.</p>
+    <p>We recommend exporting important records periodically so you have your own copy.</p>
+  </div>
+  <div class="legal-card">
+    <h2>11. Acceptable use</h2>
+    <p>You agree not to:</p>
+    <ul>
+      <li>Use Rental Genie for any unlawful purpose, including discrimination prohibited by fair housing laws.</li>
+      <li>Harass, threaten, or mislead tenants or other users.</li>
+      <li>Upload another person's information without the right to do so.</li>
+      <li>Try to access accounts or data that aren't yours, or test the security of the service without our written permission.</li>
+      <li>Upload malicious code or interfere with how the service runs.</li>
+      <li>Scrape, copy, resell, or reverse engineer the service, except as the law expressly allows.</li>
+    </ul>
+  </div>
+  <div class="legal-card">
+    <h2>12. Suspension and termination</h2>
+    <p>You can stop using Rental Genie at any time and ask us to delete your account.</p>
+    <p>We may suspend or close an account that violates these Terms, creates a security risk, or could expose other users or us to harm. Where appropriate, we will tell you why and give you a chance to fix the problem.</p>
+    <p>If we decide to discontinue Rental Genie, we will give account holders reasonable advance notice so they can export their data.</p>
+  </div>
+  <div class="legal-card">
+    <h2>13. Disclaimers</h2>
+    <p>Rental Genie is provided "as is" and "as available." To the extent permitted by law, we disclaim all warranties, express or implied, including warranties of merchantability, fitness for a particular purpose, and non-infringement. We do not guarantee that the service will be uninterrupted or error-free, or that calculations and AI answers will be accurate.</p>
+  </div>
+  <div class="legal-card">
+    <h2>14. Limitation of liability</h2>
+    <p>To the extent permitted by law, Rental Genie will not be liable for any indirect, incidental, special, consequential, or punitive damages, or for lost profits, lost rent, or lost data, arising from your use of or inability to use the service.</p>
+    <p>To the extent permitted by law, our total liability for any claim relating to the service is limited to the greater of (a) the amount you paid us for the service in the 12 months before the claim arose, or (b) $100.</p>
+  </div>
+  <div class="legal-card">
+    <h2>15. Indemnification</h2>
+    <p>You agree to defend and hold harmless Rental Genie from claims, losses, and expenses (including reasonable attorneys' fees) arising from your content, your use of the service, your dealings with tenants or other third parties, or your violation of these Terms or the law.</p>
+  </div>
+  <div class="legal-card">
+    <h2>16. Governing law and disputes</h2>
+    <p>These Terms are governed by the laws of the State of <mark class="fill">[STATE]</mark>, without regard to its conflict of law rules. Any dispute that cannot be resolved informally will be handled exclusively in the state or federal courts located in <mark class="fill">[COUNTY]</mark>, <mark class="fill">[STATE]</mark>, and you and we consent to those courts' jurisdiction.</p>
+    <p>Before filing a claim, please contact us so we can try to resolve the issue informally.</p>
+  </div>
+  <div class="legal-card">
+    <h2>17. Changes to these terms</h2>
+    <p>We may update these Terms from time to time. If we make significant changes, we will notify account holders by email or in the app before the changes take effect. Continuing to use Rental Genie after changes take effect means you accept the updated Terms.</p>
+  </div>
+  <div class="legal-card">
+    <h2>18. General</h2>
+    <p>These Terms and our Privacy Policy are the entire agreement between you and us about Rental Genie. If any part of these Terms is found unenforceable, the rest remains in effect. Our failure to enforce a provision is not a waiver. You may not transfer these Terms without our consent; we may transfer them in connection with a merger, acquisition, or sale of assets.</p>
+  </div>
+  <div class="legal-card">
+    <h2>19. Contact us</h2>
+    <p>For questions about these Terms, please <a href="contact-us.html">contact us</a> or write to us at <mark class="fill">[MAILING ADDRESS]</mark>.</p>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="footer-content">
+    <div class="footer-section app-only">
+      <h4>Navigate</h4>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="property-management.html">Property Management</a>
+      <a href="lease-rent-center.html">Lease &amp; Rent Center</a>
+      <a href="expense-tracking.html">Expense Tracking</a>
+    </div>
+    <div class="footer-section app-only">
+      <h4>Reports</h4>
+      <a href="reports-analytics.html">Reports &amp; Analytics</a>
+      <a href="all-properties-summary.html">All Properties Summary</a>
+      <a href="portfolio-financial-dashboard.html">Portfolio Dashboard</a>
+    </div>
+    <div class="footer-section guest-only">
+      <h4>Rental Genie</h4>
+      <a href="index.html">Home</a>
+      <a href="index.html#pricing">Pricing</a>
+      <a href="login.html">Log in</a>
+      <a href="signup.html">Create free account</a>
+    </div>
+    <div class="footer-section">
+      <h4>Legal &amp; Support</h4>
+      <a href="contact-us.html">Contact Us</a>
+      <a href="terms.html">Terms of Service</a>
+      <a href="privacy.html">Privacy Policy</a>
+    </div>
+  </div>
+  <div class="footer-bottom">© <span id="footerYear"></span> Rental Genie. All rights reserved.</div>
+</footer>
+
+<script>
+(function(){
+  document.getElementById('footerYear').textContent = new Date().getFullYear();
+
+  // UMD toggle
+  var toggle = document.getElementById('umdToggle');
+  var drop   = document.getElementById('umdDropdown');
+  if(toggle && drop){
+    toggle.addEventListener('click', function(e){
+      e.stopPropagation();
+      drop.classList.toggle('open');
+      toggle.setAttribute('aria-expanded', drop.classList.contains('open'));
+    });
+    document.addEventListener('click', function(){ drop.classList.remove('open'); });
+  }
+
+  // Hamburger
+  var ham = document.getElementById('hamburgerBtn');
+  var drw = document.getElementById('mobileDrawer');
+  if(ham && drw){
+    ham.addEventListener('click', function(e){ e.stopPropagation(); drw.style.display = drw.style.display === 'block' ? 'none' : 'block'; });
+    document.addEventListener('click', function(e){ if(drw && !drw.contains(e.target) && !ham.contains(e.target)) drw.style.display = 'none'; });
+  }
+
+  // Auth check
+  (async function(){
+    try {
+      var sb = window._rgClient;
+      var r = await sb.auth.getUser();
+      var user = r.data && r.data.user;
+      if(!user){ document.body.classList.add('auth-guest'); return; }
+      var uname = (user.user_metadata && (user.user_metadata.full_name || user.user_metadata.name)) || user.email.split('@')[0];
+      var _p = uname.split(' ');
+      var ini = (_p.length >= 2 ? _p[0][0]+_p[_p.length-1][0] : uname.slice(0,2)).toUpperCase();
+      document.body.classList.remove('auth-guest');
+      document.body.classList.add('auth-ready');
+      var um = document.getElementById('userMenu');
+      if(um && window.innerWidth > 900) um.style.display = 'inline-flex';
+      var els = {umdAvatar:ini, umdName:uname, umdFullName:uname, umdEmail:user.email||'', drawerAvatar:ini, mobileUsernameLabel:uname};
+      Object.keys(els).forEach(function(id){ var el=document.getElementById(id); if(el) el.textContent=els[id]; });
+      var ma = document.getElementById('mobileAccountLink'); if(ma) ma.style.display='block';
+      var mlo = document.getElementById('mobileLogoutContainer'); if(mlo) mlo.style.display='block';
+      var mli = document.getElementById('mobileLogin'); if(mli) mli.style.display='none';
+      var lb = document.getElementById('logoutBtn');
+      var mlb = document.getElementById('mobileLogoutBtn');
+      async function doSignOut(){ try{ await sb.auth.signOut(); }catch(e){} location.href='login.html'; }
+      if(lb) lb.addEventListener('click', doSignOut);
+      if(mlb) mlb.addEventListener('click', doSignOut);
+    } catch(e) { document.body.classList.add('auth-guest'); }
+  }());
+}());
+</script>
+</body>
+</html>

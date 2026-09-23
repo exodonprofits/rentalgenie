@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Documents – Rental Genie</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap">
+<link rel="dns-prefetch" href="https://pbojacnagutipfhcxltj.supabase.co">
+
+<style>
+/* ── Design Tokens ──────────────────────────────────────────── */
+:root {
+  --navy:        #0c1e3a;
+  --navy-mid:    #1a3a6b;
+  --navy-light:  #1e5799;
+  --sky:         #2d8cf0;
+  --sky-soft:    #e8f0fe;
+  --border:      #e2e8f0;
+  --bg:          #f1f4f8;
+  --card:        #ffffff;
+  --text:        #0c1e3a;
+  --muted:       #64748b;
+  --success:     #10b981;
+  --success-bg:  #ecfdf5;
+  --success-bdr: #a7f3d0;
+  --warn-bg:     #fffbeb;
+  --warn-bdr:    #fde68a;
+  --warn-text:   #92400e;
+  --danger-bg:   #fef2f2;
+  --danger-bdr:  #fecaca;
+  --danger-text: #7f1d1d;
+  --info-bg:     #eff6ff;
+  --info-bdr:    #bfdbfe;
+  --info-text:   #1e40af;
+  --radius-sm:   8px;
+  --radius-md:   12px;
+  --radius-lg:   16px;
+  --radius-xl:   20px;
+  --shadow-sm:   0 1px 4px rgba(12,30,58,.06);
+  --shadow-md:   0 4px 16px rgba(12,30,58,.09);
+  --shadow-lg:   0 8px 32px rgba(12,30,58,.14);
+  --header-grad: linear-gradient(135deg,#0c1e3a 0%,#1a3a6b 55%,#1e5799 100%);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: 'DM Sans', -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Auth Overlay ───────────────────────────────────────────── */
+#authOverlay {
+  position: fixed; inset: 0; z-index: 9999;
+  background: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column; gap: 16px;
+  transition: opacity .35s;
+}
+#authOverlay.hidden { opacity: 0; pointer-events: none; }
+.spinner-ring {
+  width: 44px; height: 44px; border-radius: 50%;
+  border: 3px solid rgba(12,30,58,.1);
+  border-top-color: var(--sky);
+  animation: spin .75s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+#authOverlay p { font-size: .88rem; color: var(--muted); font-weight: 500; }
+
+/* ── Header ─────────────────────────────────────────────────── */
+.header-container {
+  position: sticky; top: 0; z-index: 1000;
+  background: var(--header-grad);
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  box-shadow: 0 2px 20px rgba(12,30,58,.35);
+}
+.navbar {
+  max-width: 1440px; margin: 0 auto; padding: 0 22px;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 64px; gap: 12px;
+}
+.nav-right-group { display: flex; align-items: center; gap: 8px; }
+.brand-area { display: flex; align-items: center; gap: 11px; text-decoration: none; flex-shrink: 0; }
+.brand-logo {
+  width: 38px; height: 38px; border-radius: 9px;
+  background: rgba(255,255,255,.12);
+  box-shadow: 0 0 0 1px rgba(255,255,255,.2), 0 2px 8px rgba(0,0,0,.2);
+  object-fit: cover; flex-shrink: 0;
+}
+.brand-title { font-size: 1.15rem; font-weight: 700; color: #fff; letter-spacing: -.2px; }
+.nav-links { display: flex; gap: 2px; align-items: center; }
+.nav-links a {
+  display: flex; align-items: center; gap: 5px;
+  text-decoration: none; font-size: .8rem; font-weight: 600;
+  padding: 6px 10px; color: rgba(255,255,255,.72);
+  border-radius: var(--radius-sm); transition: all .18s; white-space: nowrap;
+}
+.nav-links a:hover  { color: #fff; background: rgba(255,255,255,.1); }
+.nav-links a.nav-active { color: #fff; background: rgba(255,255,255,.15); }
+
+/* UMD */
+.umd-wrap { position: relative; }
+.umd-toggle {
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.22);
+  border-radius: 999px; padding: 5px 12px 5px 5px;
+  cursor: pointer; transition: background .18s;
+}
+.umd-toggle:hover { background: rgba(255,255,255,.18); }
+.umd-avatar {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--sky), var(--navy-mid));
+  display: flex; align-items: center; justify-content: center;
+  font-size: .68rem; font-weight: 700; color: #fff; flex-shrink: 0;
+}
+.umd-name  { font-size: .8rem; color: #fff; font-weight: 600; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.umd-caret { font-size: .6rem; color: rgba(255,255,255,.7); }
+.umd-dropdown {
+  display: none; position: absolute; right: 0; top: calc(100% + 8px);
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); box-shadow: var(--shadow-lg);
+  min-width: 220px; overflow: hidden; z-index: 200;
+}
+.umd-dropdown.open { display: block; }
+.umd-user-row { padding: 14px 16px 10px; border-bottom: 1px solid var(--border); }
+.umd-user-name  { font-size: .88rem; font-weight: 700; color: var(--navy); }
+.umd-user-email { font-size: .75rem; color: var(--muted); margin-top: 2px; }
+.umd-section { display: flex; flex-direction: column; padding: 6px; border-bottom: 1px solid var(--border); }
+.umd-section:last-child { border-bottom: none; }
+.umd-link {
+  display: flex; align-items: center; gap: 9px;
+  padding: 9px 10px; border-radius: var(--radius-sm);
+  font-size: .84rem; font-weight: 600; color: var(--text);
+  text-decoration: none; background: none; border: none;
+  cursor: pointer; width: 100%; font-family: 'DM Sans', sans-serif;
+  transition: background .15s;
+}
+.umd-link:hover { background: var(--bg); }
+.umd-link.danger { color: #ef4444; }
+.umd-link.danger:hover { background: var(--danger-bg); }
+#nav-login {
+  background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.25);
+  color: #fff; padding: 7px 14px; border-radius: 999px;
+  font-weight: 600; text-decoration: none; font-size: .82rem;
+}
+
+.nav-bell {
+  display: flex; align-items: center; justify-content: center;
+  width: 34px; height: 34px; border-radius: 999px; flex-shrink: 0;
+  background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.22);
+  color: #fff; font-size: 1rem; text-decoration: none;
+  transition: background .18s;
+}
+.nav-bell:hover { background: rgba(255,255,255,.18); }
+
+.hamburger {
+  display: none; padding: 7px 10px;
+  border: 1px solid rgba(255,255,255,.25); border-radius: var(--radius-sm);
+  background: rgba(255,255,255,.1); cursor: pointer;
+  color: #fff; font-size: 1rem; transition: background .18s;
+}
+.hamburger:hover { background: rgba(255,255,255,.2); }
+@media(max-width:900px) { .nav-links { display: none; } .hamburger { display: block; } .umd-wrap { display: none !important; } .nav-bell { display: none !important; } #nav-login { display: none !important; } }
+
+.drawer {
+  display: none; position: fixed;
+  top: 72px; left: 12px; right: 12px;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 8px;
+  z-index: 999; box-shadow: var(--shadow-lg);
+}
+.drawer a, .drawer button {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 14px; border-radius: var(--radius-sm);
+  font-weight: 600; font-size: .88rem;
+  text-decoration: none; color: var(--text);
+  background: none; border: none; cursor: pointer;
+  width: 100%; font-family: 'DM Sans', sans-serif;
+  transition: background .15s;
+}
+.drawer a:hover, .drawer button:hover { background: var(--bg); }
+.drawer a.nav-active { background: var(--sky-soft); color: var(--navy-mid); }
+.drawer-divider { height: 1px; background: var(--border); margin: 4px 0; }
+.drawer-signout { color: #ef4444 !important; }
+
+/* ── Main ───────────────────────────────────────────────────── */
+main {
+  flex: 1; max-width: 1280px; width: 100%;
+  margin: 0 auto; padding: 28px 22px 64px;
+  animation: fadeUp .35s ease both;
+}
+
+/* ── Page header ────────────────────────────────────────────── */
+.page-header {
+  display: flex; align-items: flex-start;
+  justify-content: space-between; gap: 16px;
+  flex-wrap: wrap; margin-bottom: 22px;
+}
+.page-title { font-size: 1.65rem; font-weight: 700; color: var(--navy); letter-spacing: -.4px; line-height: 1.2; }
+.page-sub   { font-size: .88rem; color: var(--muted); margin-top: 4px; font-weight: 500; }
+
+/* ── Filter bar ─────────────────────────────────────────────── */
+.filter-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 16px 20px;
+  box-shadow: var(--shadow-sm); margin-bottom: 20px;
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+}
+.filter-field { display: flex; flex-direction: column; gap: 4px; min-width: 170px; flex: 1; }
+.filter-field label {
+  font-size: .68rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .4px; color: var(--muted);
+}
+.filter-field select, .filter-field input {
+  padding: 9px 12px; border: 1.5px solid var(--border);
+  border-radius: var(--radius-md); font-family: 'DM Sans', sans-serif;
+  font-size: .87rem; font-weight: 600; color: var(--text);
+  background: #f8fafc; outline: none;
+  transition: border-color .15s, box-shadow .15s;
+}
+.filter-field select:focus, .filter-field input:focus {
+  border-color: var(--sky); background: #fff;
+  box-shadow: 0 0 0 3px rgba(45,140,240,.1);
+}
+
+/* ── Buttons ────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 9px 16px; border-radius: var(--radius-md);
+  border: 1.5px solid var(--border); background: var(--card);
+  color: var(--navy); font-family: 'DM Sans', sans-serif;
+  font-size: .83rem; font-weight: 600; text-decoration: none;
+  cursor: pointer; transition: all .16s; white-space: nowrap;
+}
+.btn:hover { background: var(--bg); border-color: #cbd5e1; transform: translateY(-1px); }
+.btn.primary {
+  background: var(--header-grad); border-color: transparent; color: #fff;
+  box-shadow: 0 2px 10px rgba(12,30,58,.2);
+}
+.btn.primary:hover { filter: brightness(1.1); box-shadow: 0 4px 16px rgba(12,30,58,.28); }
+.btn.sm { padding: 6px 12px; font-size: .76rem; }
+.btn.danger { color: var(--danger-text); border-color: var(--danger-bdr); background: var(--danger-bg); }
+.btn.danger:hover { background: #fee2e2; }
+
+/* ── KPI strip ──────────────────────────────────────────────── */
+.kpi-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px; margin-bottom: 20px;
+}
+@media(max-width:720px) { .kpi-strip { grid-template-columns: 1fr 1fr; } }
+.kpi-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 16px 18px;
+  box-shadow: var(--shadow-sm); position: relative; overflow: hidden;
+}
+.kpi-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: var(--header-grad);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+.kpi-label {
+  font-size: .68rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .5px; color: var(--muted); margin-bottom: 6px;
+}
+.kpi-value { font-size: 1.2rem; font-weight: 700; color: var(--navy); }
+
+/* ── Section card ───────────────────────────────────────────── */
+.section-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius-xl); box-shadow: var(--shadow-sm);
+  margin-bottom: 20px; overflow: hidden;
+}
+.card-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; flex-wrap: wrap;
+  padding: 18px 22px 0;
+}
+.card-head-left { display: flex; flex-direction: column; }
+.card-title { font-size: 1rem; font-weight: 700; color: var(--navy); display: flex; align-items: center; gap: 8px; }
+.card-sub { font-size: .8rem; color: var(--muted); margin-top: 3px; font-weight: 500; }
+.card-body { padding: 16px 22px 22px; }
+
+/* ── Upload form ────────────────────────────────────────────── */
+.doc-form-field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
+.doc-form-field label { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: var(--muted); }
+.doc-form-field select, .doc-form-field input {
+  padding: 9px 12px; border: 1.5px solid var(--border); border-radius: var(--radius-md);
+  font-family: 'DM Sans', sans-serif; font-size: .87rem; color: var(--text); background: #fff;
+}
+.doc-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+@media(max-width:640px) { .doc-form-grid { grid-template-columns: 1fr; } }
+
+/* ── Table ──────────────────────────────────────────────────── */
+.table-wrap { overflow-x: auto; border-radius: var(--radius-md); border: 1px solid var(--border); }
+table { width: 100%; border-collapse: collapse; font-size: .84rem; }
+th { background: #f8fafc; padding: 11px 14px; text-align: left; font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); border-bottom: 1px solid var(--border); white-space: nowrap; }
+td { padding: 12px 14px; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: #f8fafc; }
+
+/* ── Chips ──────────────────────────────────────────────────── */
+.chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 10px; border-radius: 999px;
+  font-weight: 700; font-size: .73rem;
+  border: 1px solid var(--border); background: #f8fafc; color: var(--text);
+  white-space: nowrap;
+}
+.chip.good   { background: var(--success-bg); border-color: var(--success-bdr); color: #065f46; }
+.chip.warn   { background: var(--warn-bg);    border-color: var(--warn-bdr);    color: var(--warn-text); }
+.chip.danger { background: var(--danger-bg);  border-color: var(--danger-bdr);  color: var(--danger-text); }
+.chip.info   { background: var(--info-bg);    border-color: var(--info-bdr);    color: var(--info-text); }
+.chip.plain  { background: #f8fafc;           border-color: var(--border);      color: var(--text); }
+
+.open-btn { display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; border-radius: var(--radius-sm); background: var(--header-grad); color: #fff; text-decoration: none; font-size: .78rem; font-weight: 700; transition: filter .15s; }
+.open-btn:hover { filter: brightness(1.15); }
+
+.icon-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border); background: #fff; cursor: pointer;
+  color: var(--danger-text); font-size: .85rem; transition: background .15s;
+}
+.icon-btn:hover { background: var(--danger-bg); }
+
+.empty-state { text-align: center; padding: 48px 20px; }
+.empty-icon { font-size: 2.5rem; margin-bottom: 12px; }
+.empty-state p { font-size: .9rem; color: var(--muted); font-weight: 500; line-height: 1.6; }
+
+.skel { background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 6px; display: inline-block; }
+@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+/* ── Footer ─────────────────────────────────────────────────── */
+.site-footer { background: var(--navy); padding: 28px 20px 20px; margin-top: 40px; }
+.footer-content {
+  max-width: 1440px; margin: 0 auto;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 28px; padding-bottom: 18px;
+}
+.footer-section h4 { font-size: .75rem; font-weight: 700; color: rgba(255,255,255,.75); text-transform: uppercase; letter-spacing: .8px; margin: 0 0 12px; }
+.footer-section a, .footer-section p { display: block; color: rgba(255,255,255,.4); text-decoration: none; margin-bottom: 8px; font-size: .82rem; }
+.footer-section a:hover { color: rgba(255,255,255,.85); }
+.footer-bottom { text-align: center; padding-top: 14px; border-top: 1px solid rgba(255,255,255,.08); color: rgba(255,255,255,.28); font-size: .82rem; }
+@media(max-width:600px) { .site-footer { display: none; } }
+
+/* ── Mobile bottom nav ──────────────────────────────────────── */
+.mobile-nav {
+  position: fixed; left: 0; right: 0; bottom: 0; display: none; z-index: 1200;
+  padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+  background: var(--header-grad);
+  border-top: 1px solid rgba(255,255,255,.08);
+  box-shadow: 0 -4px 20px rgba(12,30,58,.25);
+}
+.mobile-nav-inner { max-width: 1440px; margin: 0 auto; display: grid; grid-template-columns: repeat(6,1fr); gap: 5px; }
+.mnav {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 4px; padding: 10px 8px; border-radius: 8px;
+  border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.07);
+  color: rgba(255,255,255,.6); font-size: 11px; font-weight: 700;
+  text-decoration: none; text-align: center;
+}
+.mnav .ico { font-size: 22px; line-height: 1; }
+.mnav.active { background: rgba(255,255,255,.18); color: #fff; border-color: rgba(255,255,255,.25); }
+.mobile-pad { display: none; height: 86px; }
+@media(max-width:860px) { .mobile-nav { display: block; } .mobile-pad { display: block; } }
+
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }
+
+@media(max-width:600px) {
+  main { padding: 20px 14px 40px; }
+  .page-title { font-size: 1.35rem; }
+}
+</style>
+</head>
+<body>
+<!-- ═══ SUPABASE BOOTSTRAP (body-first: avoids tracking-prevention blocking safeStorage) ═══ -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/* ── rgFiles ────────────────────────────────────────────────────────────────
+   Turns a stored file reference into a short-lived signed link, so pages keep
+   working when the storage buckets are switched from public to private.
+   Accepts a storage path or a stored public URL.
+   Markup:  <a href="#" ${rgFiles.attr('bucket', pathOrUrl)}>Open</a>
+   Then:    rgFiles.hydrate(client, containerEl)  // after markup is in the DOM
+--------------------------------------------------------------------------- */
+window.rgFiles = (function () {
+  function parse(value) {
+    var m = String(value).match(/\/object\/(?:public|sign|authenticated)\/([^/]+)\/([^?]+)/);
+    return m ? { bucket: m[1], path: decodeURIComponent(m[2]) } : null;
+  }
+  function resolve(client, bucket, value, seconds) {
+    if (!value) return Promise.resolve(null);
+    var v = String(value), b = bucket, p = v, wasUrl = false;
+    if (/^(blob:|data:)/i.test(v)) return Promise.resolve(v);
+    if (/^https?:\/\//i.test(v)) {
+      wasUrl = true;
+      var hit = parse(v);
+      if (!hit) return Promise.resolve(v);          // a link someone typed in
+      b = hit.bucket; p = hit.path;
+    }
+    if (!client || !client.storage) return Promise.resolve(wasUrl ? v : null);
+    return client.storage.from(b).createSignedUrl(p, seconds || 3600)
+      .then(function (r) {
+        if (r && r.data && r.data.signedUrl) return r.data.signedUrl;
+        return wasUrl ? v : null;
+      })
+      .catch(function () { return wasUrl ? v : null; });
+  }
+  function attr(bucket, value) {
+    return value ? ' data-rg-file="' + bucket + '|' + encodeURIComponent(value) + '"' : '';
+  }
+  function hydrate(client, root) {
+    var nodes = (root || document).querySelectorAll('[data-rg-file]');
+    Array.prototype.forEach.call(nodes, function (el) {
+      var raw = el.getAttribute('data-rg-file') || '';
+      var i = raw.indexOf('|');
+      if (i < 0) return;
+      el.removeAttribute('data-rg-file');
+      resolve(client, raw.slice(0, i), decodeURIComponent(raw.slice(i + 1))).then(function (url) {
+        if (!url) { el.removeAttribute('href'); el.title = 'File unavailable'; return; }
+        if (el.tagName === 'IMG') el.src = url; else el.href = url;
+      });
+    });
+  }
+  return { resolve: resolve, hydrate: hydrate, attr: attr };
+})();
+</script>
+
+<script>
+(function() {
+  try {
+    var _mem = new Map();
+    var _ls = null; try { _ls = window.localStorage; } catch(e) {}
+    var _store = {
+      getItem:    function(k){ try { return (_ls && _ls.getItem(k)) || _mem.get(k) || null; } catch(e) { return _mem.get(k) || null; } },
+      setItem:    function(k,v){ try { _ls && _ls.setItem(k,v); } catch(e) {} _mem.set(k,v); },
+      removeItem: function(k){ try { _ls && _ls.removeItem(k); } catch(e) {} _mem.delete(k); }
+    };
+    var _c = window._rgClient || window.supabase.createClient(
+      'https://pbojacnagutipfhcxltj.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBib2phY25hZ3V0aXBmaGN4bHRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgwMDkwODAsImV4cCI6MjA2MzU4NTA4MH0.ZLCcAzTYljoZycpBGwMtthP5VyAJ4schuIvt4HibGc0',
+      { auth: { lock: undefined, persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storage: _store } }
+    );
+    window._rgClient = _c; window.sb = _c; window.client = _c;
+    window.getSbClient = function() { return _c; };
+    window.GSClient = { getAsync: async function() { return _c; } };
+  } catch(e) { console.error('RG bootstrap failed:', e); }
+})();
+</script>
+<!-- ══════════════════════════════════════════════════════════════════════════════════════ -->
+
+<div id="authOverlay">
+  <div class="spinner-ring"></div>
+  <p>Loading documents…</p>
+</div>
+
+<header class="header-container">
+  <div class="navbar">
+    <a class="brand-area" href="index.html">
+      <img src="images/rg-logo.png" class="brand-logo" alt="Rental Genie"
+           onerror="this.style.display='none'" />
+      <span class="brand-title">Rental Genie</span>
+    </a>
+
+    <nav class="nav-links" aria-label="Main navigation">
+      <a href="dashboard.html">📊 Dashboard</a>
+      <a href="property-management.html">🏘️ Properties</a>
+      <a href="lease-rent-center.html">💰 Lease &amp; Rent</a>
+      <a href="expense-tracking.html">💸 Expenses</a>
+      <a href="maintenance-requests.html">🛠 Maintenance</a>
+      <a href="reports-analytics.html">📈 Reports</a>
+    </nav>
+
+    <div class="nav-right-group">
+      <a class="nav-bell" id="navBell" href="tenant-messages.html" title="Messages" aria-label="Messages" style="display:none">🔔</a>
+      <div class="umd-wrap" id="userMenu" style="display:none">
+        <button class="umd-toggle" id="umdToggle" aria-haspopup="true" aria-expanded="false">
+          <div class="umd-avatar" id="umdAvatar">?</div>
+          <span class="umd-name" id="umdName">User</span>
+          <span class="umd-caret">▾</span>
+        </button>
+        <div class="umd-dropdown" id="umdDropdown">
+          <div class="umd-user-row">
+            <div class="umd-user-name"  id="umdFullName">—</div>
+            <div class="umd-user-email" id="umdEmail">—</div>
+          </div>
+          <div class="umd-section">
+            <a class="umd-link" href="dashboard.html">📊 Dashboard</a>
+            <a class="umd-link" href="account.html">⚙️ Account Settings</a>
+          </div>
+          <div class="umd-section">
+            <button class="umd-link danger" id="logoutBtn">🚪 Sign Out</button>
+          </div>
+        </div>
+      </div>
+      <a id="nav-login" href="login.html">Log in</a>
+    </div>
+    <button class="hamburger" id="hamburgerBtn" aria-label="Open menu">☰</button>
+  </div>
+</header>
+
+<div class="drawer" id="mobileDrawer">
+  <a href="account.html" id="mobileAccountLink" style="display:none;" class="drawer-user-row">
+    <span class="drawer-avatar" id="drawerAvatar">?</span>
+    <span class="drawer-username" id="mobileUsernameLabel">Account</span>
+  </a>
+  <a href="dashboard.html">📊 Dashboard</a>
+  <a href="property-management.html">🏘️ Properties</a>
+  <a href="lease-rent-center.html">💰 Lease &amp; Rent</a>
+  <a href="expense-tracking.html">💸 Expenses</a>
+  <a href="maintenance-requests.html">🛠 Maintenance</a>
+  <a href="reports-analytics.html">📈 Reports</a>
+  <div class="drawer-divider"></div>
+  <a href="login.html" id="mobileLogin" class="drawer-login" style="display:none;">Log in</a>
+  <div id="mobileLogoutContainer" style="display:none;">
+    <button id="mobileLogoutBtn">Sign Out</button>
+  </div>
+</div>
+
+<main>
+
+  <div class="page-header">
+    <div>
+      <div class="page-title">📁 Documents</div>
+      <div class="page-sub">Signed leases, notices &amp; files shared with your tenants — across all properties.</div>
+    </div>
+    <button class="btn primary" id="uploadDocBtn" type="button">⬆ Upload Document</button>
+  </div>
+
+  <div class="filter-card">
+    <div class="filter-field" style="min-width:200px;">
+      <label for="fltProperty">Property</label>
+      <select id="fltProperty">
+        <option value="">All Properties</option>
+      </select>
+    </div>
+    <div class="filter-field" style="min-width:200px;">
+      <label for="fltTenant">Tenant</label>
+      <select id="fltTenant">
+        <option value="">All Tenants</option>
+      </select>
+    </div>
+    <div class="filter-field" style="min-width:150px;">
+      <label for="fltType">Type</label>
+      <select id="fltType">
+        <option value="">All Types</option>
+        <option value="lease">📄 Lease</option>
+        <option value="notice">📣 Notice</option>
+        <option value="receipt">🧾 Receipt</option>
+        <option value="other">📁 Other</option>
+      </select>
+    </div>
+    <div class="filter-field" style="min-width:200px;">
+      <label for="fltSearch">Search</label>
+      <input id="fltSearch" type="search" placeholder="🔍 Title…" />
+    </div>
+  </div>
+
+  <div class="kpi-strip">
+    <div class="kpi-card"><div class="kpi-label">🗂 Total Files</div><div class="kpi-value" id="kpiTotal">—</div></div>
+    <div class="kpi-card"><div class="kpi-label">📄 Leases</div><div class="kpi-value" id="kpiLease">—</div></div>
+    <div class="kpi-card"><div class="kpi-label">📣 Notices</div><div class="kpi-value" id="kpiNotices">—</div></div>
+    <div class="kpi-card"><div class="kpi-label">🧾 Receipts</div><div class="kpi-value" id="kpiReceipts">—</div></div>
+  </div>
+
+  <!-- Upload form -->
+  <div class="section-card hidden" id="docUploadCard" style="display:none;">
+    <div class="card-head">
+      <div class="card-head-left">
+        <div class="card-title">⬆ Upload Document</div>
+        <div class="card-sub">Share a signed lease, notice, or file with a specific tenant.</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="doc-form-grid">
+        <div class="doc-form-field">
+          <label for="docProperty">Property</label>
+          <select id="docProperty"><option value="">Select property…</option></select>
+        </div>
+        <div class="doc-form-field">
+          <label for="docTenant">Tenant</label>
+          <select id="docTenant"><option value="">Select tenant…</option></select>
+        </div>
+        <div class="doc-form-field">
+          <label for="docType">Type</label>
+          <select id="docType">
+            <option value="lease">📄 Lease</option>
+            <option value="notice">📣 Notice</option>
+            <option value="receipt">🧾 Receipt</option>
+            <option value="other">📁 Other</option>
+          </select>
+        </div>
+        <div class="doc-form-field">
+          <label for="docTitle">Title</label>
+          <input id="docTitle" type="text" placeholder="e.g., Signed Lease Agreement" />
+        </div>
+      </div>
+      <div class="doc-form-field">
+        <label for="docFile">File</label>
+        <input id="docFile" type="file" accept="application/pdf,image/*,.doc,.docx" />
+        <div id="docUploadStatus" style="font-size:.78rem;color:var(--muted);margin-top:4px;"></div>
+      </div>
+      <div class="doc-form-field">
+        <label for="docNote">Note (optional)</label>
+        <input id="docNote" type="text" placeholder="Optional note for your records" />
+      </div>
+      <div style="display:flex;gap:8px;margin-top:6px;">
+        <button class="btn primary" id="saveDocBtn" type="button">💾 Save Document</button>
+        <button class="btn" id="cancelDocBtn" type="button">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="card-head">
+      <div class="card-head-left">
+        <div class="card-title">📁 All Documents</div>
+        <div class="card-sub" id="docsCardSub">Every file shared with your tenants.</div>
+      </div>
+      <button class="btn sm" id="refreshBtn" type="button">🔄 Refresh</button>
+    </div>
+    <div class="card-body">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Date</th><th>Type</th><th>Title</th><th>Property</th><th>Tenant</th><th>Open</th><th></th></tr>
+          </thead>
+          <tbody id="docBody">
+            <tr><td colspan="7"><span class="skel" style="width:60%;height:16px;"></span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<footer class="site-footer">
+  <div class="footer-content">
+    <div class="footer-section">
+      <h4>Navigate</h4>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="property-management.html">Property Management</a>
+      <a href="lease-rent-center.html">Lease &amp; Rent Center</a>
+      <a href="expense-tracking.html">Expense Tracking</a>
+    </div>
+    <div class="footer-section">
+      <h4>Support &amp; Legal</h4>
+      <a href="contact-us.html">Contact Us</a>
+      <a href="contact-us.html">Help Center</a>
+      <a href="terms.html">Terms of Service</a>
+      <a href="privacy.html">Privacy Policy</a>
+    </div>
+    <div class="footer-section">
+      <h4>Account</h4>
+      <a href="account.html">My Account</a>
+      <a href="invite-tenant.html">Invite Tenant</a>
+      <a href="tenant-portal-picker.html">Tenant Portal</a>
+    </div>
+  </div>
+  <div class="footer-bottom">© <span id="footerYear"></span> Rental Genie. All rights reserved.</div>
+</footer>
+
+<nav class="mobile-nav" aria-label="Mobile navigation">
+  <div class="mobile-nav-inner">
+    <a class="mnav" href="dashboard.html"><div class="ico">📊</div></a>
+    <a class="mnav" href="property-management.html"><div class="ico">🏘️</div></a>
+    <a class="mnav" href="lease-rent-center.html"><div class="ico">💰</div></a>
+    <a class="mnav" href="expense-tracking.html"><div class="ico">💸</div></a>
+    <a class="mnav" href="maintenance-requests.html"><div class="ico">🛠️</div></a>
+    <a class="mnav" href="reports-analytics.html"><div class="ico">📈</div></a>
+  </div>
+</nav>
+<div class="mobile-pad" aria-hidden="true"></div>
+
+<script>
+var client = window._rgClient;
+
+/* ============================================================
+   STATE
+============================================================ */
+var currentUser = null;
+var activeCompanyId = '';
+var propertiesCache = [];
+var leasesCache = [];      /* all leases for company (for tenant dropdowns) */
+var docsCache = [];
+
+function $(id) { return document.getElementById(id); }
+function isUuid(v) { return typeof v === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v); }
+function safe(v) { return String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+function safeUrl(u) { u = (u||'').trim(); return /^https?:\/\//i.test(u) ? u : null; }
+function fmtDateTime(iso) {
+  if (!iso) return '—';
+  var d = new Date(iso);
+  return isNaN(d.getTime()) ? String(iso) : d.toLocaleDateString(undefined,{year:'numeric',month:'short',day:'2-digit'});
+}
+function slugify(s) { return String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'') || 'file'; }
+function docTypeMeta(t) {
+  var v = (t || '').toLowerCase();
+  if (v === 'lease')   return { icon: '📄', label: 'Lease',   cls: 'info' };
+  if (v === 'receipt') return { icon: '🧾', label: 'Receipt', cls: 'good' };
+  if (v === 'notice')  return { icon: '📣', label: 'Notice',  cls: 'warn' };
+  return { icon: '📁', label: 'Document', cls: 'plain' };
+}
+
+function hideOverlay() {
+  var o = $('authOverlay');
+  if (o) { o.classList.add('hidden'); setTimeout(function () { o.style.display = 'none'; }, 380); }
+}
+
+/* ============================================================
+   AUTH
+============================================================ */
+async function setupAuth() {
+  try {
+    var res = await client.auth.getUser();
+    var user = res.data && res.data.user;
+    currentUser = user || null;
+    var loginBtn = $('nav-login');
+    var userMenu = $('userMenu');
+    var navBell = $('navBell');
+    if (!user) { hideOverlay(); return null; }
+    var uname = (user.user_metadata && (user.user_metadata.full_name || user.user_metadata.name))
+                || user.email.split('@')[0];
+    var _dp = uname.split(' ');
+    var initials = (_dp.length >= 2 ? _dp[0][0] + _dp[_dp.length-1][0] : uname.slice(0,2)).toUpperCase();
+
+    if (loginBtn) loginBtn.style.display = 'none';
+    if (userMenu) userMenu.style.display = window.innerWidth > 900 ? 'block' : 'none';
+    if (navBell) navBell.style.display = window.innerWidth > 900 ? 'flex' : 'none';
+    $('umdAvatar').textContent = initials;
+    $('umdName').textContent = uname;
+    $('umdFullName').textContent = uname;
+    $('umdEmail').textContent = user.email || '';
+    var da = $('drawerAvatar'); if (da) da.textContent = initials;
+    var ml = $('mobileUsernameLabel'); if (ml) ml.textContent = uname;
+    var ma = $('mobileAccountLink'); if (ma) ma.style.display = 'block';
+    var mlo = $('mobileLogoutContainer'); if (mlo) mlo.style.display = 'block';
+
+    client.auth.onAuthStateChange(function (event) {
+      if (event === 'SIGNED_OUT') location.href = 'login.html';
+    });
+    return user;
+  } catch(e) { hideOverlay(); return null; }
+}
+
+(function wireHeader() {
+  var toggle = $('umdToggle');
+  var drop   = $('umdDropdown');
+  if (toggle && drop) {
+    toggle.addEventListener('click', function (e) {
+      e.stopPropagation();
+      drop.classList.toggle('open');
+      toggle.setAttribute('aria-expanded', drop.classList.contains('open'));
+    });
+    document.addEventListener('click', function () { drop.classList.remove('open'); });
+  }
+  async function doSignOut() { try { await client.auth.signOut(); } catch(e) {} location.href='login.html'; }
+  var lb = $('logoutBtn');       if (lb) lb.addEventListener('click', doSignOut);
+  var mb = $('mobileLogoutBtn'); if (mb) mb.addEventListener('click', doSignOut);
+  var ham = $('hamburgerBtn');
+  var drw = $('mobileDrawer');
+  if (ham && drw) {
+    ham.addEventListener('click', function () { drw.style.display = drw.style.display === 'block' ? 'none' : 'block'; });
+    document.addEventListener('click', function (e) {
+      if (drw.style.display === 'block' && !drw.contains(e.target) && !ham.contains(e.target))
+        drw.style.display = 'none';
+    });
+  }
+}());
+
+/* ============================================================
+   COMPANY RESOLUTION (canonical 3-step pattern)
+============================================================ */
+function getParams() { return new URLSearchParams(location.search); }
+
+function resolveActiveCompanyId() {
+  var fromUrl = getParams().get('company_id');
+  if (fromUrl && isUuid(fromUrl)) {
+    try { localStorage.setItem('rg_active_company_id', fromUrl); } catch(e) {}
+    return Promise.resolve(fromUrl);
+  }
+  var cached = null;
+  try { cached = localStorage.getItem('rg_active_company_id'); } catch(e) {}
+  if (cached && isUuid(cached)) return Promise.resolve(cached);
+
+  if (!currentUser) return Promise.resolve(null);
+
+  return client.from('company_members').select('company_id').eq('user_id', currentUser.id)
+    .order('created_at', { ascending: true }).limit(1).maybeSingle()
+    .then(function (r) {
+      if (!r.error && r.data && r.data.company_id) {
+        try { localStorage.setItem('rg_active_company_id', r.data.company_id); } catch(e) {}
+        return r.data.company_id;
+      }
+      return client.from('companies').select('id')
+        .or('created_by.eq.' + currentUser.id + ',owner_user_id.eq.' + currentUser.id)
+        .order('created_at', { ascending: true }).limit(1).maybeSingle()
+        .then(function (c) {
+          if (!c.error && c.data && c.data.id) {
+            try { localStorage.setItem('rg_active_company_id', c.data.id); } catch(e) {}
+            return c.data.id;
+          }
+          return null;
+        });
+    })
+    .catch(function () { return null; });
+}
+
+/* ============================================================
+   LOAD PROPERTIES + LEASES (for tenant dropdowns)
+============================================================ */
+function loadProperties() {
+  var q = client.from('properties').select('id,name').order('name');
+  if (activeCompanyId) q = q.eq('company_id', activeCompanyId);
+  return q.then(function (res) {
+    propertiesCache = (res.data || []);
+    var opts = '<option value="">All Properties</option>' +
+      propertiesCache.map(function (p) { return '<option value="' + safe(p.name) + '">' + safe(p.name) + '</option>'; }).join('');
+    $('fltProperty').innerHTML = opts;
+    $('docProperty').innerHTML = '<option value="">Select property…</option>' +
+      propertiesCache.map(function (p) { return '<option value="' + safe(p.name) + '">' + safe(p.name) + '</option>'; }).join('');
+
+    var urlProp = getParams().get('property') ? decodeURIComponent(getParams().get('property')) : '';
+    if (urlProp) { $('fltProperty').value = urlProp; }
+  });
+}
+
+function loadLeases() {
+  var q = client.from('leases').select('tenant_email,tenant_id,tenant_name,property_name').order('lease_start', { ascending: false });
+  if (activeCompanyId) q = q.eq('company_id', activeCompanyId);
+  return q.then(function (res) {
+    leasesCache = res.data || [];
+  });
+}
+
+function tenantOptionsFor(propertyName) {
+  var seen = {};
+  var out = [];
+  leasesCache.forEach(function (l) {
+    if (propertyName && l.property_name !== propertyName) return;
+    var key = (l.tenant_email || '').toLowerCase();
+    if (!key || seen[key]) return;
+    seen[key] = true;
+    out.push(l);
+  });
+  return out;
+}
+
+function refreshTenantFilter() {
+  var propertyName = $('fltProperty').value;
+  var opts = tenantOptionsFor(propertyName);
+  var current = $('fltTenant').value;
+  $('fltTenant').innerHTML = '<option value="">All Tenants</option>' +
+    opts.map(function (l) { return '<option value="' + safe(l.tenant_email) + '">' + safe(l.tenant_name || l.tenant_email) + '</option>'; }).join('');
+  if (opts.some(function (l) { return l.tenant_email === current; })) $('fltTenant').value = current;
+}
+
+function refreshDocTenantSelect() {
+  var propertyName = $('docProperty').value;
+  var opts = tenantOptionsFor(propertyName);
+  $('docTenant').innerHTML = '<option value="">Select tenant…</option>' +
+    opts.map(function (l) { return '<option value="' + safe(l.tenant_email) + '" data-tenant-id="' + safe(l.tenant_id||'') + '" data-tenant-name="' + safe(l.tenant_name||'') + '">' + safe(l.tenant_name || l.tenant_email) + '</option>'; }).join('');
+}
+
+/* ============================================================
+   LOAD + RENDER DOCUMENTS
+============================================================ */
+function loadDocuments() {
+  if (!activeCompanyId) { docsCache = []; renderDocs(); return Promise.resolve(); }
+  var q = client.from('tenant_documents').select('*').eq('company_id', activeCompanyId).order('uploaded_at', { ascending: false });
+  return q.then(function (res) {
+    if (res.error) { console.error('Documents load error:', res.error); docsCache = []; }
+    else { docsCache = res.data || []; }
+    updateKpis();
+    renderDocs();
+  });
+}
+
+function updateKpis() {
+  var count = function (t) { return docsCache.filter(function (d) { return (d.doc_type||'').toLowerCase() === t; }).length; };
+  $('kpiTotal').textContent = docsCache.length || '0';
+  $('kpiLease').textContent = count('lease') || '0';
+  $('kpiNotices').textContent = count('notice') || '0';
+  $('kpiReceipts').textContent = count('receipt') || '0';
+}
+
+function filteredDocs() {
+  var propertyName = $('fltProperty').value;
+  var tenantEmail  = $('fltTenant').value;
+  var type         = $('fltType').value;
+  var q            = ($('fltSearch').value || '').trim().toLowerCase();
+  return docsCache.filter(function (d) {
+    if (propertyName && d.property_name !== propertyName) return false;
+    if (tenantEmail && (d.tenant_email||'').toLowerCase() !== tenantEmail.toLowerCase()) return false;
+    if (type && (d.doc_type||'').toLowerCase() !== type) return false;
+    if (q && !((d.title||'')+' '+(d.property_name||'')+' '+(d.tenant_email||'')).toLowerCase().includes(q)) return false;
+    return true;
+  });
+}
+
+function renderDocs() {
+  var body = $('docBody');
+  var rows = filteredDocs();
+  if (!rows.length) {
+    body.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">📁</div><p>No documents found.<br>Upload a signed lease, notice, or file to get started.</p></div></td></tr>';
+    return;
+  }
+  body.innerHTML = rows.map(function (d) {
+    var meta = docTypeMeta(d.doc_type);
+    var fileRef = d.file_path || d.file_url;
+    return '<tr>' +
+      '<td style="white-space:nowrap">' + fmtDateTime(d.uploaded_at) + '</td>' +
+      '<td><span class="chip ' + meta.cls + '">' + meta.icon + ' ' + meta.label + '</span></td>' +
+      '<td style="max-width:220px;font-weight:600">' + safe(d.title||'Untitled') + (d.note ? '<div style="font-size:.75rem;color:var(--muted);font-weight:500;margin-top:2px;">' + safe(d.note) + '</div>' : '') + '</td>' +
+      '<td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + safe(d.property_name||'—') + '</td>' +
+      '<td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + safe(d.tenant_email||'—') + '</td>' +
+      '<td>' + (fileRef ? '<a class="open-btn" href="#"' + rgFiles.attr('tenant-documents', fileRef) + ' target="_blank" rel="noopener noreferrer">↗ Open</a>' : '—') + '</td>' +
+      '<td><button class="icon-btn" title="Delete" onclick="window._deleteDoc(' + d.id + ')">🗑</button></td>' +
+      '</tr>';
+  }).join('');
+  rgFiles.hydrate(client, body);
+}
+
+window._deleteDoc = function (id) {
+  if (!confirm('Delete this document? This cannot be undone.')) return;
+  client.from('tenant_documents').delete().eq('id', id).then(function (res) {
+    if (res.error) { alert('Delete failed: ' + res.error.message); return; }
+    loadDocuments();
+  });
+};
+
+/* ============================================================
+   UPLOAD FORM
+============================================================ */
+function wireDocumentsForm() {
+  var card = $('docUploadCard');
+  $('uploadDocBtn').addEventListener('click', function () {
+    card.style.display = card.style.display === 'none' ? 'block' : 'none';
+    if (card.style.display === 'block') {
+      var fp = $('fltProperty').value;
+      if (fp) { $('docProperty').value = fp; refreshDocTenantSelect(); }
+    }
+  });
+  $('cancelDocBtn').addEventListener('click', function () { card.style.display = 'none'; });
+  $('docProperty').addEventListener('change', refreshDocTenantSelect);
+
+  $('saveDocBtn').addEventListener('click', function () {
+    var propertyName = $('docProperty').value;
+    var tenantOpt = $('docTenant').selectedOptions[0];
+    var tenantEmail = $('docTenant').value;
+    var tenantId = tenantOpt ? (tenantOpt.getAttribute('data-tenant-id') || null) : null;
+    var docType = $('docType').value;
+    var title = ($('docTitle').value || '').trim();
+    var note = ($('docNote').value || '').trim();
+    var fileInput = $('docFile');
+    var file = fileInput.files && fileInput.files[0];
+    var statusEl = $('docUploadStatus');
+
+    if (!propertyName) { statusEl.style.color = '#dc2626'; statusEl.textContent = 'Please select a property.'; return; }
+    if (!tenantEmail)  { statusEl.style.color = '#dc2626'; statusEl.textContent = 'Please select a tenant.'; return; }
+    if (!title)        { statusEl.style.color = '#dc2626'; statusEl.textContent = 'Please enter a title.'; return; }
+    if (!file)         { statusEl.style.color = '#dc2626'; statusEl.textContent = 'Please choose a file.'; return; }
+    if (!activeCompanyId) { statusEl.style.color = '#dc2626'; statusEl.textContent = 'No company found for this account.'; return; }
+
+    statusEl.style.color = 'var(--muted)';
+    statusEl.textContent = 'Uploading…';
+    $('saveDocBtn').disabled = true;
+
+    var safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+    var path = activeCompanyId + '/' + slugify(propertyName) + '/' + Date.now() + '_' + safeName;
+
+    client.storage.from('tenant-documents').upload(path, file, { cacheControl: '3600', upsert: false, contentType: file.type })
+      .then(function (up) {
+        if (up.error) throw up.error;
+        var pub = client.storage.from('tenant-documents').getPublicUrl(path);
+        var fileUrl = pub.data && pub.data.publicUrl;
+        if (!fileUrl) throw new Error('Could not resolve file URL.');
+        return client.from('tenant_documents').insert([{
+          company_id: activeCompanyId,
+          property_name: propertyName,
+          tenant_email: tenantEmail,
+          tenant_id: tenantId || null,
+          doc_type: docType,
+          title: title,
+          file_url: fileUrl,
+          file_path: path,
+          note: note || null,
+          uploaded_by: currentUser ? currentUser.id : null
+        }]);
+      })
+      .then(function (res) {
+        if (res.error) throw res.error;
+        statusEl.style.color = '#16a34a';
+        statusEl.textContent = '✅ Document uploaded.';
+        $('docTitle').value = ''; $('docNote').value = ''; fileInput.value = '';
+        setTimeout(function () { $('docUploadCard').style.display = 'none'; statusEl.textContent = ''; }, 700);
+        loadDocuments();
+      })
+      .catch(function (err) {
+        statusEl.style.color = '#dc2626';
+        statusEl.textContent = '❌ ' + (err.message || 'Upload failed.');
+      })
+      .finally(function () { $('saveDocBtn').disabled = false; });
+  });
+}
+
+/* ============================================================
+   INIT
+============================================================ */
+$('fltProperty').addEventListener('change', function () { refreshTenantFilter(); renderDocs(); });
+$('fltTenant').addEventListener('change', renderDocs);
+$('fltType').addEventListener('change', renderDocs);
+$('fltSearch').addEventListener('input', renderDocs);
+$('refreshBtn').addEventListener('click', loadDocuments);
+
+document.getElementById('footerYear').textContent = new Date().getFullYear();
+
+document.addEventListener('DOMContentLoaded', function () {
+  setTimeout(hideOverlay, 5000);
+
+  (async function () {
+    await setupAuth();
+    hideOverlay();
+    activeCompanyId = (await resolveActiveCompanyId()) || '';
+    await Promise.all([loadProperties(), loadLeases()]);
+    refreshTenantFilter();
+    wireDocumentsForm();
+    await loadDocuments();
+  }());
+});
+</script>
+</body>
+</html>

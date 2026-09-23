@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🏦 Escrow Reconciliation – Rental Genie</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono&display=swap" rel="stylesheet">
+<style>
+/* ── Design tokens ── */
+:root {
+  --navy:       #0c1e3a;
+  --navy-mid:   #1a3a6b;
+  --navy-light: #1e5799;
+  --sky:        #2d8cf0;
+  --border:     #e2e8f0;
+  --bg:         #f1f4f8;
+  --card:       #ffffff;
+  --text:       #0c1e3a;
+  --muted:      #64748b;
+  --success:    #10b981;
+  --danger:     #ef4444;
+  --radius-md:  12px;
+  --radius-lg:  16px;
+  --shadow-sm:  0 1px 4px rgba(12,30,58,.06);
+  --shadow-md:  0 4px 16px rgba(12,30,58,.09);
+}
+*,*::before,*::after{box-sizing:border-box;}
+html,body{height:100%;margin:0;}
+body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;}
+
+/* ── Header ── */
+.header-container{position:sticky;top:0;z-index:1000;background:linear-gradient(135deg,#0c1e3a 0%,#1a3a6b 55%,#1e5799 100%);border-bottom:1px solid rgba(255,255,255,.08);box-shadow:0 2px 20px rgba(12,30,58,.35);}
+.navbar{max-width:1440px;margin:0 auto;padding:13px 22px;display:flex;align-items:center;justify-content:space-between;}
+.brand-area{display:flex;align-items:center;gap:11px;text-decoration:none;}
+.brand-logo{width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.15);box-shadow:0 0 0 1px rgba(255,255,255,.2),0 4px 12px rgba(0,0,0,.2);object-fit:cover;}
+.brand-title{font-size:1.25rem;font-weight:700;color:#fff;letter-spacing:-.3px;}
+.nav-links{display:flex;gap:2px;align-items:center;}
+.nav-links a{display:inline-flex;align-items:center;gap:5px;padding:6px 10px;font-size:13.5px;font-weight:500;color:rgba(255,255,255,.78);text-decoration:none;border-radius:8px;white-space:nowrap;transition:all .18s;}
+.nav-links a:hover{background:rgba(255,255,255,.12);color:#fff;}
+.nav-active{background:rgba(255,255,255,.16)!important;color:#fff!important;}
+#nav-login{padding:7px 16px;border-radius:999px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);color:#fff;font-weight:600;font-size:13.5px;text-decoration:none;}
+.hamburger{display:none;font-size:1.4rem;padding:7px 12px;border:1px solid rgba(255,255,255,.22);border-radius:8px;background:rgba(255,255,255,.1);cursor:pointer;color:#fff;}
+@media(max-width:860px){.nav-links{display:none;}.hamburger{display:block;}}
+
+/* ── Auth visibility ── */
+body.auth-guest #nav-login{display:inline-flex!important;}body.auth-guest .umd-wrap{display:none!important;}
+body.auth-ready #nav-login{display:none!important;}body.auth-ready .umd-wrap{display:block!important;}
+body.auth-ready #mobileLogin{display:none!important;}body.auth-ready #mobileAccountLink{display:flex!important;}body.auth-ready #mobileLogoutContainer{display:block!important;}
+body.auth-guest #mobileLogin{display:block!important;}body.auth-guest #mobileAccountLink{display:none!important;}body.auth-guest #mobileLogoutContainer{display:none!important;}
+@media(max-width:860px){body.auth-ready .umd-wrap{display:none!important;}}
+
+/* ── UMD ── */
+.umd-wrap{position:relative;}.umd-toggle{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:5px 12px 5px 5px;cursor:pointer;transition:background .18s;color:#fff;font-family:'DM Sans',sans-serif;}
+.umd-toggle:hover{background:rgba(255,255,255,.18);}
+.umd-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#38bdf8,#1a3a6b);display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:700;color:#fff;flex-shrink:0;}
+.umd-name{font-size:.8rem;color:#fff;font-weight:600;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}.umd-caret{font-size:.6rem;color:rgba(255,255,255,.7);}
+.umd-dropdown{display:none;position:absolute;right:0;top:calc(100% + 8px);background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:0 8px 32px rgba(12,30,58,.18);min-width:220px;overflow:hidden;z-index:1100;}
+.umd-dropdown.open{display:block;animation:umdFadeIn .15s ease both;}@keyframes umdFadeIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+.umd-user-row{padding:14px 16px 10px;border-bottom:1px solid #f1f5f9;}.umd-user-name{font-size:.88rem;font-weight:700;color:var(--navy);}.umd-user-email{font-size:.75rem;color:var(--muted);margin-top:2px;}
+.umd-section{display:flex;flex-direction:column;padding:6px;border-bottom:1px solid #f1f5f9;}.umd-section:last-child{border-bottom:none;}
+.umd-link{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:8px;font-size:.84rem;font-weight:600;color:var(--text);text-decoration:none;background:none;border:none;cursor:pointer;width:100%;font-family:'DM Sans',sans-serif;transition:background .15s;}
+.umd-link:hover{background:#f8faff;}.umd-link.danger{color:var(--danger);}.umd-link.danger:hover{background:#fef2f2;}
+
+/* ── Drawer ── */
+.drawer{display:none;position:fixed;top:70px;left:12px;right:12px;background:#fff;border:1px solid var(--border);border-radius:18px;padding:0;z-index:1300;box-shadow:0 16px 48px rgba(12,30,58,.2);max-height:calc(100vh - 90px);overflow-y:auto;}
+.drawer-user-row{display:flex!important;align-items:center;gap:12px;padding:16px 16px 14px!important;border-bottom:1px solid #f1f5f9!important;text-decoration:none;background:#fafbfc;}
+.drawer-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#1a3a6b,#1e5799);color:#fff;font-weight:700;font-size:.78rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;text-transform:uppercase;}
+.drawer-username{font-weight:700;font-size:.95rem;color:var(--navy)!important;}
+.drawer-grid{display:grid;grid-template-columns:1fr 1fr;padding:8px 10px;gap:2px;}
+.drawer-grid-divider{grid-column:1/-1;height:1px;background:#f1f5f9;margin:2px 0;}
+.drawer-grid a{display:flex;align-items:center;gap:8px;padding:11px 10px;font-weight:600;font-size:.88rem;color:var(--navy)!important;text-decoration:none;border-radius:9px;transition:background .12s;}
+.drawer-grid a:hover{background:#f1f5f9;}.drawer-grid a.nav-active{background:#eff4ff!important;color:var(--navy-mid)!important;font-weight:700!important;}
+.drawer-login{display:block;padding:11px 16px;font-weight:600;color:var(--navy)!important;font-size:.9rem;border-top:1px solid #f1f5f9;text-decoration:none;}
+#mobileLogoutContainer{border-top:1px solid #f1f5f9;padding:6px 10px 8px;}
+#mobileLogoutContainer button{width:100%;padding:10px;background:none;border:none;text-align:left;font-weight:700;color:var(--danger);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.9rem;border-radius:8px;}
+#mobileLogoutContainer button:hover{background:#fef2f2;}
+
+/* ── Mobile bottom nav ── */
+.mobile-nav{display:none;position:fixed;left:0;right:0;bottom:0;z-index:1200;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:linear-gradient(135deg,#0c1e3a,#1a3a6b);border-top:1px solid rgba(255,255,255,.08);box-shadow:0 -4px 20px rgba(12,30,58,.28);}
+.mobile-nav-inner{max-width:1440px;margin:0 auto;display:grid;grid-template-columns:repeat(6,1fr);gap:5px;}
+.mnav{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:9px 6px;border-radius:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.07);color:rgba(255,255,255,.55);font-weight:700;font-size:10px;text-decoration:none;text-align:center;}
+.mnav .ico{font-size:22px;line-height:1;}.mnav.active{background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.25);color:#fff;}
+.mobile-pad{display:none;height:82px;}
+@media(max-width:860px){.mobile-nav{display:block;}.mobile-pad{display:block;}main.page{padding-bottom:calc(82px + env(safe-area-inset-bottom))!important;}}
+@media(max-width:600px){.site-footer{display:none!important;}}
+
+/* ── Footer ── */
+.site-footer{background:var(--navy);padding:40px 20px 24px;margin-top:48px;}
+.footer-content{max-width:1440px;margin:0 auto;display:grid;grid-template-columns:1.6fr repeat(3,1fr);gap:32px;padding-bottom:28px;border-bottom:1px solid rgba(255,255,255,.08);}
+@media(max-width:860px){.footer-content{grid-template-columns:1fr 1fr;}}@media(max-width:520px){.footer-content{grid-template-columns:1fr;}}
+.footer-brand .footer-logo-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.footer-brand .footer-logo{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);}
+.footer-brand .footer-name{font-size:1.1rem;font-weight:700;color:#fff;}
+.footer-brand p{font-size:.83rem;color:rgba(255,255,255,.45);line-height:1.55;max-width:220px;margin:0;}
+.footer-section h4{font-size:.72rem;font-weight:700;color:rgba(255,255,255,.55);text-transform:uppercase;letter-spacing:1px;margin:0 0 14px;}
+.footer-section a{display:block;color:rgba(255,255,255,.5);text-decoration:none;font-size:.85rem;margin-bottom:9px;transition:color .15s;}
+.footer-section a:hover{color:rgba(255,255,255,.9);}
+.footer-bottom{max-width:1440px;margin:20px auto 0;color:rgba(255,255,255,.3);font-size:.78rem;}
+
+/* ── Page layout ── */
+main.page{flex:1;max-width:1100px;width:100%;margin:0 auto;padding:28px 22px 40px;}
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:6px;flex-wrap:wrap;}
+.page-title{font-size:1.55rem;font-weight:700;color:var(--navy);margin:0 0 4px;display:flex;align-items:center;gap:8px;}
+.page-intro{color:var(--muted);font-size:.9rem;margin:0 0 8px;}
+.back-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:999px;background:#e5e7eb;color:#374151;text-decoration:none;font-size:.86rem;font-weight:600;border:none;cursor:pointer;margin-bottom:18px;}
+.back-btn:hover{background:#d1d5db;}
+
+/* ── Cards ── */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);padding:22px 24px 26px;margin-bottom:18px;}
+.card-title{font-size:1rem;font-weight:800;color:var(--text);display:flex;align-items:center;gap:8px;margin:0 0 4px;}
+.card-sub{font-size:.82rem;color:var(--muted);margin:0 0 18px;}
+.section-divider{height:1px;background:var(--border);margin:20px 0;}
+
+/* ── Summary KPI strip ── */
+.kpi-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px;}
+@media(max-width:700px){.kpi-strip{grid-template-columns:repeat(2,1fr);}}
+.kpi-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);padding:16px 18px;box-shadow:var(--shadow-sm);}
+.kpi-label{font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;}
+.kpi-value{font-size:1.45rem;font-weight:800;color:var(--navy);font-family:'DM Mono',monospace;}
+.kpi-value.positive{color:#059669;}.kpi-value.negative{color:var(--danger);}
+.kpi-note{font-size:.72rem;color:var(--muted);margin-top:4px;}
+
+/* ── Property + period selectors ── */
+.controls-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px;}
+.controls-row label{font-size:.8rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;}
+.controls-row select,.controls-row input[type="month"]{padding:8px 12px;border:1.5px solid var(--border);border-radius:var(--radius-md);font-family:'DM Sans',sans-serif;font-size:.88rem;color:var(--text);background:#f8fafc;cursor:pointer;outline:none;}
+.controls-row select:focus,.controls-row input:focus{border-color:var(--sky);box-shadow:0 0 0 3px rgba(45,140,240,.1);}
+
+/* ── Grid ── */
+.grid-2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 18px;}
+.grid-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px 18px;}
+@media(max-width:700px){.grid-2,.grid-3{grid-template-columns:1fr;}}
+.full-span{grid-column:1/-1;}
+
+/* ── Form fields ── */
+.form-field{display:flex;flex-direction:column;gap:4px;}
+.form-field label{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);}
+.form-field input,.form-field select,.form-field textarea{padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--radius-md);font-family:'DM Sans',sans-serif;font-size:.9rem;color:var(--text);background:#f8fafc;outline:none;transition:border-color .15s,box-shadow .15s;}
+.form-field input:focus,.form-field select:focus,.form-field textarea:focus{border-color:var(--sky);box-shadow:0 0 0 3px rgba(45,140,240,.1);background:#fff;}
+.form-field textarea{resize:vertical;min-height:72px;}
+.field-hint{font-size:.72rem;color:var(--muted);margin-top:3px;}
+
+/* ── Buttons ── */
+.btn-row{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;flex-wrap:wrap;}
+.primary-btn{background:linear-gradient(135deg,#0c1e3a,#1a3a6b,#1e5799);color:#fff;border:none;padding:10px 22px;border-radius:999px;font-weight:700;font-size:.88rem;cursor:pointer;font-family:'DM Sans',sans-serif;box-shadow:0 2px 10px rgba(12,30,58,.2);}
+.primary-btn:hover{filter:brightness(1.08);}.primary-btn:disabled{opacity:.5;cursor:not-allowed;}
+.ghost-btn{background:#fff;border:1.5px solid var(--border);color:var(--text);padding:9px 18px;border-radius:999px;font-weight:600;font-size:.88rem;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.ghost-btn:hover{background:#f1f5f9;}
+.small-btn{padding:5px 12px;border-radius:999px;font-size:.75rem;font-weight:700;cursor:pointer;border:1.5px solid var(--border);background:#fff;color:var(--text);font-family:'DM Sans',sans-serif;}
+.small-btn:hover{background:#f1f5f9;}.small-btn.danger{color:var(--danger);border-color:#fca5a5;}.small-btn.danger:hover{background:#fef2f2;}
+
+/* ── Table ── */
+.table-wrap{width:100%;overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius-md);background:#fff;}
+table{width:100%;border-collapse:collapse;min-width:640px;}
+th,td{text-align:left;padding:10px 13px;border-bottom:1px solid #f1f5f9;vertical-align:middle;font-size:.85rem;}
+th{background:#f8fafc;font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;position:sticky;top:0;z-index:1;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:#fafbff;}
+.row-actions{display:flex;gap:6px;flex-wrap:wrap;}
+.status-badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:999px;font-size:.72rem;font-weight:700;white-space:nowrap;}
+.status-badge.match{background:#d1fae5;color:#065f46;}
+.status-badge.shortage{background:#fee2e2;color:#991b1b;}
+.status-badge.surplus{background:#dbeafe;color:#1e40af;}
+.status-badge.pending{background:#fef3c7;color:#92400e;}
+
+/* ── Alert ── */
+.alert-box{padding:13px 16px;border-radius:var(--radius-md);font-size:.88rem;font-weight:600;margin-bottom:16px;display:none;}
+.alert-box.success{background:#d1fae5;color:#065f46;border:1px solid #34d399;display:flex;}
+.alert-box.error{background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;display:flex;}
+.alert-box.info{background:#dbeafe;color:#1e40af;border:1px solid #93c5fd;display:flex;}
+
+/* ── Pill ── */
+.info-pill{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;background:#f3f4f6;border:1px solid var(--border);font-weight:600;font-size:.88rem;color:var(--text);}
+</style>
+</head>
+
+<body class="auth-guest">
+
+<!-- Supabase Bootstrap (body-first) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function(){
+  try{
+    var _m=new Map(),_l=null;try{_l=window.localStorage;}catch(e){}
+    var _s={getItem:function(k){try{return(_l&&_l.getItem(k))||_m.get(k)||null;}catch(e){return _m.get(k)||null;}},setItem:function(k,v){try{_l&&_l.setItem(k,v);}catch(e){}_m.set(k,v);},removeItem:function(k){try{_l&&_l.removeItem(k);}catch(e){}_m.delete(k);}};
+    if(!window._rgClient){window._rgClient=window.supabase.createClient('https://pbojacnagutipfhcxltj.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBib2phY25hZ3V0aXBmaGN4bHRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgwMDkwODAsImV4cCI6MjA2MzU4NTA4MH0.ZLCcAzTYljoZycpBGwMtthP5VyAJ4schuIvt4HibGc0',{auth:{lock:undefined,persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storage:_s}});}
+    window.sb=window._rgClient;window.client=window._rgClient;
+    window.getSbClient=function(){return window._rgClient;};
+  }catch(e){console.error('RG bootstrap failed:',e);}
+})();
+</script>
+
+<header class="header-container">
+  <div class="navbar">
+    <a class="brand-area" href="dashboard.html">
+      <img src="images/rg-logo.png" onerror="this.style.display='none'" class="brand-logo" alt="Rental Genie" />
+      <span class="brand-title">Rental Genie</span>
+    </a>
+    <nav class="nav-links" aria-label="Main navigation">
+      <a href="dashboard.html">📊 Dashboard</a>
+      <a href="property-management.html" class="nav-active">🏘️ Properties</a>
+      <a href="lease-rent-center.html">💰 Lease &amp; Rent</a>
+      <a href="expense-tracking.html">💸 Expenses</a>
+      <a href="maintenance-requests.html">🛠 Maintenance</a>
+      <a href="tenant-messages.html">💬 Messages</a>
+      <a href="reports-analytics.html">📈 Reports</a>
+    </nav>
+    <div class="umd-wrap" id="userMenu" style="display:none">
+      <button class="umd-toggle" id="umdToggle" aria-haspopup="true" aria-expanded="false">
+        <div class="umd-avatar" id="umdAvatar">?</div>
+        <span class="umd-name" id="umdName">User</span>
+        <span class="umd-caret">▾</span>
+      </button>
+      <div class="umd-dropdown" id="umdDropdown">
+        <div class="umd-user-row">
+          <div class="umd-user-name" id="umdFullName">—</div>
+          <div class="umd-user-email" id="umdEmail">—</div>
+        </div>
+        <div class="umd-section">
+          <a class="umd-link" href="dashboard.html">📊 Dashboard</a>
+          <a class="umd-link" href="account.html">⚙️ Account Settings</a>
+          <a class="umd-link" href="invite-tenant.html">✉️ Invite Tenant</a>
+          <a class="umd-link" href="tenant-portal-picker.html">🏠 Tenant Portal</a>
+        </div>
+        <div class="umd-section">
+          <a class="umd-link" href="reports-analytics.html">📈 Reports &amp; Analytics</a>
+          <a class="umd-link" href="contact-us.html">💬 Contact Support</a>
+        </div>
+        <div class="umd-section">
+          <button class="umd-link danger" id="logoutBtn">🚪 Sign Out</button>
+        </div>
+      </div>
+    </div>
+    <a id="nav-login" href="login-select.html">Log in</a>
+    <button class="hamburger" id="hamburgerBtn" aria-label="Open menu">☰</button>
+  </div>
+</header>
+
+<div class="drawer" id="mobileDrawer">
+  <a href="account.html" id="mobileAccountLink" style="display:none;" class="drawer-user-row">
+    <span class="drawer-avatar" id="drawerAvatar">?</span>
+    <span class="drawer-username" id="mobileUsernameLabel">Account</span>
+  </a>
+  <div class="drawer-grid">
+    <a href="dashboard.html">📊 Dashboard</a>
+    <a href="property-management.html" class="nav-active">🏘️ Properties</a>
+    <div class="drawer-grid-divider"></div>
+    <a href="lease-rent-center.html">💰 Lease &amp; Rent</a>
+    <a href="expense-tracking.html">💸 Expenses</a>
+    <div class="drawer-grid-divider"></div>
+    <a href="maintenance-requests.html">🛠 Maintenance</a>
+    <a href="tenant-messages.html">💬 Messages</a>
+    <a href="reports-analytics.html">📈 Reports</a>
+  </div>
+  <a href="login-select.html" id="mobileLogin" class="drawer-login">Log in</a>
+  <div id="mobileLogoutContainer" style="display:none;">
+    <button id="mobileLogoutBtn">Sign Out</button>
+  </div>
+</div>
+
+<main class="page">
+
+  <a class="back-btn" id="backBtn" href="property-management.html">← Back</a>
+
+  <div class="page-header">
+    <div>
+      <div class="page-title">🏦 Escrow Reconciliation</div>
+      <div class="page-intro">Track and reconcile escrow account activity — taxes, insurance, and reserve balances — against your lender's statements.</div>
+    </div>
+    <div>
+      <span class="info-pill">🏷️ Property: <span id="propertyNameLabel" style="margin-left:4px;">—</span></span>
+    </div>
+  </div>
+
+  <!-- Alert -->
+  <div class="alert-box" id="alertBox"></div>
+
+  <!-- ── KPI Summary ── -->
+  <div class="kpi-strip">
+    <div class="kpi-card">
+      <div class="kpi-label">Escrow Balance</div>
+      <div class="kpi-value" id="kpiBalance">—</div>
+      <div class="kpi-note">Current period</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Total Collected</div>
+      <div class="kpi-value positive" id="kpiCollected">—</div>
+      <div class="kpi-note">Paid into escrow</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Total Disbursed</div>
+      <div class="kpi-value negative" id="kpiDisbursed">—</div>
+      <div class="kpi-note">Taxes + Insurance</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Surplus / Shortage</div>
+      <div class="kpi-value" id="kpiSurplus">—</div>
+      <div class="kpi-note" id="kpiSurplusNote">vs. lender required</div>
+    </div>
+  </div>
+
+  <!-- ── Period / Property controls ── -->
+  <div class="controls-row">
+    <label>Period:</label>
+    <input type="month" id="periodPicker" />
+    <label style="margin-left:8px;">Year View:</label>
+    <select id="yearPicker"></select>
+  </div>
+
+  <!-- ── Add / Edit Entry ── -->
+  <div class="card">
+    <div class="card-title">➕ Add / Edit Escrow Entry</div>
+    <div class="card-sub">Record a disbursement (tax payment, insurance premium) or a collection (lender escrow deposit).</div>
+
+    <form id="escrowForm">
+      <input type="hidden" id="entryId" />
+      <div class="grid-2">
+        <div class="form-field">
+          <label for="entryType">📂 Entry Type</label>
+          <select id="entryType" required>
+            <optgroup label="Collections (money in)">
+              <option value="collection_mortgage">Escrow Collection (mortgage payment)</option>
+              <option value="collection_manual">Manual Escrow Deposit</option>
+            </optgroup>
+            <optgroup label="Disbursements (money out)">
+              <option value="tax_payment">Property Tax Payment</option>
+              <option value="insurance_premium">Insurance Premium</option>
+              <option value="hoa_payment">HOA / Special Assessment</option>
+              <option value="flood_insurance">Flood Insurance</option>
+              <option value="other_disbursement">Other Disbursement</option>
+            </optgroup>
+            <optgroup label="Adjustments">
+              <option value="lender_adjustment">Lender Adjustment</option>
+              <option value="shortage_payment">Shortage Payment</option>
+              <option value="surplus_refund">Surplus Refund</option>
+            </optgroup>
+          </select>
+        </div>
+
+        <div class="form-field">
+          <label for="entryDate">📅 Date</label>
+          <input type="date" id="entryDate" required />
+        </div>
+
+        <div class="form-field">
+          <label for="entryAmount">💵 Amount ($)</label>
+          <input type="number" id="entryAmount" step="0.01" min="0" placeholder="e.g., 3200.00" required />
+          <span class="field-hint">Enter the positive dollar amount — direction is set by entry type.</span>
+        </div>
+
+        <div class="form-field">
+          <label for="entryPayee">🏢 Payee / Source</label>
+          <input type="text" id="entryPayee" placeholder="e.g., Cook County Treasurer, State Farm" />
+        </div>
+
+        <div class="form-field">
+          <label for="entryRef">🔢 Reference / Confirmation #</label>
+          <input type="text" id="entryRef" placeholder="e.g., TXN-2026-0412" />
+        </div>
+
+        <div class="form-field">
+          <label for="entryStatus">✅ Status</label>
+          <select id="entryStatus">
+            <option value="pending">Pending</option>
+            <option value="completed">Completed</option>
+            <option value="disputed">Disputed</option>
+          </select>
+        </div>
+
+        <div class="form-field full-span">
+          <label for="entryNotes">📝 Notes</label>
+          <textarea id="entryNotes" placeholder="Tax year, policy number, lender statement reference…"></textarea>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button type="button" class="ghost-btn" id="clearBtn">Clear</button>
+        <button type="submit" class="primary-btn" id="saveBtn">💾 Save Entry</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- ── Lender Required Balance ── -->
+  <div class="card">
+    <div class="card-title">📋 Lender Escrow Requirements</div>
+    <div class="card-sub">Set the minimum required balance and annual projections from your escrow analysis statement.</div>
+
+    <div class="grid-3">
+      <div class="form-field">
+        <label for="reqMinBalance">Minimum Required Balance ($)</label>
+        <input type="number" id="reqMinBalance" step="0.01" min="0" placeholder="e.g., 4800.00" />
+        <span class="field-hint">Typically 2 months of projected disbursements.</span>
+      </div>
+      <div class="form-field">
+        <label for="reqAnnualTax">Annual Property Tax ($)</label>
+        <input type="number" id="reqAnnualTax" step="0.01" min="0" placeholder="e.g., 6400.00" />
+      </div>
+      <div class="form-field">
+        <label for="reqAnnualInsurance">Annual Insurance Premium ($)</label>
+        <input type="number" id="reqAnnualInsurance" step="0.01" min="0" placeholder="e.g., 1800.00" />
+      </div>
+      <div class="form-field">
+        <label for="reqMonthlyEscrow">Monthly Escrow Payment ($)</label>
+        <input type="number" id="reqMonthlyEscrow" step="0.01" min="0" placeholder="e.g., 686.00" />
+        <span class="field-hint">From your lender statement (tax + insurance ÷ 12 + cushion).</span>
+      </div>
+      <div class="form-field">
+        <label for="reqEffectiveDate">Analysis Statement Date</label>
+        <input type="date" id="reqEffectiveDate" />
+      </div>
+      <div class="form-field">
+        <label for="reqNotes">Notes</label>
+        <input type="text" id="reqNotes" placeholder="Statement reference, next review date…" />
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button type="button" class="primary-btn" id="saveReqBtn">💾 Save Requirements</button>
+    </div>
+  </div>
+
+  <!-- ── Transaction History ── -->
+  <div class="card">
+    <div class="card-title">📚 Escrow Ledger</div>
+    <div class="card-sub">All escrow activity for this property. Use the period filter above to narrow down.</div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Type</th>
+            <th>Payee / Source</th>
+            <th>Amount</th>
+            <th>Direction</th>
+            <th>Status</th>
+            <th>Ref #</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="ledgerBody">
+          <tr><td colspan="8" style="color:var(--muted);padding:20px 14px;">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div id="ledgerEmpty" style="display:none;text-align:center;padding:32px 16px;color:var(--muted);">
+      No escrow entries found for this period. Add your first one above.
+    </div>
+  </div>
+
+</main>
+
+<!-- Mobile nav -->
+<nav class="mobile-nav" aria-label="Mobile navigation">
+  <div class="mobile-nav-inner">
+    <a class="mnav" href="dashboard.html"><div class="ico">📊</div></a>
+    <a class="mnav active" href="property-management.html"><div class="ico">🏘️</div></a>
+    <a class="mnav" href="lease-rent-center.html"><div class="ico">💰</div></a>
+    <a class="mnav" href="expense-tracking.html"><div class="ico">💸</div></a>
+    <a class="mnav" href="maintenance-requests.html"><div class="ico">🛠️</div></a>
+    <a class="mnav" href="reports-analytics.html"><div class="ico">📈</div></a>
+  </div>
+</nav>
+<div class="mobile-pad" aria-hidden="true"></div>
+
+<footer class="site-footer">
+  <div class="footer-content">
+    <div class="footer-brand">
+      <div class="footer-logo-row">
+        <img src="images/rg-logo.png" onerror="this.style.display='none'" class="footer-logo" alt="Rental Genie" />
+        <span class="footer-name">Rental Genie</span>
+      </div>
+      <p>Smart property management for independent landlords.</p>
+    </div>
+    <div class="footer-section">
+      <h4>Navigate</h4>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="property-management.html">Properties</a>
+      <a href="lease-rent-center.html">Lease &amp; Rent</a>
+      <a href="expense-tracking.html">Expenses</a>
+    </div>
+    <div class="footer-section">
+      <h4>Account</h4>
+      <a href="account.html">My Account</a>
+      <a href="tenant-portal-picker.html">Tenant Portal</a>
+      <a href="invite-tenant.html">Invite Tenant</a>
+    </div>
+    <div class="footer-section">
+      <h4>Support</h4>
+      <a href="contact-us.html">Contact Us</a>
+      <a href="terms.html">Terms of Service</a>
+      <a href="privacy.html">Privacy Policy</a>
+    </div>
+  </div>
+  <div class="footer-bottom">© <span id="footerYear"></span> Rental Genie. All rights reserved.</div>
+</footer>
+
+<script>
+'use strict';
+
+const sb = window._rgClient;
+const params     = new URLSearchParams(window.location.search);
+const propertyId = params.get('property_id') || params.get('id') || null;
+const companyId  = params.get('company_id') || null;
+const returnTo   = params.get('return_to') || '';
+
+/* ── URL helpers ── */
+(function wireBack() {
+  var btn = document.getElementById('backBtn');
+  if (!btn) return;
+  if (returnTo) btn.href = decodeURIComponent(returnTo);
+  else if (propertyId) btn.href = 'property-overview.html?property_id=' + encodeURIComponent(propertyId) + (companyId ? '&company_id=' + encodeURIComponent(companyId) : '');
+  else btn.href = 'property-management.html';
+})();
+
+/* ── Format helpers ── */
+function fmtMoney(v) {
+  const n = Number(v);
+  if (!isFinite(n)) return '—';
+  return '$' + n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+function safeText(v) { return (v == null || v === '') ? '—' : String(v); }
+function toISO(d) { return d ? String(d).slice(0,10) : ''; }
+
+/* ── Alert ── */
+function showAlert(msg, type) {
+  var el = document.getElementById('alertBox');
+  el.textContent = msg;
+  el.className = 'alert-box ' + (type || 'info');
+  el.style.display = 'flex';
+  clearTimeout(el._t);
+  el._t = setTimeout(function() { el.style.display = 'none'; }, 5000);
+}
+
+/* ── Entry type metadata ── */
+var DISBURSEMENT_TYPES = new Set(['tax_payment','insurance_premium','hoa_payment','flood_insurance','other_disbursement','shortage_payment']);
+var COLLECTION_TYPES   = new Set(['collection_mortgage','collection_manual','surplus_refund']);
+var TYPE_LABELS = {
+  collection_mortgage: 'Escrow Collection',
+  collection_manual:   'Manual Deposit',
+  tax_payment:         'Property Tax',
+  insurance_premium:   'Insurance Premium',
+  hoa_payment:         'HOA / Assessment',
+  flood_insurance:     'Flood Insurance',
+  other_disbursement:  'Other Disbursement',
+  lender_adjustment:   'Lender Adjustment',
+  shortage_payment:    'Shortage Payment',
+  surplus_refund:      'Surplus Refund'
+};
+
+function entryDirection(type) {
+  if (COLLECTION_TYPES.has(type)) return 'in';
+  if (DISBURSEMENT_TYPES.has(type)) return 'out';
+  return 'adj';
+}
+
+/* ── Period picker ── */
+(function initPeriod() {
+  var now = new Date();
+  var pm  = document.getElementById('periodPicker');
+  var yr  = document.getElementById('yearPicker');
+  var iso = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
+  pm.value = iso;
+
+  for (var y = now.getFullYear(); y >= now.getFullYear()-5; y--) {
+    var opt = document.createElement('option');
+    opt.value = y; opt.textContent = y;
+    yr.appendChild(opt);
+  }
+  yr.value = now.getFullYear();
+
+  pm.addEventListener('change', loadLedger);
+  yr.addEventListener('change', loadLedger);
+})();
+
+/* ── Auth setup ── */
+async function rgSetupAuth() {
+  var user = null;
+  try { var r = await sb.auth.getUser(); user = (!r.error && r.data?.user) ? r.data.user : null; } catch(e){}
+  if (!user) { try { var s = await sb.auth.getSession(); user = s.data?.session?.user || null; } catch(e){} }
+  if (!user) {
+    document.body.classList.add('auth-guest');
+    location.href = 'login-select.html?returnTo=' + encodeURIComponent(location.pathname + location.search);
+    return null;
+  }
+  var uname = (user.user_metadata?.full_name || user.user_metadata?.name || user.email.split('@')[0]);
+  var parts = uname.trim().split(/\s+/);
+  var initials = (parts.length >= 2 ? parts[0][0] + parts[parts.length-1][0] : uname.slice(0,2)).toUpperCase();
+  document.body.classList.remove('auth-guest');
+  document.body.classList.add('auth-ready');
+  var av=document.getElementById('umdAvatar');   if(av) av.textContent=initials;
+  var nm=document.getElementById('umdName');     if(nm) nm.textContent=uname;
+  var fn=document.getElementById('umdFullName'); if(fn) fn.textContent=uname;
+  var em=document.getElementById('umdEmail');    if(em) em.textContent=user.email||'';
+  var da=document.getElementById('drawerAvatar'); if(da) da.textContent=initials;
+  var ml=document.getElementById('mobileUsernameLabel'); if(ml) ml.textContent=uname;
+  sb.auth.onAuthStateChange(function(_e, sess) {
+    document.body.classList.remove('auth-ready','auth-guest');
+    document.body.classList.add(sess?.user ? 'auth-ready' : 'auth-guest');
+  });
+  return user;
+}
+
+/* ── Header wiring ── */
+function wireHeader() {
+  var uBtn=document.getElementById('umdToggle'), uDrp=document.getElementById('umdDropdown');
+  if (uBtn && uDrp) {
+    uBtn.onclick = function(e){ e.stopPropagation(); uDrp.classList.toggle('open'); };
+    document.addEventListener('click', function(e){ if(!uDrp.contains(e.target)&&!uBtn.contains(e.target)) uDrp.classList.remove('open'); });
+  }
+  var lBtn=document.getElementById('logoutBtn'), mlBtn=document.getElementById('mobileLogoutBtn');
+  var signOut = async function(){ try{await sb.auth.signOut();}catch(e){} location.href='login-select.html'; };
+  if(lBtn) lBtn.onclick=signOut; if(mlBtn) mlBtn.onclick=signOut;
+  var ham=document.getElementById('hamburgerBtn'), drw=document.getElementById('mobileDrawer');
+  if(ham && drw){
+    ham.onclick=function(e){ e.stopPropagation(); drw.style.display=drw.style.display==='block'?'none':'block'; };
+    document.addEventListener('click', function(e){ if(drw.style.display==='block'&&!drw.contains(e.target)&&!ham.contains(e.target)) drw.style.display='none'; });
+  }
+}
+
+/* ── Load property name ── */
+async function loadPropertyName() {
+  if (!propertyId) return;
+  try {
+    var res = await sb.from('properties').select('name').eq('id', propertyId).single();
+    if (!res.error && res.data?.name) {
+      document.getElementById('propertyNameLabel').textContent = res.data.name;
+    }
+  } catch(e) {}
+}
+
+/* ── Cache of all entries ── */
+var allEntries = [];
+var requirementsRow = null;
+
+/* ── Load escrow requirements ── */
+async function loadRequirements() {
+  if (!propertyId) return;
+  try {
+    var res = await sb.from('property_escrow_requirements')
+      .select('*').eq('property_id', propertyId).maybeSingle();
+    if (!res.error && res.data) {
+      requirementsRow = res.data;
+      var d = res.data;
+      if (d.min_balance != null)       document.getElementById('reqMinBalance').value    = d.min_balance;
+      if (d.annual_tax != null)        document.getElementById('reqAnnualTax').value     = d.annual_tax;
+      if (d.annual_insurance != null)  document.getElementById('reqAnnualInsurance').value = d.annual_insurance;
+      if (d.monthly_escrow != null)    document.getElementById('reqMonthlyEscrow').value = d.monthly_escrow;
+      if (d.effective_date)            document.getElementById('reqEffectiveDate').value = toISO(d.effective_date);
+      if (d.notes)                     document.getElementById('reqNotes').value         = d.notes || '';
+    }
+  } catch(e) { console.warn('loadRequirements:', e); }
+}
+
+/* ── Load ledger ── */
+async function loadLedger() {
+  if (!propertyId) return;
+  var body  = document.getElementById('ledgerBody');
+  var empty = document.getElementById('ledgerEmpty');
+  body.innerHTML = '<tr><td colspan="8" style="color:var(--muted);padding:20px 14px;">Loading…</td></tr>';
+
+  try {
+    var res = await sb.from('property_escrow_entries')
+      .select('*').eq('property_id', propertyId)
+      .order('entry_date', { ascending: false });
+
+    if (res.error) throw res.error;
+    allEntries = res.data || [];
+
+    // Filter by period picker
+    var period = document.getElementById('periodPicker').value; // YYYY-MM
+    var yearVal = document.getElementById('yearPicker').value;
+    var filtered = allEntries.filter(function(e) {
+      var d = toISO(e.entry_date);
+      if (period) return d.startsWith(period);
+      if (yearVal) return d.startsWith(yearVal);
+      return true;
+    });
+
+    updateKPIs(filtered);
+
+    if (!filtered.length) {
+      body.innerHTML = '';
+      empty.style.display = 'block';
+      return;
+    }
+    empty.style.display = 'none';
+    body.innerHTML = filtered.map(rowHtml).join('');
+  } catch(e) {
+    console.error(e);
+    body.innerHTML = '<tr><td colspan="8" style="color:var(--danger);">Failed to load ledger. Check console.</td></tr>';
+  }
+}
+
+/* ── Update KPI strip ── */
+function updateKPIs(entries) {
+  var collected = 0, disbursed = 0;
+  entries.forEach(function(e) {
+    var amt = Number(e.amount || 0);
+    var dir = entryDirection(e.entry_type || '');
+    if (dir === 'in') collected += amt;
+    else if (dir === 'out') disbursed += amt;
+  });
+  var balance = collected - disbursed;
+  var minBal  = requirementsRow ? Number(requirementsRow.min_balance || 0) : 0;
+  var surplus  = balance - minBal;
+
+  document.getElementById('kpiBalance').textContent   = fmtMoney(balance);
+  document.getElementById('kpiCollected').textContent = fmtMoney(collected);
+  document.getElementById('kpiDisbursed').textContent = fmtMoney(disbursed);
+
+  var kpiS = document.getElementById('kpiSurplus');
+  kpiS.textContent = fmtMoney(Math.abs(surplus));
+  kpiS.className = 'kpi-value ' + (surplus >= 0 ? 'positive' : 'negative');
+  document.getElementById('kpiSurplusNote').textContent = surplus >= 0
+    ? 'Surplus vs. required min' : 'Shortage vs. required min';
+}
+
+/* ── Render a row ── */
+function rowHtml(e) {
+  var dir     = entryDirection(e.entry_type || '');
+  var dirLabel= dir === 'in' ? '⬆ In' : (dir === 'out' ? '⬇ Out' : '↔ Adj');
+  var dirColor= dir === 'in' ? '#059669' : (dir === 'out' ? 'var(--danger)' : 'var(--muted)');
+  var statCls = {completed:'match',pending:'pending',disputed:'shortage'}[e.status||'pending'] || 'pending';
+  return '<tr>' +
+    '<td>' + safeText(toISO(e.entry_date)) + '</td>' +
+    '<td>' + safeText(TYPE_LABELS[e.entry_type] || e.entry_type) + '</td>' +
+    '<td>' + safeText(e.payee) + '</td>' +
+    '<td style="font-family:\'DM Mono\',monospace;font-weight:700;">' + fmtMoney(e.amount) + '</td>' +
+    '<td><span style="font-weight:700;color:' + dirColor + ';">' + dirLabel + '</span></td>' +
+    '<td><span class="status-badge ' + statCls + '">' + safeText(e.status || 'pending') + '</span></td>' +
+    '<td><span style="font-size:.78rem;color:var(--muted);">' + safeText(e.reference_number) + '</span></td>' +
+    '<td><div class="row-actions">' +
+      '<button class="small-btn" type="button" data-action="edit" data-id="' + e.id + '">Edit</button>' +
+      '<button class="small-btn danger" type="button" data-action="delete" data-id="' + e.id + '">Delete</button>' +
+    '</div></td>' +
+    '</tr>';
+}
+
+/* ── Form clear / fill ── */
+function clearForm() {
+  document.getElementById('entryId').value      = '';
+  document.getElementById('entryType').value    = 'collection_mortgage';
+  document.getElementById('entryDate').value    = new Date().toISOString().slice(0,10);
+  document.getElementById('entryAmount').value  = '';
+  document.getElementById('entryPayee').value   = '';
+  document.getElementById('entryRef').value     = '';
+  document.getElementById('entryStatus').value  = 'completed';
+  document.getElementById('entryNotes').value   = '';
+}
+
+function fillForm(e) {
+  document.getElementById('entryId').value      = e.id || '';
+  document.getElementById('entryType').value    = e.entry_type || 'collection_mortgage';
+  document.getElementById('entryDate').value    = toISO(e.entry_date);
+  document.getElementById('entryAmount').value  = e.amount ?? '';
+  document.getElementById('entryPayee').value   = e.payee || '';
+  document.getElementById('entryRef').value     = e.reference_number || '';
+  document.getElementById('entryStatus').value  = e.status || 'pending';
+  document.getElementById('entryNotes').value   = e.notes || '';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+document.getElementById('clearBtn').addEventListener('click', clearForm);
+
+/* ── Save escrow entry ── */
+document.getElementById('escrowForm').addEventListener('submit', async function(ev) {
+  ev.preventDefault();
+  var btn = document.getElementById('saveBtn');
+  btn.disabled = true; btn.textContent = 'Saving…';
+
+  var id = document.getElementById('entryId').value || null;
+  var payload = {
+    company_id:       companyId,
+    property_id:      propertyId,
+    entry_type:       document.getElementById('entryType').value,
+    entry_date:       document.getElementById('entryDate').value,
+    amount:           Number(document.getElementById('entryAmount').value) || null,
+    payee:            document.getElementById('entryPayee').value.trim() || null,
+    reference_number: document.getElementById('entryRef').value.trim() || null,
+    status:           document.getElementById('entryStatus').value,
+    notes:            document.getElementById('entryNotes').value.trim() || null
+  };
+
+  try {
+    var res = id
+      ? await sb.from('property_escrow_entries').update(payload).eq('id', id)
+      : await sb.from('property_escrow_entries').insert([payload]);
+
+    if (res.error) throw res.error;
+    showAlert('✅ Escrow entry saved!', 'success');
+    clearForm();
+    await loadLedger();
+  } catch(e) {
+    console.error(e);
+    showAlert('❌ Save failed: ' + (e.message || 'Unknown error'), 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = '💾 Save Entry';
+  }
+});
+
+/* ── Save requirements ── */
+document.getElementById('saveReqBtn').addEventListener('click', async function() {
+  var btn = this;
+  btn.disabled = true; btn.textContent = 'Saving…';
+  var payload = {
+    company_id:       companyId,
+    property_id:      propertyId,
+    min_balance:      Number(document.getElementById('reqMinBalance').value) || null,
+    annual_tax:       Number(document.getElementById('reqAnnualTax').value) || null,
+    annual_insurance: Number(document.getElementById('reqAnnualInsurance').value) || null,
+    monthly_escrow:   Number(document.getElementById('reqMonthlyEscrow').value) || null,
+    effective_date:   document.getElementById('reqEffectiveDate').value || null,
+    notes:            document.getElementById('reqNotes').value.trim() || null
+  };
+  try {
+    var res = requirementsRow
+      ? await sb.from('property_escrow_requirements').update(payload).eq('id', requirementsRow.id)
+      : await sb.from('property_escrow_requirements').insert([payload]);
+    if (res.error) throw res.error;
+    showAlert('✅ Requirements saved!', 'success');
+    await loadRequirements();
+    await loadLedger(); // recalculate surplus
+  } catch(e) {
+    console.error(e);
+    showAlert('❌ Save failed: ' + (e.message || 'Unknown error'), 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = '💾 Save Requirements';
+  }
+});
+
+/* ── Ledger row actions ── */
+document.getElementById('ledgerBody').addEventListener('click', async function(e) {
+  var btn = e.target.closest('button[data-action]');
+  if (!btn) return;
+  var id     = btn.getAttribute('data-id');
+  var action = btn.getAttribute('data-action');
+  var rec    = allEntries.find(function(r){ return r.id === id; });
+  if (!rec) return;
+
+  if (action === 'edit') { fillForm(rec); return; }
+
+  if (action === 'delete') {
+    if (!confirm('Delete this escrow entry? This cannot be undone.')) return;
+    try {
+      var res = await sb.from('property_escrow_entries').delete().eq('id', id);
+      if (res.error) throw res.error;
+      showAlert('Entry deleted.', 'info');
+      await loadLedger();
+    } catch(e) {
+      console.error(e);
+      showAlert('❌ Delete failed: ' + (e.message || ''), 'error');
+    }
+  }
+});
+
+/* ── Boot ── */
+document.getElementById('footerYear').textContent = new Date().getFullYear();
+
+document.addEventListener('DOMContentLoaded', async function() {
+  wireHeader();
+  try {
+    var user = await rgSetupAuth();
+    if (!user) return;
+    clearForm();
+    await Promise.all([
+      loadPropertyName(),
+      loadRequirements(),
+      loadLedger()
+    ]);
+  } catch(e) {
+    console.error('Boot error:', e);
+    showAlert('Failed to initialise page. Please refresh.', 'error');
+  }
+});
+</script>
+</body>
+</html>

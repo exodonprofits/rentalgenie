@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>👤 My Account – Rental Genie</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap">
+<style>
+
+  :root {
+    --navy:        #0c1e3a;
+    --navy-mid:    #1a3a6b;
+    --navy-light:  #1e5799;
+    --sky:         #2d8cf0;
+    --sky-soft:    #e8f0fe;
+    --teal:        #0ea5e9;
+    --border:      #e2e8f0;
+    --bg:          #f1f4f8;
+    --card:        #ffffff;
+    --text:        #0c1e3a;
+    --muted:       #64748b;
+    --success:     #10b981;
+    --success-bg:  #ecfdf5;
+    --success-bdr: #a7f3d0;
+    --warn:        #f59e0b;
+    --warn-bg:     #fffbeb;
+    --warn-bdr:    #fde68a;
+    --warn-text:   #92400e;
+    --danger:      #ef4444;
+    --danger-bg:   #fef2f2;
+    --danger-bdr:  #fecaca;
+    --danger-text: #7f1d1d;
+    --info-bg:     #eff6ff;
+    --info-bdr:    #bfdbfe;
+    --info-text:   #1e40af;
+    --radius-sm:   8px;
+    --radius-md:   12px;
+    --radius-lg:   16px;
+    --radius-xl:   20px;
+    --shadow-sm:   0 1px 4px rgba(12,30,58,.06);
+    --shadow-md:   0 4px 16px rgba(12,30,58,.09);
+    --shadow-lg:   0 8px 32px rgba(12,30,58,.14);
+    --header-grad: linear-gradient(135deg,#0c1e3a 0%,#1a3a6b 55%,#1e5799 100%);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: 'DM Sans', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  #authOverlay {
+    position: fixed; inset: 0; z-index: 9999;
+    background: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column; gap: 16px;
+    transition: opacity .35s;
+  }
+  #authOverlay.hidden { opacity: 0; pointer-events: none; }
+  .spinner-ring {
+    width: 44px; height: 44px; border-radius: 50%;
+    border: 3px solid rgba(12,30,58,.1);
+    border-top-color: var(--sky);
+    animation: spin .75s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #authOverlay p { font-size: .88rem; color: var(--muted); font-weight: 500; }
+
+  .header-container {
+    position: sticky; top: 0; z-index: 1000;
+    background: var(--header-grad);
+    border-bottom: 1px solid rgba(255,255,255,.08);
+    box-shadow: 0 2px 20px rgba(12,30,58,.35);
+  }
+  .navbar {
+    max-width: 1280px; margin: 0 auto; padding: 0 22px;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 64px; gap: 12px;
+  }
+  .brand-area { display: flex; align-items: center; gap: 11px; text-decoration: none; flex-shrink: 0; }
+  .brand-logo {
+    width: 38px; height: 38px; border-radius: 9px;
+    background: rgba(255,255,255,.12);
+    box-shadow: 0 0 0 1px rgba(255,255,255,.2), 0 2px 8px rgba(0,0,0,.2);
+    object-fit: cover; flex-shrink: 0;
+  }
+  .brand-title { font-size: 1.1rem; font-weight: 700; color: #fff; letter-spacing: -.2px; }
+  .brand-badge {
+    display: inline-block; font-size: .65rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .5px;
+    background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.2);
+    color: rgba(255,255,255,.8); border-radius: 999px;
+    padding: 2px 8px; margin-left: 2px;
+  }
+
+  .nav-links { display: flex; gap: 2px; align-items: center; }
+  .nav-links a {
+    display: flex; align-items: center; gap: 5px;
+    text-decoration: none; font-size: .82rem; font-weight: 600;
+    padding: 7px 11px; color: rgba(255,255,255,.75);
+    border-radius: var(--radius-sm); transition: all .18s;
+    white-space: nowrap;
+  }
+  .nav-links a:hover { color: #fff; background: rgba(255,255,255,.1); }
+  .nav-links a.nav-active { color: #fff; background: rgba(255,255,255,.15); }
+
+  .umd-wrap { position: relative; flex-shrink: 0; }
+  .umd-toggle {
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.18);
+    border-radius: 999px; padding: 5px 12px 5px 5px;
+    cursor: pointer; color: #fff; font-family: inherit; font-size: .82rem; font-weight: 600;
+    transition: background .18s;
+  }
+  .umd-toggle:hover { background: rgba(255,255,255,.18); }
+  .umd-avatar {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--sky), var(--navy-mid));
+    display: flex; align-items: center; justify-content: center;
+    font-size: .68rem; font-weight: 700; color: #fff; flex-shrink: 0;
+  }
+  .umd-name { font-size: .78rem; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: rgba(255,255,255,.9); }
+  .umd-caret { font-size: .7rem; opacity: .7; margin-left: 2px; color: rgba(255,255,255,.7); }
+  .umd-dropdown {
+    display: none; position: absolute; top: calc(100% + 10px); right: 0;
+    background: #fff; border: 1px solid #e2e8f0;
+    border-radius: 16px; min-width: 220px;
+    box-shadow: 0 8px 32px rgba(12,30,58,.18);
+    z-index: 1001; overflow: hidden; padding: 6px;
+  }
+  .umd-dropdown.open { display: block; animation: umdFadeIn .15s ease; }
+  @keyframes umdFadeIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
+  .umd-user-row { padding: 10px 12px 8px; border-bottom: 1px solid #e2e8f0; margin-bottom: 4px; }
+  .umd-user-name { font-weight: 700; font-size: .9rem; color: #0c1e3a; }
+  .umd-user-email { font-size: .78rem; color: #64748b; margin-top: 2px; }
+  .umd-section { padding: 4px 0; border-bottom: 1px solid #f1f4f8; margin-bottom: 2px; }
+  .umd-section:last-child { border-bottom: none; margin-bottom: 0; }
+  .umd-link {
+    display: flex; align-items: center; gap: 9px;
+    width: 100%; padding: 9px 12px; border-radius: 10px;
+    font-size: .85rem; font-weight: 600; color: #0c1e3a;
+    text-decoration: none; background: none; border: none;
+    cursor: pointer; font-family: inherit; text-align: left;
+  }
+  .umd-link:hover { background: #f1f4f8; }
+  .umd-link.danger { color: #ef4444; }
+  .umd-link.danger:hover { background: #fef2f2; }
+  .umd-link.nav-active { background: #e8f0fe !important; color: #1a3a6b !important; }
+
+  .hamburger {
+    display: none; padding: 7px 10px;
+    border: 1px solid rgba(255,255,255,.25); border-radius: var(--radius-sm);
+    background: rgba(255,255,255,.1); cursor: pointer;
+    color: #fff; font-size: 1rem; font-weight: 700;
+    transition: background .18s;
+  }
+  .hamburger:hover { background: rgba(255,255,255,.2); }
+
+  @media(max-width:880px) {
+    .nav-links { display: none; }
+    .umd-wrap { display: none; }
+    .hamburger { display: block; }
+  }
+
+  .drawer {
+    display: none; position: fixed;
+    top: 72px; left: 12px; right: 12px;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 8px;
+    z-index: 999; box-shadow: var(--shadow-lg);
+  }
+  .drawer a {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 14px; border-radius: var(--radius-sm);
+    font-weight: 600; font-size: .9rem;
+    text-decoration: none; color: var(--text);
+    transition: background .15s;
+  }
+  .drawer a:hover { background: var(--bg); }
+  .drawer a.nav-active { background: var(--sky-soft); color: var(--navy-mid); }
+  .drawer-signout { color: var(--danger) !important; }
+  .drawer-divider { height: 1px; background: var(--border); margin: 4px 0; }
+
+  .auth-gate {
+    max-width: 520px; margin: 60px auto; padding: 0 20px;
+    text-align: center;
+  }
+  .auth-gate-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius-xl); padding: 40px 32px;
+    box-shadow: var(--shadow-md);
+  }
+  .auth-gate-icon { font-size: 2.5rem; margin-bottom: 16px; }
+  .auth-gate-card h2 { font-size: 1.3rem; font-weight: 700; color: var(--navy); margin-bottom: 8px; }
+  .auth-gate-card p { font-size: .9rem; color: var(--muted); margin-bottom: 24px; line-height: 1.5; }
+  .hidden { display: none !important; }
+
+  main {
+    flex: 1; max-width: 900px; width: 100%;
+    margin: 0 auto; padding: 28px 22px 48px;
+  }
+
+  .page-header {
+    display: flex; align-items: flex-start;
+    justify-content: space-between; gap: 16px;
+    flex-wrap: wrap; margin-bottom: 24px;
+    animation: fadeUp .4s ease both;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .page-title { font-size: 1.65rem; font-weight: 700; color: var(--navy); letter-spacing: -.4px; line-height: 1.2; }
+  .page-sub { font-size: .88rem; color: var(--muted); margin-top: 4px; font-weight: 500; }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 9px 16px; border-radius: 999px; border: 1px solid var(--border);
+    background: #fff; color: var(--text); font-size: .85rem; font-weight: 700;
+    cursor: pointer; font-family: inherit; transition: all .15s;
+  }
+  .btn:hover { background: var(--bg); }
+  .btn:disabled { opacity: .55; cursor: not-allowed; }
+  .btn.primary { background: var(--navy); border-color: var(--navy); color: #fff; }
+  .btn.primary:hover { background: var(--navy-mid); }
+
+  .section-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius-xl); box-shadow: var(--shadow-sm);
+    margin-bottom: 20px; overflow: hidden;
+    animation: fadeUp .4s ease .05s both;
+  }
+  .card-head { padding: 18px 22px 0; }
+  .card-title { font-size: 1rem; font-weight: 700; color: var(--navy); display: flex; align-items: center; gap: 8px; }
+  .card-sub   { font-size: .8rem; color: var(--muted); margin-top: 3px; font-weight: 500; }
+  .card-body  { padding: 16px 22px 22px; }
+
+  .form-group { display:flex; flex-direction:column; gap:6px; }
+  .form-group label { font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--muted); }
+  .form-input { padding:10px 12px; border:1.5px solid var(--border); border-radius:var(--radius-md); font-size:.88rem; font-family:'DM Sans',sans-serif; color:var(--text); background:#fff; transition:border-color .15s,box-shadow .15s; }
+  .form-input:focus { outline:none; border-color:var(--sky); box-shadow:0 0 0 3px rgba(45,140,240,.12); }
+  .form-input:disabled { background:#f8fafc; color:var(--muted); }
+
+  .status-msg { font-size:.84rem; margin-top:12px; padding:11px 14px; border-radius:var(--radius-md); display:none; line-height:1.5; }
+  .status-msg.err  { display:block; background:var(--danger-bg); color:var(--danger-text); border:1px solid var(--danger-bdr); }
+  .status-msg.ok   { display:block; background:var(--success-bg); color:#065f46; border:1px solid var(--success-bdr); }
+  .status-msg.info { display:block; background:var(--info-bg); color:var(--info-text); border:1px solid var(--info-bdr); }
+
+  .info-item-label { font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--muted); margin-bottom:4px; }
+  .info-item-value { font-size:.92rem; font-weight:600; color:var(--navy); }
+  .info-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  @media(max-width:600px) { .info-grid { grid-template-columns:1fr; } }
+
+</style>
+</head>
+<body>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function(){try{var _m=new Map(),_l=null;try{_l=window.localStorage;}catch(e){}var _s={getItem:function(k){try{return(_l&&_l.getItem(k))||_m.get(k)||null;}catch(e){return _m.get(k)||null;}},setItem:function(k,v){try{_l&&_l.setItem(k,v);}catch(e){}_m.set(k,v);},removeItem:function(k){try{_l&&_l.removeItem(k);}catch(e){}_m.delete(k);}};window._rgClient=window._rgClient||window.supabase.createClient('https://pbojacnagutipfhcxltj.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBib2phY25hZ3V0aXBmaGN4bHRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgwMDkwODAsImV4cCI6MjA2MzU4NTA4MH0.ZLCcAzTYljoZycpBGwMtthP5VyAJ4schuIvt4HibGc0',{auth:{lock:undefined,persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storage:_s}});window.sb=window.client=window._rgClient;}catch(e){console.error('RG bootstrap failed:',e);}})(  );
+</script>
+
+<div id="authOverlay"><div class="spinner-ring"></div><p>Loading your account…</p></div>
+
+<header class="header-container">
+  <div class="navbar">
+    <a class="brand-area" href="tenant-portal.html">
+      <img class="brand-logo" src="images/rg-logo.png" alt="Rental Genie"
+           onerror="this.style.display='none'" />
+      <div>
+        <span class="brand-title">Rental Genie</span>
+        <span class="brand-badge">Tenant</span>
+      </div>
+    </a>
+
+    <nav class="nav-links" aria-label="Tenant navigation">
+      <a id="navHome"     href="tenant-portal.html">🏠 Home</a>
+      <a id="navLease"    href="tenant-lease.html">📄 Lease</a>
+      <a id="navPayments" href="tenant-payments.html">💵 Payments</a>
+      <a id="navRepairs"  href="tenant-repair-requests.html">🛠️ Repairs</a>
+      <a id="navDocs"     href="tenant-documents.html">📁 Docs</a>
+      <a id="navContact"  href="tenant-contact.html">💬 Contact</a>
+    </nav>
+
+    <div class="umd-wrap" id="userChip" style="display:none">
+      <button class="umd-toggle" id="umdToggle" aria-haspopup="true" aria-expanded="false">
+        <div class="umd-avatar" id="userAvatar">?</div>
+        <span class="umd-name" id="userEmail">—</span>
+        <span class="umd-caret">▾</span>
+      </button>
+      <div class="umd-dropdown" id="umdDropdown">
+        <div class="umd-user-row">
+          <div class="umd-user-name" id="umdFullName">Tenant</div>
+          <div class="umd-user-email" id="umdEmail">—</div>
+        </div>
+        <div class="umd-section">
+          <a class="umd-link nav-active" href="tenant-account.html">👤 My Account</a>
+        </div>
+        <div class="umd-section">
+          <button class="umd-link danger" id="navSignOut">🚪 Sign Out</button>
+        </div>
+      </div>
+    </div>
+
+    <button class="hamburger" id="hamburgerBtn" aria-label="Toggle menu">☰</button>
+  </div>
+</header>
+<div class="drawer" id="mobileDrawer">
+  <a id="drawerHome"     href="tenant-portal.html">🏠 Portal Home</a>
+  <a id="drawerLease"    href="tenant-lease.html">📄 My Lease</a>
+  <a id="drawerPayments" href="tenant-payments.html">💵 Payments</a>
+  <a id="drawerRepairs"  href="tenant-repair-requests.html">🛠️ Repairs</a>
+  <a id="drawerDocs"     href="tenant-documents.html">📁 Documents</a>
+  <a id="drawerContact"  href="tenant-contact.html">💬 Contact</a>
+  <a id="drawerAccount"  href="tenant-account.html" class="nav-active">👤 My Account</a>
+  <div class="drawer-divider"></div>
+  <a id="drawerSignOut"  href="#" class="drawer-signout">🚪 Sign Out</a>
+</div>
+
+<section id="authGate" class="auth-gate hidden">
+  <div class="auth-gate-card">
+    <div class="auth-gate-icon">🔐</div>
+    <h2>Session Required</h2>
+    <p>Your session has expired or you're not logged in. Please sign in to access your account.</p>
+    <a id="loginLink" class="btn primary" href="tenant-login.html">Go to Login →</a>
+  </div>
+</section>
+
+<main id="app" class="hidden">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">👤 My Account</h1>
+      <p class="page-sub">Update your contact phone number and email address.</p>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="card-head">
+      <div class="card-title">📞 Phone Number</div>
+      <div class="card-sub">Used by your landlord to reach you about your rental.</div>
+    </div>
+    <div class="card-body">
+      <div class="form-group" style="max-width:280px;">
+        <label>Phone</label>
+        <input id="phoneInput" class="form-input" placeholder="(555) 555-5555" />
+      </div>
+      <div style="margin-top:14px;">
+        <button class="btn primary" id="btnSavePhone" type="button">💾 Save Phone</button>
+      </div>
+      <div class="status-msg" id="phoneStatus"></div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="card-head">
+      <div class="card-title">📧 Email Address</div>
+      <div class="card-sub">This is also your login email.</div>
+    </div>
+    <div class="card-body">
+      <div class="form-group" style="max-width:360px;margin-bottom:14px;">
+        <label>Current Email</label>
+        <input id="currentEmailInput" class="form-input" disabled />
+      </div>
+      <div class="form-group" style="max-width:360px;">
+        <label>New Email</label>
+        <input id="newEmailInput" type="email" class="form-input" placeholder="you@newaddress.com" />
+      </div>
+      <div style="margin-top:14px;">
+        <button class="btn primary" id="btnSaveEmail" type="button">✉️ Send Confirmation to New Email</button>
+      </div>
+      <div class="status-msg" id="emailStatus"></div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="card-head">
+      <div class="card-title">🪪 Account Details</div>
+      <div class="card-sub">Read-only — contact your landlord to change these.</div>
+    </div>
+    <div class="card-body">
+      <div class="info-grid">
+        <div>
+          <div class="info-item-label">Name on Lease</div>
+          <div class="info-item-value" id="infoTenantName">—</div>
+        </div>
+        <div>
+          <div class="info-item-label">Property</div>
+          <div class="info-item-value" id="infoProperty">—</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer style="padding:22px;text-align:center;font-size:.78rem;color:var(--muted);">
+  © <span id="footerYear"></span> Rental Genie · Signed in as <span id="footerWhoami">Tenant</span>
+</footer>
+
+<script>
+(function () {
+  var sb = window._rgClient;
+  var user = null;
+  var tenant = null;
+
+  function $(id) { return document.getElementById(id); }
+  function setText(id, v) { var el = $(id); if (el) el.textContent = (v == null || v === '') ? '—' : v; }
+
+  function setStatus(id, type, msg) {
+    var el = $(id);
+    if (!el) return;
+    el.className = 'status-msg' + (type ? ' ' + type : '');
+    el.textContent = msg || '';
+  }
+
+  function requireAuth() {
+    var attempts = 0;
+    function tryGet() {
+      return sb.auth.getUser().then(function (r) {
+        if (r.data && r.data.user) return r.data.user;
+        return sb.auth.getSession().then(function (s) {
+          if (s.data && s.data.session && s.data.session.user) return s.data.session.user;
+          attempts++;
+          if (attempts < 3) return new Promise(function (res) { setTimeout(res, 180); }).then(tryGet);
+          return null;
+        });
+      });
+    }
+    return tryGet();
+  }
+
+  function resolveTenant(user) {
+    return sb.from('tenants').select('id, auth_user_id, email, tenant_name, phone, property_name')
+      .eq('auth_user_id', user.id).maybeSingle()
+      .then(function (r1) {
+        if (r1.data) { if (r1.data.email !== user.email) { sb.from('tenants').update({ email: user.email }).eq('id', r1.data.id).then(function(){}, function(){}); } return r1.data; }
+        return sb.from('tenants').select('id, auth_user_id, email, tenant_name, phone, property_name')
+          .ilike('email', user.email).maybeSingle()
+          .then(function (r2) {
+            if (r2.data && !r2.data.auth_user_id) {
+              sb.from('tenants').update({ auth_user_id: user.id }).eq('id', r2.data.id).then(function(){}, function(){});
+            }
+            return r2.data || null;
+          });
+      })
+      .catch(function () { return null; });
+  }
+
+  function hideOverlay() {
+    var ov = $('authOverlay');
+    if (ov) { ov.classList.add('hidden'); setTimeout(function () { ov.style.display = 'none'; }, 380); }
+  }
+
+  function showAuthGate() {
+    hideOverlay();
+    $('authGate').classList.remove('hidden');
+    $('app').classList.add('hidden');
+  }
+
+  function wireNav() {
+    var btn = $('hamburgerBtn');
+    var drawer = $('mobileDrawer');
+    if (btn && drawer && !btn.__wired) {
+      btn.__wired = true;
+      btn.addEventListener('click', function () {
+        drawer.style.display = (drawer.style.display === 'block') ? 'none' : 'block';
+      });
+      document.addEventListener('click', function (e) {
+        if (drawer.style.display === 'block' && !drawer.contains(e.target) && e.target !== btn) {
+          drawer.style.display = 'none';
+        }
+      });
+    }
+    function doSignOut() {
+      try { sb.auth.signOut(); } catch (e) {}
+      location.href = 'tenant-login.html';
+    }
+    var so = $('navSignOut'); if (so) so.addEventListener('click', function (e) { e.preventDefault(); doSignOut(); });
+    var ds = $('drawerSignOut'); if (ds) ds.addEventListener('click', function (e) { e.preventDefault(); doSignOut(); });
+
+    var umdBtn = $('umdToggle');
+    var umdDrop = $('umdDropdown');
+    if (umdBtn && umdDrop && !umdBtn.__wired) {
+      umdBtn.__wired = true;
+      umdBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        umdDrop.classList.toggle('open');
+        umdBtn.setAttribute('aria-expanded', umdDrop.classList.contains('open'));
+      });
+      document.addEventListener('click', function () { umdDrop.classList.remove('open'); });
+    }
+  }
+
+  function loadAccount(u) {
+    user = u;
+    setText('footerYear', new Date().getFullYear());
+    setText('footerWhoami', user.email || 'Tenant');
+
+    var chip = $('userChip'), avatarEl = $('userAvatar'), emailEl = $('userEmail');
+    if (chip && avatarEl && emailEl && user.email) {
+      avatarEl.textContent = user.email.substring(0, 2).toUpperCase();
+      emailEl.textContent = user.email;
+      chip.style.display = 'flex';
+    }
+    setText('umdFullName', user.email || 'Tenant');
+    setText('umdEmail', user.email || '');
+
+    $('currentEmailInput').value = user.email || '';
+
+    resolveTenant(user).then(function (t) {
+      tenant = t;
+
+      if (tenant && tenant.tenant_name) {
+        var _parts = tenant.tenant_name.trim().split(/\s+/).filter(Boolean);
+        var _init = _parts.length >= 2 ? (_parts[0][0] + _parts[_parts.length-1][0]).toUpperCase() : (_parts[0] ? _parts[0].slice(0,2).toUpperCase() : '');
+        var _av = document.getElementById('userAvatar'); if (_av && _init) _av.textContent = _init;
+        var _em = document.getElementById('userEmail'); if (_em) _em.textContent = _parts[0];
+        var _fn = document.getElementById('umdFullName'); if (_fn) _fn.textContent = tenant.tenant_name;
+      }
+      if (tenant) {
+        $('phoneInput').value = tenant.phone || '';
+        setText('infoTenantName', tenant.tenant_name);
+        // Property comes from the lease directly (authoritative, always current),
+        // not tenant.property_name, which can go stale after a renewal into a new unit.
+        sb.from('leases').select('property_name').eq('tenant_id', tenant.id)
+          .order('lease_start', { ascending: false }).limit(1).maybeSingle()
+          .then(function (r) {
+            setText('infoProperty', (r.data && r.data.property_name) || tenant.property_name);
+          });
+      } else {
+        setStatus('phoneStatus', 'info', 'No tenant record was found for your account yet. Contact your landlord if this seems wrong.');
+        $('btnSavePhone').disabled = true;
+      }
+    });
+  }
+
+  $('btnSavePhone').addEventListener('click', function () {
+    if (!tenant) return;
+    var btn = this;
+    var phone = $('phoneInput').value.trim();
+    btn.disabled = true; btn.textContent = 'Saving…';
+    setStatus('phoneStatus', '', '');
+
+    sb.from('tenants').update({ phone: phone || null }).eq('id', tenant.id).then(function (res) {
+      btn.disabled = false; btn.textContent = '💾 Save Phone';
+      if (res.error) {
+        setStatus('phoneStatus', 'err', 'Could not save: ' + res.error.message);
+        return;
+      }
+      tenant.phone = phone;
+      setStatus('phoneStatus', 'ok', '✅ Phone number saved.');
+    });
+  });
+
+  $('btnSaveEmail').addEventListener('click', function () {
+    var btn = this;
+    var newEmail = $('newEmailInput').value.trim();
+    setStatus('emailStatus', '', '');
+
+    if (!newEmail) {
+      setStatus('emailStatus', 'err', 'Please enter a new email address.');
+      return;
+    }
+    if (newEmail.toLowerCase() === (user.email || '').toLowerCase()) {
+      setStatus('emailStatus', 'err', "That's already your current email.");
+      return;
+    }
+
+    btn.disabled = true; btn.textContent = 'Sending…';
+
+    sb.auth.updateUser({ email: newEmail }).then(function (res) {
+      btn.disabled = false; btn.textContent = '✉️ Send Confirmation to New Email';
+      if (res.error) {
+        setStatus('emailStatus', 'err', 'Could not start email change: ' + res.error.message);
+        return;
+      }
+      setStatus('emailStatus', 'info',
+        '📩 A confirmation link was sent to ' + newEmail + ". Your login email won't change until you click that link. " +
+        'Once confirmed, this page will show your new email automatically the next time you log in.');
+      $('newEmailInput').value = '';
+    });
+  });
+
+  document.addEventListener('DOMContentLoaded', function () {
+    wireNav();
+    setTimeout(hideOverlay, 4000);
+
+    requireAuth().then(function (u) {
+      if (!u) { showAuthGate(); return; }
+      hideOverlay();
+      $('authGate').classList.add('hidden');
+      $('app').classList.remove('hidden');
+      loadAccount(u);
+    }).catch(function () {
+      showAuthGate();
+    });
+
+    sb.auth.onAuthStateChange(function (event) {
+      if (event === 'SIGNED_OUT') location.href = 'tenant-login.html';
+    });
+  });
+})();
+</script>
+</body>
+</html>

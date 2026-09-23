@@ -1,0 +1,146 @@
+/* rental-header.css */
+
+/* Blue gradient */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  background: linear-gradient(120deg, #007bff 0%, #e0f0ff 45%, #ffffff 100%);
+  border-bottom: 1px solid rgba(0,0,0,0.08);
+  box-shadow: 0 4px 12px rgba(15,23,42,0.08);
+}
+
+.site-header-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 10px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Brand */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #1f2937;
+  text-decoration: none;
+  font-weight: 700;
+}
+
+/* Logo */
+.logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #e0f2ff,#c7e0ff 40%, #007bff 78%);
+  box-shadow: 0 0 0 2px rgba(0,123,255,0.2), 0 6px 14px rgba(15,23,42,0.12);
+}
+
+/* Navbar */
+.menu {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 14px;
+}
+
+.menu a {
+  color: #6b7280;
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  padding-bottom: 4px;
+}
+
+.menu a:hover {
+  color: #007bff;
+  border-bottom-color: #007bff;
+}
+
+.menu a.active {
+  color: #0056b3;
+  border-bottom-color: #0056b3;
+  font-weight: 600;
+}
+
+/* User menu */
+.user-menu {
+  display: none;
+  position: relative;
+  align-items: center;
+}
+
+.user-menu-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: white;
+  border: 1px solid #cbd5f5;
+  cursor: pointer;
+}
+
+/* Dropdown */
+.user-menu-dropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  min-width: 180px;
+  display: none;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+}
+
+.user-menu-dropdown a,
+.user-menu-dropdown button {
+  padding: 10px 12px;
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.user-menu-dropdown a:hover,
+.user-menu-dropdown button:hover {
+  background: #eef6ff;
+}
+
+/* Mobile drawer */
+.hamburger {
+  display: none;
+  background: white;
+  border: 1px solid #cbd5f5;
+  padding: 8px;
+  border-radius: 8px;
+}
+
+.drawer {
+  display: none;
+  position: fixed;
+  inset: 60px 12px auto 12px;
+  background: white;
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 10px 28px rgba(0,0,0,0.15);
+}
+
+.drawer a {
+  padding: 10px;
+  display: block;
+  border-radius: 8px;
+  margin: 4px 0;
+}
+
+/* Mobile */
+@media(max-width: 720px) {
+  .menu { display: none; }
+  .hamburger { display: inline-flex; }
+}

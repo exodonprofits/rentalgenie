@@ -1,0 +1,243 @@
+{
+  "name": "Rental Genie — Payment inbox v1",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "rg-payment-inbox",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "inbound-email",
+      "name": "Inbound email",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        300
+      ],
+      "webhookId": "rg-payment-inbox"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ── Rental Genie payment-inbox parser (n8n Code node body lives in parseItem) ──\n// Accepts a Postmark inbound payload. Returns one of:\n//   { route: 0, ...parsed }        rule-parsed payment  -> ingest\n//   { route: 1, token, text, ... } unknown format       -> AI extraction\n//   { route: 2, token, verifyUrl } Gmail forwarding verification\n//   { route: 3, reason }           skip (marketing, outgoing, not a payment)\n\nfunction header(payload, name) {\n  var list = payload.Headers || [];\n  var lower = name.toLowerCase();\n  for (var i = 0; i < list.length; i++) {\n    if (String(list[i].Name || '').toLowerCase() === lower) return String(list[i].Value || '');\n  }\n  return '';\n}\n\nfunction htmlToText(html) {\n  return String(html || '')\n    .replace(/<(script|style)[\\s\\S]*?<\\/\\1>/gi, ' ')\n    .replace(/<br\\s*\\/?>/gi, '\\n')\n    .replace(/<\\/(p|div|tr|td|th|h\\d)>/gi, '\\n')\n    .replace(/<[^>]+>/g, ' ')\n    .replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&#36;/g, '$')\n    .replace(/[ \\t]+/g, ' ');\n}\n\nfunction toISODate(s) {\n  if (!s) return null;\n  var d = new Date(String(s).replace(/\\./g, '') + ' 12:00');\n  if (isNaN(d)) return null;\n  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');\n}\n\nfunction money(s) {\n  if (s == null) return null;\n  var n = Number(String(s).replace(/[,\\s$]/g, ''));\n  return isFinite(n) && n > 0 ? n : null;\n}\n\nfunction dkimPassFor(payload, domain) {\n  var ar = (header(payload, 'Authentication-Results') + ' ' + header(payload, 'ARC-Authentication-Results')).toLowerCase();\n  return ar.indexOf('dkim=pass') >= 0 && ar.indexOf(domain) >= 0;\n}\n\nfunction inboxToken(payload) {\n  if (payload.MailboxHash) return String(payload.MailboxHash).toLowerCase();\n  var to = String(payload.OriginalRecipient || payload.To || '');\n  var m = to.match(/rent-([a-z0-9]{6,32})@/i);\n  return m ? m[1].toLowerCase() : null;\n}\n\nfunction parseItem(payload) {\n  var from = String((payload.FromFull && payload.FromFull.Email) || payload.From || '').toLowerCase();\n  var subject = String(payload.Subject || '');\n  var text = String(payload.TextBody || '');\n  if (text.replace(/[\\s|]/g, '').length < 20) text = htmlToText(payload.HtmlBody);\n  var flat = text.replace(/\\s+/g, ' ');\n  var token = inboxToken(payload);\n  var messageId = header(payload, 'Message-ID') || payload.MessageID || null;\n\n  if (!token) return { route: 3, reason: 'no inbox token' };\n\n  // Gmail asks the new forwarding address to confirm it\n  if (from.indexOf('forwarding-noreply@google.com') >= 0) {\n    var link = flat.match(/https:\\/\\/mail(?:-settings)?\\.google\\.com\\/mail\\/[^\\s)\"'<>]+/i);\n    return link ? { route: 2, token: token, verifyUrl: link[0] } : { route: 3, reason: 'verification email without link' };\n  }\n\n  // Chase: \"You received money with Zelle®\"\n  if (from.indexOf('chase.com') >= 0 && /received money with zelle/i.test(subject)) {\n    var payer = (flat.match(/\\|?\\s*([A-Za-z0-9 .,'&-]{2,80}?)\\s+sent you money/i) || [])[1];\n    var amount = money((flat.match(/Amount[\\s|:]*\\$\\s*([\\d,]+(?:\\.\\d{2})?)/i) || [])[1]);\n    var date = toISODate((flat.match(/Sent on[\\s|:]*([A-Za-z]{3,9}\\.? \\d{1,2}, \\d{4})/i) || [])[1]);\n    var txn = (flat.match(/Transaction number[\\s|:#]*([A-Za-z0-9]+)/i) || [])[1] || null;\n    var memoM = text.match(/Memo[ \\t|:]*([^|\\n\\r]+)/i);\n    var memo = memoM ? memoM[1].trim() : null;\n    if (payer && amount) {\n      return { route: 0, token: token, messageId: messageId, source: 'chase_zelle', method: 'Zelle',\n               payer: payer.trim(), amount: amount, date: date, memo: memo, txn: txn,\n               subject: subject, body: flat.slice(0, 4000), verified: dkimPassFor(payload, 'chase.com') };\n    }\n  }\n\n  // Venmo: \"Name paid you $X\" (only venmo@venmo.com; email.venmo.com is marketing)\n  if (from === 'venmo@venmo.com' || /<venmo@venmo\\.com>/.test(from)) {\n    var vs = subject.match(/^(.+?) paid you \\$([\\d,]+(?:\\.\\d{2})?)/i);\n    if (!vs) return { route: 3, reason: 'venmo email that is not an incoming payment' };\n    var vDate = toISODate((flat.match(/Date[\\s|#:]*([A-Za-z]{3,9}\\.? \\d{1,2}, \\d{4})/i) || [])[1]);\n    var vTxn = (flat.match(/Transaction ID[\\s|#:]*(\\d+)/i) || [])[1] || null;\n    var vMemoM = flat.match(/paid you \\$\\s*[\\d,]+\\s*\\.?\\s*\\d{0,2}\\s+((?:(?!paid you).)*?)\\s+See transaction/i);\n    return { route: 0, token: token, messageId: messageId, source: 'venmo', method: 'Venmo',\n             payer: vs[1].trim(), amount: money(vs[2]), date: vDate, memo: vMemoM ? vMemoM[1].trim() : null,\n             txn: vTxn, subject: subject, body: flat.slice(0, 4000), verified: dkimPassFor(payload, 'venmo.com') };\n  }\n  if (from.indexOf('venmo.com') >= 0) return { route: 3, reason: 'venmo marketing' };\n\n  // Anything else: let the AI step decide whether it is an incoming payment\n  return { route: 1, token: token, messageId: messageId, from: from, subject: subject,\n           text: flat.slice(0, 6000), verified: false };\n}\n\n// Webhook v2 puts the Postmark payload under json.body\nreturn $input.all().map(function (it) {\n  var payload = it.json.body || it.json;\n  return { json: parseItem(payload) };\n});\n"
+      },
+      "id": "parse-alert",
+      "name": "Parse alert",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "expression",
+        "numberOutputs": 4,
+        "output": "={{ $json.route }}"
+      },
+      "id": "route",
+      "name": "Route",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        480,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://pbojacnagutipfhcxltj.supabase.co/rest/v1/rpc/rg_ingest_payment_email",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ p_inbox_token: $json.token, p_message_id: $json.messageId, p_source: $json.source, p_method: $json.method, p_payer: $json.payer, p_amount: $json.amount, p_date_paid: $json.date, p_memo: $json.memo, p_transaction_ref: $json.txn, p_subject: $json.subject, p_body: $json.body, p_sender_verified: $json.verified }) }}",
+        "options": {}
+      },
+      "id": "ingest-payment",
+      "name": "Ingest payment",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        960,
+        140
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "",
+          "name": "Rental Genie Supabase (service role)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "anthropicApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 300, system: \"You read bank and payment-app notification emails for a landlord. Decide whether the email reports money RECEIVED by the account holder. Respond with only a JSON object, no prose and no code fences: {\\\"is_incoming_payment\\\": boolean, \\\"payer\\\": string or null, \\\"amount\\\": number or null, \\\"date\\\": \\\"YYYY-MM-DD\\\" or null, \\\"method\\\": \\\"Zelle\\\" | \\\"Venmo\\\" | \\\"ACH\\\" | \\\"Cash App\\\" | \\\"PayPal\\\" | \\\"Other\\\" | null, \\\"memo\\\": string or null, \\\"transaction_ref\\\": string or null}. Money the account holder sent, bills, statements, and promotions are not incoming payments.\", messages: [{ role: 'user', content: 'From: ' + $json.from + '\\nSubject: ' + $json.subject + '\\n\\n' + $json.text }] }) }}",
+        "options": {},
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            }
+          ]
+        }
+      },
+      "id": "ai-extract",
+      "name": "AI extract",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        720,
+        300
+      ],
+      "credentials": {
+        "anthropicApi": {
+          "id": "",
+          "name": "Anthropic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Turn Claude's JSON reply back into the same shape the rule parsers produce.\n// Drops anything Claude says is not an incoming payment.\nvar out = [];\nvar items = $input.all();\nfor (var i = 0; i < items.length; i++) {\n  var src = $('Parse alert').itemMatching(i).json;\n  var resp = items[i].json || {};\n  var text = (resp.content && resp.content[0] && resp.content[0].text) || '';\n  var data = null;\n  try { data = JSON.parse(text.replace(/```json|```/g, '').trim()); } catch (e) { data = null; }\n  if (!data || !data.is_incoming_payment || !data.amount || !data.payer) continue;\n  out.push({ json: {\n    route: 0, token: src.token, messageId: src.messageId, source: 'ai',\n    method: data.method || 'Other', payer: data.payer, amount: Number(data.amount),\n    date: data.date || null, memo: data.memo || null, txn: data.transaction_ref || null,\n    subject: src.subject, body: src.text, verified: false\n  } });\n}\nreturn out;\n"
+      },
+      "id": "normalize-ai",
+      "name": "Normalize AI",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://pbojacnagutipfhcxltj.supabase.co/rest/v1/rpc/rg_store_inbox_verification",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ p_inbox_token: $json.token, p_url: $json.verifyUrl }) }}",
+        "options": {}
+      },
+      "id": "store-verification-link",
+      "name": "Store verification link",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        720,
+        460
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "",
+          "name": "Rental Genie Supabase (service role)"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "skip",
+      "name": "Skip",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        720,
+        620
+      ]
+    }
+  ],
+  "connections": {
+    "Inbound email": {
+      "main": [
+        [
+          {
+            "node": "Parse alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse alert": {
+      "main": [
+        [
+          {
+            "node": "Route",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route": {
+      "main": [
+        [
+          {
+            "node": "Ingest payment",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI extract",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Store verification link",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Skip",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI extract": {
+      "main": [
+        [
+          {
+            "node": "Normalize AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize AI": {
+      "main": [
+        [
+          {
+            "node": "Ingest payment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}

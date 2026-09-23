@@ -1,0 +1,38 @@
+# ── Private data — never commit ─────────────────────────────────────────
+# Mortgage statements, rent exports, tenant lists and similar files
+import export/
+*.csv
+*.xlsx
+backups/
+exports/
+
+# ── Secrets ─────────────────────────────────────────────────────────────
+.env
+.env.*
+*.pem
+*.key
+secrets.json
+**/service-role*
+**/*service_role*
+
+# ── Editor / OS noise ───────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.swp
+*~
+
+# ── Build / tooling ─────────────────────────────────────────────────────
+node_modules/
+dist/
+build/
+.wrangler/
+.cache/
+
+# ── Local scratch ───────────────────────────────────────────────────────
+*.log
+tmp/
+scratch/
+*_v[0-9]*.html

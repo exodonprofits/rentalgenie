@@ -1,0 +1,53 @@
+<header class="header-container">
+  <div class="navbar">
+    <div class="brand-area"><a href="index.html">
+      <img src="/images/rg-logo.png" class="brand-logo" /></a>
+      <div class="brand-title">Rental Genie</div>
+    </div>
+
+    <nav class="nav-links">
+      <a href="index.html" class="nav-active">📊 Dashboard</a>
+      <a href="property-management.html">🏘️ Property Management</a>
+      <a href="lease-rent-center.html">📄 Lease & Rent Center</a>
+      <a href="expense-tracking.html">💸 Expense Tracking</a>
+      <a href="maintenance-requests.html">🛠 Maintenance Requests</a>
+      <a href="reports-analytics.html">📈 Reports & Analytics</a>
+
+      <a id="nav-login" href="login.html">Log in</a>
+
+      <div class="user-menu" id="userMenu">
+        <button class="user-menu-toggle" id="userMenuBtn" aria-expanded="false" aria-haspopup="true">
+          <span id="usernameLabel">User</span> ▾
+        </button>
+        <div class="user-menu-dropdown" id="userMenuDropdown">
+          <a href="account.html">Account</a>
+          <button id="logoutBtn">Sign Out</button>
+        </div>
+      </div>
+    </nav>
+
+    <button class="hamburger" id="hamburgerBtn">☰</button>
+  </div>
+</header>
+<!-- =========================
+     MOBILE DRAWER
+========================= -->
+<div class="drawer-backdrop" id="drawerBackdrop" aria-hidden="true"></div>
+<div class="drawer" id="mobileDrawer" aria-label="Mobile menu" aria-hidden="true">
+  <a href="account.html" id="mobileAccountLink" style="display:none;">
+    Hello, <span id="mobileUsernameLabel">User</span> (Account)
+  </a>
+
+  <a href="index.html" data-nav="dashboard">📊 Dashboard</a>
+  <a href="property-management.html" data-nav="properties">🏘️ Property Management <span class="nav-badge" id="badgeVacanciesM"></span></a>
+  <a href="lease-rent-center.html" data-nav="leases">💰 Lease & Rent Center <span class="nav-badge" id="badgeRentM"></span></a>
+  <a href="expense-tracking.html" data-nav="expenses">💸 Expense Tracking</a>
+  <a href="maintenance-requests.html" data-nav="maintenance">🛠 Maintenance Requests <span class="nav-badge" id="badgeMaintenanceM"></span></a>
+  <a href="reports-analytics.html" data-nav="reports">📈 Reports & Analytics</a>
+
+  <a href="/onboarding/login.html" id="mobileLogin">Log in</a>
+
+  <div id="mobileLogoutContainer" style="display:none;">
+    <button id="mobileLogoutBtn" type="button">Sign Out</button>
+  </div>
+</div>

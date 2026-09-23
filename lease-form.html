@@ -1,0 +1,1231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lease Form – Rental Genie</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap">
+<link rel="dns-prefetch" href="https://pbojacnagutipfhcxltj.supabase.co">
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+
+<style>
+/* ── Design Tokens (matches dashboard / view-lease) ────────── */
+:root {
+  --navy:        #0c1e3a;
+  --navy-mid:    #1a3a6b;
+  --navy-light:  #1e5799;
+  --sky:         #2d8cf0;
+  --sky-soft:    #e8f0fe;
+  --border:      #e2e8f0;
+  --bg:          #f1f4f8;
+  --card:        #ffffff;
+  --text:        #0c1e3a;
+  --muted:       #64748b;
+  --success:     #10b981;
+  --success-bg:  #ecfdf5;
+  --success-bdr: #a7f3d0;
+  --warn-bg:     #fffbeb;
+  --warn-bdr:    #fde68a;
+  --warn-text:   #92400e;
+  --danger-bg:   #fef2f2;
+  --danger-bdr:  #fecaca;
+  --danger-text: #7f1d1d;
+  --info-bg:     #eff6ff;
+  --info-bdr:    #bfdbfe;
+  --info-text:   #1e40af;
+  --radius-sm:   8px;
+  --radius-md:   12px;
+  --radius-lg:   16px;
+  --radius-xl:   20px;
+  --shadow-sm:   0 1px 4px rgba(12,30,58,.06);
+  --shadow-md:   0 4px 16px rgba(12,30,58,.09);
+  --shadow-lg:   0 8px 32px rgba(12,30,58,.14);
+  --header-grad: linear-gradient(135deg,#0c1e3a 0%,#1a3a6b 55%,#1e5799 100%);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: 'DM Sans', -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Header ─────────────────────────────────────────────────── */
+.header-container {
+  position: sticky; top: 0; z-index: 1000;
+  background: var(--header-grad);
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  box-shadow: 0 2px 20px rgba(12,30,58,.35);
+}
+.navbar {
+  max-width: 1440px; margin: 0 auto; padding: 0 22px;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 64px; gap: 12px;
+}
+.brand-area { display: flex; align-items: center; gap: 11px; text-decoration: none; flex-shrink: 0; }
+.brand-logo {
+  width: 38px; height: 38px; border-radius: 9px;
+  background: rgba(255,255,255,.12);
+  box-shadow: 0 0 0 1px rgba(255,255,255,.2), 0 2px 8px rgba(0,0,0,.2);
+  object-fit: cover; flex-shrink: 0;
+}
+.brand-title { font-size: 1.15rem; font-weight: 700; color: #fff; letter-spacing: -.2px; }
+
+.nav-links { display: flex; gap: 2px; align-items: center; }
+.nav-links a {
+  display: flex; align-items: center; gap: 5px;
+  text-decoration: none; font-size: .8rem; font-weight: 600;
+  padding: 6px 10px; color: rgba(255,255,255,.72);
+  border-radius: var(--radius-sm); transition: all .18s; white-space: nowrap;
+}
+.nav-links a:hover  { color: #fff; background: rgba(255,255,255,.1); }
+.nav-links a.nav-active { color: #fff; background: rgba(255,255,255,.15); }
+
+/* UMD (Unified Menu Dropdown) */
+.umd-wrap { position: relative; }
+.umd-toggle {
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.22);
+  border-radius: 999px; padding: 5px 12px 5px 5px;
+  cursor: pointer; transition: background .18s; color: #fff;
+}
+.umd-toggle:hover { background: rgba(255,255,255,.18); }
+.umd-avatar {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--sky), var(--navy-mid));
+  display: flex; align-items: center; justify-content: center;
+  font-size: .68rem; font-weight: 700; color: #fff; flex-shrink: 0;
+}
+.umd-name   { font-size: .8rem; font-weight: 600; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.umd-caret  { font-size: .6rem; color: rgba(255,255,255,.7); }
+.umd-dropdown {
+  display: none; position: absolute; right: 0; top: calc(100% + 8px);
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); box-shadow: var(--shadow-lg);
+  min-width: 220px; overflow: hidden; z-index: 200;
+}
+.umd-dropdown.open { display: block; }
+.umd-user-row { padding: 14px 16px 10px; border-bottom: 1px solid var(--border); }
+.umd-user-name  { font-size: .88rem; font-weight: 700; color: var(--navy); }
+.umd-user-email { font-size: .75rem; color: var(--muted); margin-top: 2px; }
+.umd-section { display: flex; flex-direction: column; padding: 6px; border-bottom: 1px solid var(--border); }
+.umd-section:last-child { border-bottom: none; }
+.umd-link {
+  display: flex; align-items: center; gap: 9px;
+  padding: 9px 10px; border-radius: var(--radius-sm);
+  font-size: .84rem; font-weight: 600; color: var(--text);
+  text-decoration: none; background: none; border: none;
+  cursor: pointer; width: 100%; font-family: 'DM Sans', sans-serif;
+  transition: background .15s;
+}
+.umd-link:hover { background: var(--bg); }
+.umd-link.danger { color: #ef4444; }
+.umd-link.danger:hover { background: var(--danger-bg); }
+
+#nav-login {
+  background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.25);
+  color: #fff !important; padding: 7px 14px; border-radius: 999px;
+  font-weight: 600; text-decoration: none; font-size: .82rem;
+}
+
+.hamburger {
+  display: none; padding: 7px 10px;
+  border: 1px solid rgba(255,255,255,.25); border-radius: var(--radius-sm);
+  background: rgba(255,255,255,.1); cursor: pointer;
+  color: #fff; font-size: 1rem; transition: background .18s;
+}
+.hamburger:hover { background: rgba(255,255,255,.2); }
+@media(max-width:1400px) {
+  .nav-links { display: none; }
+  .hamburger { display: block; }
+}
+
+.drawer {
+  display: none; position: fixed;
+  top: 72px; left: 12px; right: 12px;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 8px;
+  z-index: 999; box-shadow: var(--shadow-lg);
+}
+.drawer a, .drawer button {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 14px; border-radius: var(--radius-sm);
+  font-weight: 600; font-size: .88rem;
+  text-decoration: none; color: var(--text);
+  background: none; border: none; cursor: pointer;
+  width: 100%; font-family: 'DM Sans', sans-serif;
+  transition: background .15s;
+}
+.drawer a:hover, .drawer button:hover { background: var(--bg); }
+.drawer a.nav-active { background: var(--sky-soft); color: var(--navy-mid); }
+.drawer-divider { height: 1px; background: var(--border); margin: 4px 0; }
+.drawer-signout { color: #ef4444 !important; }
+
+/* ── Main ───────────────────────────────────────────────────── */
+main {
+  flex: 1;
+  padding: 32px 22px 64px;
+  animation: fadeUp .35s ease both;
+}
+.shell {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* ── Page header ────────────────────────────────────────────── */
+.page-header {
+  display: flex; align-items: flex-start;
+  justify-content: space-between; gap: 16px;
+  flex-wrap: wrap; margin-bottom: 24px;
+}
+.page-title   { font-size: 1.65rem; font-weight: 700; color: var(--navy); letter-spacing: -.4px; line-height: 1.2; }
+.page-sub     { font-size: .88rem; color: var(--muted); margin-top: 4px; font-weight: 500; }
+.page-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+
+/* Mode banner (renew / edit) */
+.mode-banner {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 18px; border-radius: var(--radius-lg);
+  margin-bottom: 20px; border: 1px solid transparent;
+}
+.mode-banner.renew { background: var(--info-bg); border-color: var(--info-bdr); }
+.mode-banner.edit  { background: var(--warn-bg); border-color: var(--warn-bdr); }
+.mode-banner-icon  { font-size: 1.3rem; flex-shrink: 0; }
+.mode-banner-text  { flex: 1; }
+.mode-banner-title { font-size: .9rem; font-weight: 700; }
+.mode-banner.renew .mode-banner-title { color: var(--info-text); }
+.mode-banner.edit  .mode-banner-title { color: var(--warn-text); }
+.mode-banner-sub   { font-size: .78rem; color: var(--muted); margin-top: 2px; }
+
+/* Property pill */
+.prop-pill {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: var(--sky-soft); border: 1px solid #bfdbfe;
+  border-radius: 999px; padding: 6px 14px;
+  font-size: .82rem; font-weight: 600; color: var(--navy-mid);
+}
+
+/* ── Status message ─────────────────────────────────────────── */
+.status-msg {
+  display: none; padding: 13px 16px;
+  border-radius: var(--radius-md); font-size: .88rem; font-weight: 600;
+  line-height: 1.45; margin-bottom: 18px; border: 1px solid transparent;
+}
+.status-msg.ok   { background: var(--success-bg); border-color: var(--success-bdr); color: #166534; display: block; }
+.status-msg.err  { background: var(--danger-bg);  border-color: var(--danger-bdr);  color: var(--danger-text); display: block; }
+.status-msg.info { background: var(--info-bg);    border-color: var(--info-bdr);    color: var(--info-text);   display: block; }
+
+/* ── Section cards ──────────────────────────────────────────── */
+.section-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius-xl); box-shadow: var(--shadow-sm);
+  margin-bottom: 16px; overflow: hidden;
+}
+.section-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 22px 0; gap: 10px;
+}
+.section-title {
+  display: flex; align-items: center; gap: 8px;
+  font-size: .72rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .5px; color: var(--muted);
+}
+.section-body { padding: 14px 22px 22px; }
+
+/* ── Status select highlight ────────────────────────────────── */
+.status-select-wrap { position: relative; max-width: 300px; }
+#status {
+  border-left: 3px solid var(--sky);
+  padding-left: 11px;
+  font-weight: 600;
+}
+#status.status-signed     { border-color: var(--success); }
+#status.status-terminated { border-color: var(--danger-text); }
+#status.status-draft      { border-color: var(--muted); }
+
+/* ── Form fields ────────────────────────────────────────────── */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.form-grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+@media(max-width:580px) {
+  .form-grid, .form-grid.cols-3 { grid-template-columns: 1fr; }
+}
+.form-group { display: flex; flex-direction: column; gap: 5px; }
+.form-group.full { grid-column: 1 / -1; }
+
+label {
+  font-size: .7rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .45px; color: var(--muted);
+}
+label .req { color: #ef4444; margin-left: 2px; }
+
+input, select, textarea {
+  padding: 10px 13px; border: 1.5px solid var(--border); border-radius: var(--radius-md);
+  font-family: 'DM Sans', sans-serif; font-size: .9rem; color: var(--text);
+  background: #f8fafc; width: 100%;
+  transition: border-color .15s, box-shadow .15s, background .15s;
+  appearance: none; -webkit-appearance: none;
+  outline: none;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: var(--sky);
+  box-shadow: 0 0 0 3px rgba(45,140,240,.1);
+  background: #fff;
+}
+input::placeholder, textarea::placeholder { color: #b8c4ce; }
+input[type="number"] { font-family: 'DM Mono', monospace; }
+input[type="date"]   { font-family: 'DM Mono', monospace; font-size: .85rem; }
+textarea { resize: vertical; min-height: 88px; }
+
+/* Input prefix for currency */
+.input-wrap { position: relative; }
+.input-prefix {
+  position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+  font-size: .85rem; color: var(--muted); font-weight: 600;
+  pointer-events: none; font-family: 'DM Mono', monospace;
+}
+.input-wrap input { padding-left: 26px; }
+.input-suffix {
+  position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+  font-size: .75rem; color: var(--muted); font-weight: 600;
+  pointer-events: none;
+}
+
+/* Field hint text */
+.field-hint { font-size: .72rem; color: var(--muted); margin-top: 4px; }
+
+/* ── Deposit summary chip ───────────────────────────────────── */
+.deposit-summary {
+  grid-column: 1 / -1;
+  background: var(--info-bg); border: 1px solid var(--info-bdr);
+  border-radius: var(--radius-md); padding: 10px 14px;
+  font-size: .8rem; color: var(--info-text); font-weight: 600;
+  display: none;
+}
+
+/* ── Date duration indicator ────────────────────────────────── */
+.date-duration {
+  grid-column: 1 / -1;
+  display: none;
+  background: var(--success-bg); border: 1px solid var(--success-bdr);
+  border-radius: var(--radius-md); padding: 9px 14px;
+  font-size: .8rem; color: #065f46; font-weight: 600;
+}
+
+/* ── Button row ─────────────────────────────────────────────── */
+.btn-row {
+  display: flex; gap: 10px; flex-wrap: wrap;
+  justify-content: flex-end; align-items: center;
+  padding-top: 8px; margin-top: 4px;
+}
+.btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 11px 22px; border-radius: var(--radius-md);
+  font-family: 'DM Sans', sans-serif; font-size: .88rem; font-weight: 600;
+  cursor: pointer; border: 1.5px solid var(--border);
+  text-decoration: none; transition: all .16s; white-space: nowrap;
+}
+.btn-primary {
+  background: var(--header-grad); border-color: transparent; color: #fff;
+  box-shadow: 0 2px 10px rgba(12,30,58,.22);
+}
+.btn-primary:hover:not(:disabled) { filter: brightness(1.1); box-shadow: 0 4px 18px rgba(12,30,58,.3); transform: translateY(-1px); }
+.btn-primary:disabled { opacity: .5; cursor: not-allowed; transform: none; filter: none; }
+.btn-ghost { background: var(--card); color: var(--navy); }
+.btn-ghost:hover { background: var(--bg); border-color: #cbd5e1; }
+
+/* ── Mobile bottom nav ──────────────────────────────────────── */
+.mobile-nav {
+  position: fixed; left: 0; right: 0; bottom: 0; display: none; z-index: 1200;
+  padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+  background: var(--header-grad);
+  border-top: 1px solid rgba(255,255,255,.08);
+  box-shadow: 0 -4px 20px rgba(12,30,58,.25);
+}
+.mobile-nav-inner { max-width: 1440px; margin: 0 auto; display: grid; grid-template-columns: repeat(6,1fr); gap: 5px; }
+.mnav {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 4px; padding: 10px 8px; border-radius: 8px;
+  border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.07);
+  color: rgba(255,255,255,.6); font-size: 11px; font-weight: 700;
+  text-decoration: none; text-align: center;
+}
+.mnav .ico { font-size: 22px; line-height: 1; }
+.mnav.active { background: rgba(255,255,255,.18); color: #fff; border-color: rgba(255,255,255,.25); }
+.mobile-pad { display: none; height: 86px; }
+@media(max-width:860px) { .mobile-nav { display: block; } .mobile-pad { display: block; } }
+
+/* ── Footer ─────────────────────────────────────────────────── */
+.site-footer { background: var(--navy); padding: 28px 20px 20px; margin-top: 40px; }
+.footer-content {
+  max-width: 1440px; margin: 0 auto;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 28px; padding-bottom: 18px;
+}
+.footer-section h4 { font-size: .75rem; font-weight: 700; color: rgba(255,255,255,.75); text-transform: uppercase; letter-spacing: .8px; margin: 0 0 12px; }
+.footer-section a, .footer-section p { display: block; color: rgba(255,255,255,.4); text-decoration: none; margin-bottom: 8px; font-size: .82rem; }
+.footer-section a:hover { color: rgba(255,255,255,.85); }
+.footer-bottom { text-align: center; padding-top: 14px; border-top: 1px solid rgba(255,255,255,.08); color: rgba(255,255,255,.28); font-size: .82rem; }
+@media(max-width:600px) { .site-footer { display: none; } }
+
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }
+
+/* ── Lease type conditional ── */
+.lease-type-note {
+  font-size: .78rem; color: var(--muted); font-style: italic; margin-top: 6px;
+}
+#leaseEndGroup.m2m-hidden label::after {
+  content: ' (not used for M2M)';
+  font-weight: 400; text-transform: none; letter-spacing: 0;
+  color: var(--muted); font-size: .68rem; margin-left: 4px;
+}
+</style>
+</head>
+<body>
+
+<!-- ── Header ────────────────────────────────────────────────── -->
+<header class="header-container">
+  <div class="navbar">
+    <a class="brand-area" href="index.html">
+      <img src="images/rg-logo.png" class="brand-logo" alt="Rental Genie"
+           onerror="this.style.display='none'" />
+      <span class="brand-title">Rental Genie</span>
+    </a>
+
+    <nav class="nav-links" aria-label="Main navigation">
+      <a href="dashboard.html">📊 Dashboard</a>
+      <a href="property-management.html">🏘️ Properties <span class="rg-badge hidden" data-rg-badge="1"></span></a>
+      <a href="lease-rent-center.html" class="nav-active">💰 Lease &amp; Rent <span class="rg-badge hidden" data-rg-badge="1"></span></a>
+      <a href="expense-tracking.html">💸 Expenses</a>
+      <a href="maintenance-requests.html">🛠 Maintenance <span class="rg-badge hidden" data-rg-badge="1"></span></a>
+      <a href="tenant-messages.html">💬 Messages</a>
+      <a href="reports-analytics.html">📈 Reports</a>
+    </nav>
+
+    <!-- UMD -->
+    <div class="umd-wrap" id="userMenu" style="display:none">
+      <button class="umd-toggle" id="umdToggle" aria-haspopup="true" aria-expanded="false">
+        <div class="umd-avatar" id="umdAvatar">?</div>
+        <span class="umd-name" id="umdName">User</span>
+        <span class="umd-caret">▾</span>
+      </button>
+      <div class="umd-dropdown" id="umdDropdown">
+        <div class="umd-user-row">
+          <div class="umd-user-name"  id="umdFullName">—</div>
+          <div class="umd-user-email" id="umdEmail">—</div>
+        </div>
+        <div class="umd-section">
+          <a class="umd-link" href="dashboard.html">📊 Dashboard</a>
+          <a class="umd-link" href="account.html">⚙️ Account Settings</a>
+        </div>
+        <div class="umd-section">
+          <button class="umd-link danger" id="logoutBtn">🚪 Sign Out</button>
+        </div>
+      </div>
+    </div>
+
+    <a id="nav-login" href="login.html">Log in</a>
+    <button class="hamburger" id="hamburgerBtn" aria-label="Open menu">☰</button>
+  </div>
+</header>
+
+<!-- Mobile Drawer -->
+<div class="drawer" id="mobileDrawer">
+  <a href="dashboard.html">📊 Dashboard</a>
+  <a href="property-management.html">🏘️ Properties</a>
+  <a href="lease-rent-center.html" class="nav-active">💰 Lease &amp; Rent</a>
+  <a href="expense-tracking.html">💸 Expenses</a>
+  <a href="maintenance-requests.html">🛠 Maintenance</a>
+  <a href="tenant-messages.html">💬 Messages</a>
+  <a href="reports-analytics.html">📈 Reports</a>
+  <div class="drawer-divider"></div>
+  <a href="account.html">⚙️ Account Settings</a>
+  <button class="drawer-signout" id="mobileLogoutBtn">🚪 Sign Out</button>
+</div>
+
+<!-- ── Main ──────────────────────────────────────────────────── -->
+<main>
+  <div class="shell">
+
+    <!-- Page header -->
+    <div class="page-header">
+      <div>
+        <div class="page-title" id="formTitle">📝 Create Lease</div>
+        <div class="page-sub" id="formSub">Fill in the details below to create a new lease record.</div>
+      </div>
+      <div class="page-actions">
+        <a class="btn btn-ghost" id="backBtn" href="lease-rent-center.html">← Back</a>
+      </div>
+    </div>
+
+    <!-- Property context pill -->
+    <div id="propPill" class="prop-pill" style="display:none; margin-bottom:16px;">
+      📍 <span id="propertyNameLabel">—</span>
+    </div>
+
+    <!-- Mode banner (renew / edit) -->
+    <div class="mode-banner renew" id="renewBanner" style="display:none">
+      <div class="mode-banner-icon">🔄</div>
+      <div class="mode-banner-text">
+        <div class="mode-banner-title">Renewal Mode</div>
+        <div class="mode-banner-sub">Dates have been advanced by one year. Review all fields before saving.</div>
+      </div>
+    </div>
+    <div class="mode-banner edit" id="editBanner" style="display:none">
+      <div class="mode-banner-icon">✏️</div>
+      <div class="mode-banner-text">
+        <div class="mode-banner-title">Editing Existing Lease</div>
+        <div class="mode-banner-sub">Changes will update this lease record. Review carefully before saving.</div>
+      </div>
+    </div>
+
+    <!-- Status message -->
+    <div class="status-msg" id="statusMsg" role="alert"></div>
+
+    <!-- ── 1. Lease Status & Type ───────────────────────────── -->
+    <div class="section-card">
+      <div class="section-head">
+        <div class="section-title">🏷️ Lease Status &amp; Type</div>
+      </div>
+      <div class="section-body">
+        <div class="form-grid">
+          <div class="form-group status-select-wrap">
+            <label for="status">Status</label>
+            <select id="status">
+              <option value="draft">Draft — not yet signed</option>
+              <option value="signed">Signed / In force</option>
+              <option value="month_to_month">Month-to-Month</option>
+              <option value="holdover">Holdover — expired, tenant remaining</option>
+              <option value="terminated">Terminated</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="leaseType">Lease Term Type</label>
+            <select id="leaseType">
+              <option value="fixed_term">Fixed Term — has a set end date</option>
+              <option value="month_to_month">Month-to-Month — no set end date</option>
+            </select>
+            <span class="field-hint" id="leaseTypeHint">Schedule generates dues through the end date.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 2. Tenant Details ───────────────────────────────── -->
+    <div class="section-card">
+      <div class="section-head">
+        <div class="section-title">👤 Tenant Details</div>
+      </div>
+      <div class="section-body">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="tenantName">Full Name <span class="req">*</span></label>
+            <input id="tenantName" type="text" placeholder="Jane Smith" autocomplete="off" />
+          </div>
+          <div class="form-group">
+            <label for="tenantEmail">Email Address <span class="req">*</span></label>
+            <input id="tenantEmail" type="email" placeholder="tenant@email.com" autocomplete="off" />
+            <span class="field-hint">Used for the tenant portal login (magic link)</span>
+          </div>
+          <div class="form-group full">
+            <label for="tenantPhone">Phone Number</label>
+            <input id="tenantPhone" type="tel" placeholder="(555) 123-4567" autocomplete="off" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 3. Lease Dates ─────────────────────────────────── -->
+    <div class="section-card">
+      <div class="section-head">
+        <div class="section-title">📅 Lease Dates</div>
+      </div>
+      <div class="section-body">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="leaseStart">Start Date <span class="req">*</span></label>
+            <input id="leaseStart" type="date" />
+          </div>
+          <div class="form-group" id="leaseEndGroup">
+            <label for="leaseEnd">End Date <span class="req" id="leaseEndReq">*</span></label>
+            <input id="leaseEnd" type="date" />
+            <span class="field-hint" id="leaseEndHint">Required for fixed-term leases.</span>
+          </div>
+          <!-- Duration indicator -->
+          <div class="date-duration" id="dateDuration"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 4. Rent & Fees ─────────────────────────────────── -->
+    <div class="section-card">
+      <div class="section-head">
+        <div class="section-title">💵 Rent &amp; Fees</div>
+      </div>
+      <div class="section-body">
+        <div class="form-grid cols-3">
+          <div class="form-group">
+            <label for="rentAmount">Monthly Rent <span class="req">*</span></label>
+            <div class="input-wrap">
+              <span class="input-prefix">$</span>
+              <input id="rentAmount" type="number" step="0.01" min="0" placeholder="1,500.00" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="dueDay">Rent Due Day</label>
+            <div class="input-wrap">
+              <input id="dueDay" type="number" min="1" max="31" placeholder="1" />
+              <span class="input-suffix">/ mo</span>
+            </div>
+            <span class="field-hint">Day of month (1–31)</span>
+          </div>
+          <div class="form-group">
+            <label for="lateFee">Late Fee</label>
+            <div class="input-wrap">
+              <span class="input-prefix">$</span>
+              <input id="lateFee" type="number" step="0.01" min="0" placeholder="50.00" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="gracePeriod">Grace Period</label>
+            <div class="input-wrap">
+              <input id="gracePeriod" type="number" min="0" placeholder="5" />
+              <span class="input-suffix">days</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="securityDeposit">Security Deposit</label>
+            <div class="input-wrap">
+              <span class="input-prefix">$</span>
+              <input id="securityDeposit" type="number" step="0.01" min="0" placeholder="1,500.00" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="petDeposit">Pet Deposit</label>
+            <div class="input-wrap">
+              <span class="input-prefix">$</span>
+              <input id="petDeposit" type="number" step="0.01" min="0" placeholder="0.00" />
+            </div>
+          </div>
+          <!-- Deposit total summary -->
+          <div class="deposit-summary" id="depositSummary"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 5. Notes ───────────────────────────────────────── -->
+    <div class="section-card">
+      <div class="section-head">
+        <div class="section-title">🧾 Internal Notes</div>
+      </div>
+      <div class="section-body">
+        <div class="form-group">
+          <label for="leaseNotes">Notes <span style="font-weight:400;text-transform:none;letter-spacing:0">(landlord only — not visible to tenant)</span></label>
+          <textarea id="leaseNotes" rows="3" placeholder="Parking spot #4, pet allowed per addendum, key fob #12…"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 6. Terms & Conditions ──────────────────────────── -->
+    <div class="section-card">
+      <div class="section-head">
+        <div class="section-title">📄 Terms &amp; Conditions</div>
+      </div>
+      <div class="section-body">
+        <div class="form-group">
+          <label for="terms">Lease Terms</label>
+          <textarea id="terms" rows="10" placeholder="Enter full lease terms, house rules, pet policy, maintenance responsibilities, and any addendums here…"></textarea>
+          <span class="field-hint">This content may be shown to the tenant in their portal.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Actions ────────────────────────────────────────── -->
+    <div class="btn-row">
+      <button class="btn btn-ghost" type="button" id="cancelBtn">Cancel</button>
+      <button class="btn btn-primary" id="saveLeaseBtn" type="button">💾 Save Lease</button>
+    </div>
+
+  </div>
+</main>
+
+<!-- ── Footer ─────────────────────────────────────────────────── -->
+<footer class="site-footer">
+  <div class="footer-content">
+    <div class="footer-section">
+      <h4>Navigate</h4>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="property-management.html">Properties</a>
+      <a href="lease-rent-center.html">Lease &amp; Rent Center</a>
+      <a href="expense-tracking.html">Expenses</a>
+    </div>
+    <div class="footer-section">
+      <h4>Support &amp; Legal</h4>
+      <a href="contact-us.html">Contact Us</a>
+      <a href="contact-us.html">Help Center</a>
+      <a href="terms.html">Terms of Service</a>
+      <a href="privacy.html">Privacy Policy</a>
+    </div>
+    <div class="footer-section">
+      <h4>Account</h4>
+      <a href="account.html">My Account</a>
+      <a href="invite-tenant.html">Invite Tenant</a>
+      <a href="tenant-portal.html">Tenant Portal</a>
+    </div>
+  </div>
+  <div class="footer-bottom">© <span id="footerYear"></span> Rental Genie. All rights reserved.</div>
+</footer>
+
+<!-- Mobile Bottom Nav -->
+<nav class="mobile-nav" aria-label="Mobile navigation">
+  <div class="mobile-nav-inner">
+    <a class="mnav" href="dashboard.html"><div class="ico">📊</div></a>
+    <a class="mnav" href="property-management.html"><div class="ico">🏘️</div></a>
+    <a class="mnav active" href="lease-rent-center.html"><div class="ico">💰</div></a>
+    <a class="mnav" href="expense-tracking.html"><div class="ico">💸</div></a>
+    <a class="mnav" href="maintenance-requests.html"><div class="ico">🛠️</div></a>
+    <a class="mnav" href="reports-analytics.html"><div class="ico">📈</div></a>
+  </div>
+</nav>
+<div class="mobile-pad" aria-hidden="true"></div>
+
+<!-- Supabase bootstrap — CDN loaded here in body (lease-rent-center pattern) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/* ============================================================
+   SUPABASE — safeStorage bootstrap (matches lease-rent-center)
+============================================================ */
+(function () {
+  try {
+    var mem = new Map();
+    var ls = null; try { ls = window.localStorage; } catch (e) {}
+    var _store = {
+      getItem:    function (k) { try { return (ls && ls.getItem(k)) || mem.get(k) || null; } catch (e) { return mem.get(k) || null; } },
+      setItem:    function (k, v) { try { ls && ls.setItem(k, v); } catch (e) {} mem.set(k, v); },
+      removeItem: function (k) { try { ls && ls.removeItem(k); } catch (e) {} mem.delete(k); }
+    };
+    var _c = window.supabase.createClient(
+      'https://pbojacnagutipfhcxltj.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBib2phY25hZ3V0aXBmaGN4bHRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgwMDkwODAsImV4cCI6MjA2MzU4NTA4MH0.ZLCcAzTYljoZycpBGwMtthP5VyAJ4schuIvt4HibGc0',
+      { auth: { lock: undefined, persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storage: _store } }
+    );
+    window._rgClient = _c; window.sb = _c; window.client = _c;
+    window.getSbClient = function () { return _c; };
+    window.GSClient    = { getAsync: async function () { return _c; } };
+  } catch (e) { console.error('RG bootstrap failed:', e); }
+}());
+var db = window._rgClient;
+
+/* waitForClientReady — identical to lease-rent-center */
+async function waitForClientReady() {
+  if (window.db && window.db.auth) return window.db;
+  var c = window._rgClient || window.supabase.createClient(
+    'https://pbojacnagutipfhcxltj.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBib2phY25hZ3V0aXBmaGN4bHRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgwMDkwODAsImV4cCI6MjA2MzU4NTA4MH0.ZLCcAzTYljoZycpBGwMtthP5VyAJ4schuIvt4HibGc0',
+    { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, lock: undefined } }
+  );
+  window._rgClient = c; window.db = c; window.sb = c;
+  return c;
+}
+
+/* ============================================================
+   URL PARAMS
+============================================================ */
+var _p           = new URLSearchParams(location.search);
+var propertyName = decodeURIComponent(_p.get('property') || '');
+var propertyId   = _p.get('property_id') || '';
+var leaseId      = _p.get('lease_id') || _p.get('id') || '';
+var companyId    = _p.get('company_id') || _p.get('company') || _p.get('workspace_id') || '';
+var isEdit       = !!leaseId && (_p.get('mode') !== 'renew');
+var isRenew      = _p.get('renew') === 'true' || _p.get('mode') === 'renew';
+
+/* ============================================================
+   HELPERS
+============================================================ */
+function $(id) { return document.getElementById(id); }
+
+function setStatus(msg, kind) {
+  var el = $('statusMsg');
+  el.className = 'status-msg' + (kind ? ' ' + kind : '');
+  el.textContent = msg || '';
+  if (!kind || !msg) { el.style.display = 'none'; return; }
+  el.style.display = 'block';
+  el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function toISODate(d) {
+  return d.getFullYear() + '-'
+    + String(d.getMonth()+1).padStart(2,'0') + '-'
+    + String(d.getDate()).padStart(2,'0');
+}
+function addDaysISO(iso, days) {
+  if (!iso) return '';
+  var d = new Date(iso + 'T00:00:00');
+  d.setDate(d.getDate() + days);
+  return toISODate(d);
+}
+function addYearsISO(iso, years) {
+  if (!iso) return '';
+  var d = new Date(iso + 'T00:00:00');
+  d.setFullYear(d.getFullYear() + years);
+  return toISODate(d);
+}
+function fmtMoney(v) {
+  var n = Number(v);
+  return isNaN(n) ? '' : '$' + n.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+}
+
+/* ============================================================
+   AUTH  (rgWireHeader pattern from dashboard)
+============================================================ */
+/* setupAuth replaced by inline async boot — see DOMContentLoaded below */
+function setupAuth() { /* no-op: auth handled in async boot */ }
+
+/* ============================================================
+   HEADER WIRING  (rgWireHeader pattern)
+============================================================ */
+(function wireHeader() {
+  /* UMD dropdown */
+  var toggle = $('umdToggle');
+  var drop   = $('umdDropdown');
+  if (toggle && drop) {
+    toggle.addEventListener('click', function (e) {
+      e.stopPropagation();
+      drop.classList.toggle('open');
+      toggle.setAttribute('aria-expanded', drop.classList.contains('open'));
+    });
+    document.addEventListener('click', function () { drop.classList.remove('open'); });
+  }
+
+  /* Logout buttons */
+  var lb = $('logoutBtn');
+  if (lb) lb.addEventListener('click', function () {
+    db.auth.signOut().then(function () { location.href = 'login.html'; });
+  });
+  var mlb = $('mobileLogoutBtn');
+  if (mlb) mlb.addEventListener('click', function () {
+    db.auth.signOut().then(function () { location.href = 'login.html'; });
+  });
+
+  /* Hamburger */
+  var ham = $('hamburgerBtn');
+  var drw = $('mobileDrawer');
+  if (ham && drw) {
+    ham.addEventListener('click', function () {
+      drw.style.display = drw.style.display === 'block' ? 'none' : 'block';
+    });
+    document.addEventListener('click', function (e) {
+      if (drw.style.display === 'block' && !drw.contains(e.target) && !ham.contains(e.target))
+        drw.style.display = 'none';
+    });
+  }
+}());
+
+/* ============================================================
+   STATUS SELECT ACCENT
+============================================================ */
+function updateStatusAccent() {
+  var sel = $('status');
+  if (!sel) return;
+  sel.classList.remove('status-signed', 'status-terminated', 'status-draft');
+  if (sel.value === 'signed')     sel.classList.add('status-signed');
+  if (sel.value === 'terminated') sel.classList.add('status-terminated');
+  if (sel.value === 'draft')      sel.classList.add('status-draft');
+}
+$('status').addEventListener('change', updateStatusAccent);
+
+/* ============================================================
+   DATE DURATION INDICATOR
+============================================================ */
+function updateDateDuration() {
+  var start = $('leaseStart').value;
+  var end   = $('leaseEnd').value;
+  var el    = $('dateDuration');
+  if (!el) return;
+  if (!start || !end) { el.style.display = 'none'; return; }
+  var s = new Date(start + 'T00:00:00');
+  var e = new Date(end   + 'T00:00:00');
+  if (isNaN(s) || isNaN(e) || e <= s) { el.style.display = 'none'; return; }
+  var months = (e.getFullYear() - s.getFullYear()) * 12 + (e.getMonth() - s.getMonth());
+  var days   = Math.round((e - s) / (1000 * 60 * 60 * 24));
+  el.style.display = 'block';
+  el.textContent   = '📅 Lease duration: ' + (months > 0 ? months + ' month' + (months !== 1 ? 's' : '') + ' (' + days + ' days)' : days + ' day' + (days !== 1 ? 's' : ''));
+}
+$('leaseStart').addEventListener('change', updateDateDuration);
+$('leaseEnd').addEventListener('change',   updateDateDuration);
+
+/* ============================================================
+   DEPOSIT SUMMARY
+============================================================ */
+function updateDepositSummary() {
+  var sec = Number($('securityDeposit').value || 0);
+  var pet = Number($('petDeposit').value || 0);
+  var el  = $('depositSummary');
+  if (!el) return;
+  var total = sec + pet;
+  if (!total) { el.style.display = 'none'; return; }
+  el.style.display = 'block';
+  el.textContent   = '💰 Total deposits: ' + fmtMoney(total)
+    + (sec ? ' (Security: ' + fmtMoney(sec) + ')' : '')
+    + (pet ? ' + (Pet: ' + fmtMoney(pet) + ')' : '');
+}
+$('securityDeposit').addEventListener('input', updateDepositSummary);
+$('petDeposit').addEventListener('input',      updateDepositSummary);
+
+/* ============================================================
+   LEASE TYPE — toggle end date requirement
+============================================================ */
+function updateLeaseType() {
+  var lt      = $('leaseType');
+  var endGrp  = $('leaseEndGroup');
+  var endReq  = $('leaseEndReq');
+  var endHint = $('leaseEndHint');
+  var typeHint= $('leaseTypeHint');
+  var statusSel = $('status');
+  if (!lt) return;
+
+  var isM2M = lt.value === 'month_to_month';
+
+  // End date becomes optional for M2M
+  if (endGrp)  endGrp.classList.toggle('m2m-hidden', isM2M);
+  if (endReq)  endReq.style.display   = isM2M ? 'none' : '';
+  if (endHint) endHint.textContent    = isM2M
+    ? 'Optional for M2M — leave blank or set a review date.'
+    : 'Required for fixed-term leases.';
+  if (typeHint) typeHint.textContent  = isM2M
+    ? 'Rent schedule extends month-by-month until lease is terminated.'
+    : 'Schedule generates dues through the end date.';
+
+  // Auto-set status to month_to_month if not already set to something meaningful
+  if (isM2M && statusSel) {
+    if (statusSel.value === 'draft' || statusSel.value === 'signed') {
+      statusSel.value = 'month_to_month';
+      updateStatusAccent();
+    }
+  }
+}
+
+if ($('leaseType')) {
+  $('leaseType').addEventListener('change', function() {
+    updateLeaseType();
+    updateDateDuration();
+  });
+}
+
+
+/* ============================================================
+   LOAD LEASE (edit / renew)
+============================================================ */
+function loadLeaseById(id) {
+  return db.from('leases').select('*').eq('id', id).single()
+    .then(function (res) {
+      if (res.error) throw res.error;
+      return res.data;
+    });
+}
+
+function loadLatestLeaseForProperty() {
+  if (!propertyName && !propertyId) return Promise.resolve(null);
+  var q = db.from('leases').select('*');
+  if (propertyId) q = q.eq('property_id', propertyId);
+  else            q = q.eq('property_name', propertyName);
+  return q.order('lease_end', { ascending: false }).limit(1)
+    .then(function (res) {
+      if (res.error) throw res.error;
+      return (res.data && res.data.length) ? res.data[0] : null;
+    });
+}
+
+function applyLeaseToForm(data, renewMode) {
+  if (!data) return;
+  $('tenantName').value    = data.tenant_name  || '';
+  $('tenantEmail').value   = data.tenant_email || '';
+  $('tenantPhone').value   = data.tenant_phone || '';
+  $('rentAmount').value    = data.rent_amount  != null ? data.rent_amount  : '';
+  $('dueDay').value        = (data.due_day ?? data.rent_due_day) != null ? (data.due_day ?? data.rent_due_day) : '';
+  $('lateFee').value       = (data.late_fee ?? data.late_fee_amount) != null ? (data.late_fee ?? data.late_fee_amount) : '';
+  $('gracePeriod').value   = (data.grace_period ?? data.late_fee_grace_days) != null ? (data.grace_period ?? data.late_fee_grace_days) : '';
+  $('securityDeposit').value = data.security_deposit != null ? data.security_deposit : '';
+  $('petDeposit').value    = data.pet_deposit  != null ? data.pet_deposit  : '';
+  $('leaseNotes').value    = data.notes  || '';
+  $('terms').value         = data.terms  || '';
+
+  // Lease type
+  var lt = $('leaseType');
+  if (lt) {
+    var ltype = String(data.lease_type || '').toLowerCase();
+    var inferredM2M = ltype.includes('month') || ltype === 'm2m';
+    lt.value = inferredM2M ? 'month_to_month' : 'fixed_term';
+  }
+
+  if (renewMode) {
+    var nextStart = addDaysISO(data.lease_end, 1);
+    var nextEnd   = addDaysISO(addYearsISO(nextStart, 1), -1);
+    $('leaseStart').value = nextStart;
+    $('leaseEnd').value   = nextEnd;
+    $('status').value     = 'draft';
+    if (lt) lt.value      = 'fixed_term'; // renewals default to fixed
+  } else {
+    $('leaseStart').value = data.lease_start || '';
+    $('leaseEnd').value   = data.lease_end   || '';
+    var st = String(data.status || '').toLowerCase();
+    if      (st.includes('term'))                               $('status').value = 'terminated';
+    else if (st === 'month_to_month' || st.includes('month'))   $('status').value = 'month_to_month';
+    else if (st === 'holdover')                                  $('status').value = 'holdover';
+    else if (st.includes('sign') || st.includes('activ'))       $('status').value = 'signed';
+    else                                                         $('status').value = 'draft';
+  }
+
+  /* Trigger visual updates */
+  updateStatusAccent();
+  updateLeaseType();
+  updateDateDuration();
+  updateDepositSummary();
+}
+
+/* ============================================================
+   SAVE LEASE
+============================================================ */
+/* ── Probe actual leases table columns (avoids PGRST204 on missing cols) ── */
+function probeLeaseColumns() {
+  return db.from('leases').select('*').limit(1).then(function(res) {
+    if (res.error || !res.data || !res.data.length) return null;
+    return new Set(Object.keys(res.data[0]));
+  }).catch(function() { return null; });
+}
+
+function filterToKnownColumns(payload, knownCols) {
+  if (!knownCols) return payload; // no probe result — send as-is, let server reject unknown
+  var safe = {};
+  Object.keys(payload).forEach(function(k) {
+    if (knownCols.has(k)) safe[k] = payload[k];
+  });
+  return safe;
+}
+
+function saveLease() {
+  var btn   = $('saveLeaseBtn');
+  var name  = ($('tenantName').value  || '').trim();
+  var email = ($('tenantEmail').value || '').trim();
+  var start = $('leaseStart').value;
+  var end   = $('leaseEnd').value;
+  var rent  = $('rentAmount').value;
+
+  var isM2M = $('leaseType') && $('leaseType').value === 'month_to_month';
+  if (!name)  { setStatus('Please enter the tenant name.', 'err'); return; }
+  if (!email) { setStatus('Please enter the tenant email address.', 'err'); return; }
+  if (!start) { setStatus('Please select a lease start date.', 'err'); return; }
+  if (!isM2M && !end) { setStatus('Please select a lease end date (required for fixed-term leases).', 'err'); return; }
+  if (!rent)  { setStatus('Please enter the monthly rent amount.', 'err'); return; }
+  if (end && start >= end) { setStatus('Lease end date must be after the start date.', 'err'); return; }
+
+  btn.disabled    = true;
+  btn.textContent = 'Saving…';
+  setStatus('Saving lease…', 'info');
+
+  // Build full payload — then strip unknown columns before sending
+  var fullPayload = {
+    company_id:       companyId    || null,
+    property_id:      propertyId   || null,
+    property_name:    propertyName || null,
+    tenant_name:      name,
+    tenant_email:     email,
+    tenant_phone:     ($('tenantPhone').value || '').trim() || null,
+    lease_start:      start,
+    lease_end:        end || null,
+    rent_amount:      Number(rent),
+    due_day:          $('dueDay').value         !== '' ? Number($('dueDay').value)         : null,
+    late_fee:         $('lateFee').value         !== '' ? Number($('lateFee').value)         : null,
+    grace_period:     $('gracePeriod').value     !== '' ? Number($('gracePeriod').value)     : null,
+    security_deposit: $('securityDeposit').value !== '' ? Number($('securityDeposit').value) : null,
+    pet_deposit:      $('petDeposit').value      !== '' ? Number($('petDeposit').value)      : null,
+    notes:            $('leaseNotes').value || null,
+    terms:            $('terms').value      || null,
+    status:           $('status').value,
+    lease_type:       ($('leaseType') && $('leaseType').value) || 'fixed_term',
+  };
+
+  // For edit: probe existing row to discover real columns, then filter
+  // For insert: try full payload first; on PGRST204 retry with probed columns
+  db.auth.getUser().then(function (res) {
+    if (!res.data || !res.data.user) {
+      setStatus('Not authenticated. Please log in again.', 'err');
+      btn.disabled = false; btn.innerHTML = '💾 Save Lease';
+      return;
+    }
+    var user = res.data.user;
+
+    function doRedirect() {
+      setStatus('✅ Lease saved successfully! Redirecting…', 'ok');
+      btn.innerHTML = '✅ Saved';
+      setTimeout(function () {
+        var q = new URLSearchParams();
+        if (propertyName) q.set('property', propertyName);
+        if (propertyId)   q.set('property_id', propertyId);
+        if (companyId)    q.set('company_id', companyId);
+        q.set('tab', 'lease');
+        location.href = 'lease-rent-center.html?' + q.toString();
+      }, 1400);
+    }
+
+    function onSaveError(e) {
+      console.error('saveLease error:', e);
+      setStatus('❌ Save failed: ' + (e.message || 'Check your connection and try again.'), 'err');
+      btn.disabled = false; btn.innerHTML = '💾 Save Lease';
+    }
+
+    if (isEdit && leaseId) {
+      // Edit: fetch existing row to get real column set, strip unknowns, update
+      db.from('leases').select('*').eq('id', leaseId).single()
+        .then(function(probeRes) {
+          var knownCols = (probeRes.data && !probeRes.error)
+            ? new Set(Object.keys(probeRes.data))
+            : null;
+          // Always include core columns even if probe fails
+          if (knownCols) {
+            knownCols.add('tenant_name'); knownCols.add('tenant_email');
+            knownCols.add('lease_start'); knownCols.add('rent_amount'); knownCols.add('status');
+          }
+          var safePayload = filterToKnownColumns(fullPayload, knownCols);
+          return db.from('leases').update(safePayload).eq('id', leaseId);
+        })
+        .then(function(result) {
+          if (result && result.error) throw result.error;
+          doRedirect();
+        })
+        .catch(onSaveError);
+
+    } else {
+      // Insert: try with full payload, fallback to probed columns on PGRST204
+      fullPayload.created_by = user.id;
+      db.from('leases').insert([fullPayload])
+        .then(function(result) {
+          if (!result.error) { doRedirect(); return; }
+          if (result.error.code !== 'PGRST204') throw result.error;
+          // Column missing — probe then retry
+          return probeLeaseColumns().then(function(knownCols) {
+            var safePayload = filterToKnownColumns(fullPayload, knownCols);
+            return db.from('leases').insert([safePayload]);
+          }).then(function(result2) {
+            if (result2 && result2.error) throw result2.error;
+            doRedirect();
+          });
+        })
+        .catch(onSaveError);
+    }
+
+  }).catch(function(e) {
+    setStatus('❌ Auth error: ' + (e.message || ''), 'err');
+    btn.disabled = false; btn.innerHTML = '💾 Save Lease';
+  });
+}
+
+/* ============================================================
+   INIT
+============================================================ */
+document.addEventListener('DOMContentLoaded', async function () {
+  $('footerYear').textContent = new Date().getFullYear();
+
+  // ✅ 1) Wait for Supabase client (lease-rent-center pattern)
+  const dbReady = await waitForClientReady();
+  window.db = dbReady; db = dbReady;
+
+  // ✅ 2) Auth — getUser() server-validated, avoids tracking-prevention null sessions
+  var _authUser = null;
+  try { var _gu = await dbReady.auth.getUser(); _authUser = (!_gu.error && _gu.data?.user) ? _gu.data.user : null; } catch(e) {}
+  if (!_authUser) {
+    try { var _gs = await dbReady.auth.getSession(); _authUser = _gs.data?.session?.user || null; } catch(e) {}
+  }
+
+  if (_authUser) {
+    var uname = _authUser.user_metadata?.full_name || _authUser.user_metadata?.name ||
+                (_authUser.email ? _authUser.email.split('@')[0] : 'Account');
+    var _p2 = uname.split(' ');
+    var initials = (_p2.length >= 2 ? _p2[0][0] + _p2[_p2.length-1][0] : uname.slice(0,2)).toUpperCase();
+
+    var loginBtn = $('nav-login'); if (loginBtn) loginBtn.style.display = 'none';
+    var userMenu = $('userMenu');  if (userMenu) userMenu.style.display = 'block';
+
+    var av = $('umdAvatar');   if (av) av.textContent = initials;
+    var nm = $('umdName');     if (nm) nm.textContent = uname;
+    var fn = $('umdFullName'); if (fn) fn.textContent = uname;
+    var em = $('umdEmail');    if (em) em.textContent = _authUser.email || '';
+    var ul = $('usernameLabel'); if (ul) ul.textContent = uname;
+
+    document.body.classList.remove('auth-guest');
+    document.body.classList.add('auth-ready');
+
+    dbReady.auth.onAuthStateChange(function (_e, sess) {
+      if (!sess) location.href = 'login.html';
+    });
+  } else {
+    // Not authenticated — redirect with returnTo
+    var _returnTo = encodeURIComponent(location.pathname + location.search + location.hash);
+    location.href = 'login.html?returnTo=' + _returnTo;
+    return;
+  }
+
+  // ✅ 3) UI setup (property pill, back button, mode banners)
+  if (propertyName || propertyId) {
+    $('propertyNameLabel').textContent = propertyName || ('ID: ' + propertyId);
+    $('propPill').style.display = 'inline-flex';
+  }
+
+  var backQ = new URLSearchParams();
+  if (propertyName) backQ.set('property', propertyName);
+  if (propertyId)   backQ.set('property_id', propertyId);
+  if (companyId)    backQ.set('company_id', companyId);
+  $('backBtn').href = 'lease-rent-center.html' + (backQ.toString() ? '?' + backQ.toString() : '');
+
+  $('cancelBtn').addEventListener('click', function () { history.back(); });
+  $('saveLeaseBtn').addEventListener('click', saveLease);
+
+  if (isRenew) {
+    $('formTitle').textContent = '🔄 Renew Lease';
+    $('formSub').textContent   = 'Review and update the lease terms for the renewal period.';
+    $('renewBanner').style.display = 'flex';
+  } else if (isEdit) {
+    $('formTitle').textContent = '📝 Edit Lease';
+    $('formSub').textContent   = 'Update the details for this existing lease record.';
+    $('editBanner').style.display = 'flex';
+  }
+
+  updateStatusAccent();
+  updateLeaseType();
+
+  // ✅ 4) Load existing lease data AFTER auth is confirmed (fixes edit mode blank tenant)
+  if (isEdit || isRenew) {
+    setStatus('Loading lease data…', '');
+    try {
+      var data = leaseId
+        ? await loadLeaseById(leaseId)
+        : await loadLatestLeaseForProperty();
+
+      if (!data) {
+        setStatus(isRenew ? 'No existing lease found to renew.' : 'Lease not found.', 'err');
+        return;
+      }
+      applyLeaseToForm(data, isRenew);
+      setStatus('', ''); // clear loading message
+    } catch (e) {
+      console.error('Load lease error:', e);
+      setStatus('Could not load lease data: ' + (e.message || 'Unknown error'), 'err');
+    }
+  }
+});
+</script>
+</body>
+</html>

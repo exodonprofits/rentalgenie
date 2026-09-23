@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🛡 Insurance – Rental Genie</title>
+
+
+  <style>
+
+    body { margin:0; background:#f8f9fa; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto; color:#111827; }
+    .page { max-width:1440px; margin:20px auto; padding:0 16px 32px; }
+
+    /* -------------------------------------------------------------
+   HEADER
+------------------------------------------------------------- */
+.header-container {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  width: 100%;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  background: linear-gradient(120deg,#0ea5e9 0%,#38bdf8 40%,#bae6fd 80%,#e0f2fe 100%);
+  border-bottom: 1px solid rgba(255,255,255,0.25);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.navbar {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 14px 22px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.brand-area {
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.brand-logo {
+  width:42px; height:42px;
+  border-radius:50%;
+  background:radial-gradient(circle at 30% 30%,#f0faff,#bae6fd 40%,#0ea5e9 75%);
+  box-shadow:0px 0px 0px 2px rgba(14,165,233,0.25),0px 8px 16px rgba(0,0,0,0.15);
+}
+.brand-title {
+  font-size:1.45rem;
+  font-weight:800;
+  color:#0f172a;
+  text-shadow:0 2px 4px rgba(0,0,0,0.12);
+}
+
+.nav-links {
+  display:flex;
+  gap:5px;
+  align-items:center;
+  flex-wrap:wrap;
+}
+.nav-links a {
+  text-decoration:none;
+  font-size:14px;
+  font-weight:600;
+  padding:5px 7px;
+  color:#0f172a;
+  border-radius:999px;
+  transition:.25s;
+}
+.nav-links a:hover {
+  background:white;
+}
+.nav-active {
+  background:white !important;
+  box-shadow:0 3px 8px rgba(0,0,0,0.15);
+}
+
+#nav-login {
+  padding:7px 14px;
+  border-radius:999px;
+  border:1px solid #cbd5e1;
+  font-weight:700;
+  background:white;
+}
+
+/* User Menu Dropdown Fix */
+.user-menu-dropdown.active { /* Class added by JS */
+  display:block;
+}
+.user-menu-dropdown a,
+.user-menu-dropdown button {
+  display:block; padding:10px 14px;
+  font-size:.95rem; background:none; border:none;
+  cursor:pointer; text-align:left;
+  text-decoration:none;
+  color:#111827;
+}
+.user-menu-dropdown a:hover,
+.user-menu-dropdown button:hover {
+  background:#f1f5f9;
+}
+
+/* Mobile */
+.hamburger {
+  display:none;
+  padding:6px 12px;
+  border:1px solid #cbd5e1;
+  border-radius:8px;
+  background:white;
+  cursor:pointer;
+}
+@media(max-width:820px){
+  .nav-links{display:none;}
+  .hamburger{display:block;}
+}
+
+.drawer{
+  display:none;
+  position:fixed;
+  top:76px; left:12px; right:12px;
+  background:white; border:1px solid #e2e8f0;
+  border-radius:12px; padding:12px;
+  z-index:999;
+}
+.drawer a {
+  display:block;
+  padding:12px;
+  border-bottom:1px solid #e2e8f0;
+  font-weight:600; text-decoration:none;
+  color:#0f172a;
+}
+.drawer a:last-child {
+  border-bottom:none;
+}
+/* Style for the mobile signout button container and button */
+#mobileLogoutContainer {
+    border-top: 1px solid #e2e8f0;
+    margin-top: 10px;
+    padding-top: 10px;
+}
+#mobileLogoutContainer button {
+    padding:12px;
+    background:none;
+    border:none;
+    text-align:left;
+    font-weight:600;
+    color:#dc2626;
+    cursor:pointer;
+    width: 100%;
+    display: block; /* Ensure it takes full width for padding */
+}
+#mobileLogoutContainer button:hover {
+    background:#f1f5f9;
+}
+
+
+/* Content */
+    .hero{
+      background:#fff; border:1px solid #e5e7eb; border-radius:16px; padding:18px;
+      box-shadow:0 8px 20px rgba(15,23,42,0.06);
+      display:flex; align-items:flex-start; justify-content:space-between; gap:12px;
+      margin-bottom:14px;
+    }
+    .hero h1{ margin:0; font-size:1.35rem; font-weight:900; color:#0f172a; }
+    .hero p{ margin:6px 0 0; color:#475569; font-weight:600; }
+    .pill{
+      display:inline-flex; align-items:center; gap:8px; padding:8px 12px; border-radius:999px; font-weight:800;
+      border:1px solid #e2e8f0; background:#fff; color:#0f172a; white-space:nowrap;
+    }
+
+    .grid{ display:grid; grid-template-columns: 1.12fr 0.88fr; gap:14px; }
+    .card{
+      background:#fff; border:1px solid #e5e7eb; border-radius:16px; padding:16px;
+      box-shadow:0 8px 20px rgba(15,23,42,0.06);
+    }
+    .card h2{ margin:0 0 10px; font-size:1.05rem; font-weight:900; }
+    .muted{ color:#64748b; font-weight:600; }
+
+    .form-grid{ display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
+    label{ display:block; font-weight:800; color:#0f172a; font-size:13px; }
+    input, select, textarea{
+      width:100%; margin-top:6px; padding:10px 10px; border:1px solid #cbd5e1; border-radius:12px;
+      outline:none; font-weight:700; background:#fff; box-sizing:border-box;
+    }
+    textarea{ min-height:88px; resize:vertical; }
+    input:focus, select:focus, textarea:focus{ border-color:#38bdf8; box-shadow:0 0 0 3px rgba(56,189,248,0.35); }
+
+    .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .btn{
+      border:none; border-radius:999px; padding:10px 14px; cursor:pointer; font-weight:900;
+      display:inline-flex; align-items:center; gap:8px; transition:.2s;
+    }
+    .btn-primary{ background:#0ea5e9; color:#fff; }
+    .btn-primary:hover{ filter:brightness(0.95); }
+    .btn-ghost{ background:#fff; color:#0f172a; border:1px solid #cbd5e1; }
+    .btn-ghost:hover{ background:#f8fafc; }
+
+    table{ width:100%; border-collapse:collapse; }
+    th, td{ border-bottom:1px solid #e5e7eb; padding:10px 8px; text-align:left; vertical-align:top; }
+    th{ font-size:12px; text-transform:uppercase; letter-spacing:.04em; color:#64748b; }
+    td{ font-weight:700; color:#0f172a; }
+    td .sub{ display:block; margin-top:4px; font-size:12px; font-weight:700; color:#64748b; }
+
+    .status{ margin-top:10px; font-weight:800; color:#0f172a; }
+    .status.ok{ color:#16a34a; }
+    .status.err{ color:#dc2626; }
+
+    footer{ text-align:center; margin-top:24px; color:#64748b; font-weight:700; font-size:13px; }
+
+    @media (max-width:980px){ .grid{ grid-template-columns:1fr; } }
+    @media (max-width:760px){
+.form-grid{ grid-template-columns:1fr; } .page{ margin-top:12px; }
+    }
+
+/* -------------------------------------------------------------
+   FOOTER
+------------------------------------------------------------- */
+.site-footer {
+  margin-top: 40px;
+  padding: 30px 20px 20px;
+  background: white;
+  border-top: 1px solid #e5e7eb;
+  font-size: 0.9rem;
+  color: #475569;
+}
+
+.footer-content {
+  max-width: 1440px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 30px;
+  padding-bottom: 20px;
+}
+
+.footer-section h4 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1e3a8a;
+  margin-top: 0;
+  margin-bottom: 12px;
+}
+
+.footer-section a,
+.footer-section p {
+  display: block;
+  color: #475569;
+  text-decoration: none;
+  margin-bottom: 8px;
+  transition: color 0.2s;
+}
+
+.footer-section a:hover {
+  color: #0ea5e9;
+}
+
+.footer-bottom {
+  text-align: center;
+  padding-top: 15px;
+  border-top: 1px solid #e5e7eb;
+  margin-top: 15px;
+}
+
+@media (max-width: 600px) {
+  .footer-content {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+  .footer-section h4 {
+    margin-top: 20px;
+  }
+}
+
+
+
+.header-container{position:sticky;top:0;z-index:1000;width:100%;background:linear-gradient(135deg,#0c1e3a 0%,#1a3a6b 55%,#1e5799 100%);border-bottom:1px solid rgba(255,255,255,.08);box-shadow:0 2px 20px rgba(12,30,58,.35);}
+.navbar{max-width:1440px;margin:0 auto;padding:13px 22px;display:flex;align-items:center;justify-content:space-between;}
+.brand-area{display:flex;align-items:center;gap:11px;text-decoration:none;}
+.brand-logo{width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.15);box-shadow:0 0 0 1px rgba(255,255,255,.2),0 4px 12px rgba(0,0,0,.2);object-fit:cover;}
+.brand-title{font-size:1.25rem;font-weight:700;color:#fff;letter-spacing:-0.3px;}
+.nav-links{display:flex;gap:2px;align-items:center;}
+.nav-links a{display:inline-flex;align-items:center;gap:5px;padding:6px 10px;font-size:13.5px;font-weight:500;color:rgba(255,255,255,.78);text-decoration:none;border-radius:8px;white-space:nowrap;transition:all .18s;}
+.nav-links a:hover{background:rgba(255,255,255,.12);color:#fff;}
+.nav-active{background:rgba(255,255,255,.16)!important;color:#fff!important;}
+#nav-login{padding:7px 16px;border-radius:999px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);color:#fff;font-weight:600;font-size:13.5px;text-decoration:none;}
+.hamburger{display:none;font-size:1.4rem;padding:7px 12px;border:1px solid rgba(255,255,255,.22);border-radius:8px;background:rgba(255,255,255,.1);cursor:pointer;color:#fff;}
+@media(max-width:860px){.nav-links{display:none;}.hamburger{display:block;}}
+body.auth-ready #nav-login{display:none!important;}body.auth-ready .umd-wrap{display:block!important;}body.auth-guest .umd-wrap{display:none!important;}
+body.auth-ready #mobileLogin{display:none!important;}body.auth-ready #mobileAccountLink{display:flex!important;}body.auth-ready #mobileLogoutContainer{display:block!important;}
+body.auth-guest #mobileLogin{display:block!important;}body.auth-guest #mobileAccountLink{display:none!important;}body.auth-guest #mobileLogoutContainer{display:none!important;}
+.umd-wrap{position:relative;}.umd-toggle{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:5px 12px 5px 5px;cursor:pointer;transition:background .18s;color:#fff;}
+.umd-toggle:hover{background:rgba(255,255,255,.18);}.umd-toggle .umd-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#38bdf8,#1a3a6b);display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:700;color:#fff;flex-shrink:0;}
+.umd-toggle .umd-name{font-size:.8rem;color:#fff;font-weight:600;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}.umd-caret{font-size:.6rem;color:rgba(255,255,255,.7);}
+.umd-dropdown{display:none;position:absolute;right:0;top:calc(100% + 8px);background:#fff;border:1px solid #e2e8f0;border-radius:12px;box-shadow:0 8px 32px rgba(12,30,58,.18);min-width:220px;overflow:hidden;z-index:1100;}
+.umd-dropdown.active{display:block;animation:umdFadeIn .15s ease both;}@keyframes umdFadeIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+.umd-user-row{padding:14px 16px 10px;border-bottom:1px solid #f1f5f9;}.umd-user-name{font-size:.88rem;font-weight:700;color:#0c1e3a;}.umd-user-email{font-size:.75rem;color:#64748b;margin-top:2px;}
+.umd-section{display:flex;flex-direction:column;padding:6px;border-bottom:1px solid #f1f5f9;}.umd-section:last-child{border-bottom:none;}
+.umd-link{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:8px;font-size:.84rem;font-weight:600;color:#0c1e3a;text-decoration:none;background:none;border:none;cursor:pointer;width:100%;font-family:"DM Sans",sans-serif;transition:background .15s;}
+.umd-link:hover{background:#f8faff;}.umd-link.danger{color:#dc2626;}.umd-link.danger:hover{background:#fef2f2;}
+@media(max-width:860px){.umd-wrap{display:none!important;}}
+.drawer{display:none;position:fixed;top:70px;left:12px;right:12px;background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:10px 10px 6px;z-index:1300;box-shadow:0 16px 40px rgba(12,30,58,.18);max-height:calc(100vh - 90px);overflow-y:auto;}
+.drawer-user-row{display:flex!important;align-items:center;gap:10px;padding:10px 12px 12px!important;border-bottom:1px solid #f1f5f9!important;font-weight:700!important;color:#0c1e3a!important;font-size:0.95rem!important;text-decoration:none;}
+.drawer-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#1a3a6b,#1e5799);color:#fff;font-weight:700;font-size:0.75rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;text-transform:uppercase;}
+.drawer-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:8px 0;}
+.drawer-grid a{display:flex;align-items:center;gap:7px;padding:11px 12px;border-bottom:none!important;font-weight:600;text-decoration:none;color:#0c1e3a;font-size:0.88rem;border-radius:10px;background:#f8fafc;border:1px solid #f1f5f9!important;transition:background .12s;}
+.drawer-grid a:hover{background:#eff4ff;color:#1a3a6b;}.drawer-grid a.nav-active{background:linear-gradient(135deg,#eff4ff,#e8f0fe);color:#1a3a6b;border-color:#bfdbfe!important;font-weight:700;}
+.drawer-login{display:flex;align-items:center;gap:8px;padding:11px 12px;font-weight:600;color:#0c1e3a;font-size:0.9rem;border-top:1px solid #f1f5f9;text-decoration:none;margin-top:4px;}
+#mobileLogoutContainer{border-top:1px solid #f1f5f9;margin-top:4px;padding-top:4px;}#mobileLogoutContainer button{width:100%;padding:11px 12px;background:none;border:none;text-align:left;font-weight:700;color:#dc2626;cursor:pointer;font-family:"DM Sans",sans-serif;font-size:0.9rem;border-radius:8px;}#mobileLogoutContainer button:hover{background:#fef2f2;}
+</style>
+</head>
+
+<body>
+  <header class="header-container">
+  <div class="navbar">
+    <a class="brand-area" href="dashboard.html">
+      <img src="images/rg-logo.png" onerror="this.style.display='none'" class="brand-logo" alt="Rental Genie" />
+      <span class="brand-title">Rental Genie</span>
+    </a>
+    <nav class="nav-links" aria-label="Main navigation">
+      <a href="dashboard.html">📊 Dashboard</a>
+      <a href="property-management.html" class="nav-active">🏘️ Properties</a>
+      <a href="lease-rent-center.html">💰 Lease &amp; Rent</a>
+      <a href="expense-tracking.html">💸 Expenses</a>
+      <a href="maintenance-requests.html">🛠 Maintenance</a>
+      <a href="tenant-messages.html">💬 Messages</a>
+      <a href="reports-analytics.html">📈 Reports</a>
+    </nav>
+    <div class="umd-wrap" id="userMenu">
+      <button class="umd-toggle" id="umdToggle" aria-haspopup="true" aria-expanded="false">
+        <div class="umd-avatar" id="umdAvatar">?</div>
+        <span class="umd-name" id="umdName">User</span>
+        <span class="umd-caret">▾</span>
+      </button>
+      <div class="umd-dropdown" id="umdDropdown">
+        <div class="umd-user-row">
+          <div class="umd-user-name"  id="umdFullName">—</div>
+          <div class="umd-user-email" id="umdEmail">—</div>
+        </div>
+        <div class="umd-section">
+          <a class="umd-link" href="dashboard.html">📊 Dashboard</a>
+          <a class="umd-link" href="account.html">⚙️ Account Settings</a>
+          <a class="umd-link" href="invite-tenant.html">✉️ Invite Tenant</a>
+          <a class="umd-link" href="tenant-portal-picker.html">🏠 Tenant Portal</a>
+        </div>
+        <div class="umd-section">
+          <a class="umd-link" href="reports-analytics.html">📈 Reports &amp; Analytics</a>
+          <a class="umd-link" href="contact-us.html">💬 Contact Support</a>
+        </div>
+        <div class="umd-section">
+          <button class="umd-link danger" id="logoutBtn">🚪 Sign Out</button>
+        </div>
+      </div>
+    </div>
+    <a id="nav-login" href="login.html" style="display:none">Log in</a>
+    <button class="hamburger" id="hamburgerBtn" aria-label="Open menu">☰</button>
+  </div>
+</header>
+
+<div class="drawer" id="mobileDrawer">
+  <a href="account.html" id="mobileAccountLink" style="display:none;" class="drawer-user-row">
+    <span class="drawer-avatar" id="drawerAvatar">?</span>
+    <span id="mobileUsernameLabel">Account</span>
+  </a>
+  <div class="drawer-grid">
+    <a href="dashboard.html">📊 Dashboard</a>
+    <a href="property-management.html" class="nav-active">🏘️ Properties</a>
+    <a href="lease-rent-center.html">💰 Lease &amp; Rent</a>
+    <a href="expense-tracking.html">💸 Expenses</a>
+    <a href="maintenance-requests.html">🛠 Maintenance</a>
+    <a href="tenant-messages.html">💬 Messages</a>
+    <a href="reports-analytics.html">📈 Reports</a>
+  </div>
+  <a href="login.html" id="mobileLogin" class="drawer-login">Log in</a>
+  <div id="mobileLogoutContainer" style="display:none;">
+    <button id="mobileLogoutBtn">Sign Out</button>
+  </div>
+</div>
+
+<main class="page">
+
+  <div class="page">
+    <div class="hero">
+      <div>
+        <h1>🛡 Insurance Module</h1>
+        <p class="muted">Track policy history (renewals/changes) and keep monthly cost accurate.</p>
+      </div>
+      <div class="pill" id="propertyPill">🏠 Property: —</div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h2>➕ Add / Update Policy (History)</h2>
+
+        <div class="form-grid">
+          <div>
+            <label>📅 Policy Year
+              <input id="policyYear" type="number" min="2000" max="2100" placeholder="2026" />
+            </label>
+          </div>
+          <div>
+            <label>✅ Effective Date
+              <input id="effectiveDate" type="date" />
+            </label>
+          </div>
+
+          <div>
+            <label>🏢 Provider
+              <input id="provider" type="text" placeholder="State Farm" />
+            </label>
+          </div>
+          <div>
+            <label>🔢 Policy #
+              <input id="policyNumber" type="text" placeholder="SF-123456..." />
+            </label>
+          </div>
+
+          <div>
+            <label>📆 Start Date (optional)
+              <input id="startDate" type="date" />
+            </label>
+          </div>
+          <div>
+            <label>📆 End Date / Renewal Date (optional)
+              <input id="renewalDate" type="date" />
+            </label>
+          </div>
+
+          <div>
+            <label>💰 Annual Premium
+              <input id="premiumAnnual" type="number" step="0.01" placeholder="2400" />
+            </label>
+          </div>
+          <div>
+            <label>🗓 Monthly Premium (optional)
+              <input id="premiumMonthly" type="number" step="0.01" placeholder="200" />
+            </label>
+          </div>
+
+          <div>
+            <label>💸 Deductible (optional)
+              <input id="deductible" type="number" step="0.01" placeholder="1000" />
+            </label>
+          </div>
+          <div>
+            <label>🧾 Coverage Notes (optional)
+              <input id="coverage" type="text" placeholder="Dwelling, liability, flood add-on..." />
+            </label>
+          </div>
+
+          <div style="grid-column:1/-1;">
+            <label>🌐 Provider Portal URL (optional)
+              <input id="portalUrl" type="url" placeholder="https://..." />
+            </label>
+          </div>
+
+          <div style="grid-column:1/-1;">
+            <label>📝 Notes (optional)
+              <textarea id="notes" placeholder="Renewal increase, claims, escrow change, etc."></textarea>
+            </label>
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:12px;">
+          <button class="btn btn-primary" id="saveBtn" type="button">💾 Save Policy</button>
+          <button class="btn btn-ghost" id="setCurrentBtn" type="button">⭐ Set As Current</button>
+          <button class="btn btn-ghost" id="clearBtn" type="button">🧹 Clear</button>
+        </div>
+
+        <div class="status" id="status"></div>
+      </div>
+
+      <div class="card">
+        <h2>📌 Current Snapshot (from Property)</h2>
+        <div class="muted" style="margin-bottom:10px;">
+          Dashboards should read “current” insurance values from the property.
+        </div>
+
+        <table>
+          <tbody>
+            <tr><th>Provider</th><td id="snapProvider">—</td></tr>
+            <tr><th>Policy #</th><td id="snapPolicy">—</td></tr>
+            <tr><th>Monthly Premium</th><td id="snapMonthly">—</td></tr>
+            <tr><th>Annual Premium</th><td id="snapAnnual">—</td></tr>
+            <tr><th>Renewal Date</th><td id="snapRenewal">—</td></tr>
+            <tr><th>Portal</th><td id="snapPortal">—</td></tr>
+          </tbody>
+        </table>
+
+        <div class="row" style="margin-top:12px;">
+          <button class="btn btn-ghost" id="backBtn" type="button">⬅️ Back</button>
+          <button class="btn btn-ghost" id="openPortalBtn" type="button">🌐 Open Portal</button>
+          <button class="btn btn-ghost" id="escrowBtn" type="button">💼 Escrow</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:14px;">
+      <h2>🗂 Policy History</h2>
+      <div class="muted" style="margin-bottom:10px;">
+        Add a new record at renewal or when provider/premium changes.
+      </div>
+
+      <div style="overflow:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>Year</th>
+              <th>Effective</th>
+              <th>Provider / Policy</th>
+              <th>Premium</th>
+              <th>Renewal</th>
+              <th>Portal</th>
+              <th>Notes</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="historyBody">
+            <tr><td colspan="8" class="muted">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+</div>
+
+<!-- Supabase: isolated body tag -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+
+  const params = new URLSearchParams(location.search);
+  const propertyId = params.get('property_id') || params.get('id') || '';
+  const companyId = params.get('company_id') || '';
+  const returnTo = params.get('return_to') || '';
+
+  const statusEl = document.getElementById('status');
+  const historyBody = document.getElementById('historyBody');
+
+  function setStatus(msg, type) {
+    statusEl.className = 'status ' + (type || '');
+    statusEl.textContent = msg || '';
+  }
+  function money(v) {
+    if (v === null || v === undefined || v === '') return '—';
+    const n = Number(v);
+    if (Number.isNaN(n)) return String(v);
+    return n.toLocaleString(undefined, { style:'currency', currency:'USD' });
+  }
+  function safeText(v) { return (v === null || v === undefined || v === '') ? '—' : String(v); }
+  function safeUrl(v) {
+    if (!v) return '';
+    try { return new URL(v).toString(); } catch { return ''; }
+  }
+
+  // safeStorage bootstrap — prevents tracking-prevention warnings
+  if(!window._rgClient){
+    (function(){var _m=new Map(),_l=null;try{_l=window.localStorage;}catch(e){}
+    var _s={getItem:function(k){try{return(_l&&_l.getItem(k))||_m.get(k)||null;}catch(e){return _m.get(k)||null;}},setItem:function(k,v){try{_l&&_l.setItem(k,v);}catch(e){}_m.set(k,v);},removeItem:function(k){try{_l&&_l.removeItem(k);}catch(e){}_m.delete(k);}};
+    window._rgClient=window.supabase.createClient('https://pbojacnagutipfhcxltj.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBib2phY25hZ3V0aXBmaGN4bHRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgwMDkwODAsImV4cCI6MjA2MzU4NTA4MH0.ZLCcAzTYljoZycpBGwMtthP5VyAJ4schuIvt4HibGc0',{auth:{lock:undefined,persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storage:_s}});
+    })();}
+  const db = window._rgClient;
+
+  async function waitForClientReady(ms){
+    ms=ms||4000;if(window._rgClient&&window._rgClient.auth)return window._rgClient;
+    return new Promise(function(resolve,reject){var elapsed=0;var t=setInterval(function(){elapsed+=25;
+      if(window._rgClient&&window._rgClient.auth){clearInterval(t);resolve(window._rgClient);}
+      else if(elapsed>=ms){clearInterval(t);reject(new Error('not ready'));}},25);});
+  }
+
+  
+
+/* -------------------------------------------------------------
+   Authentication UI (match property-overview.html)
+------------------------------------------------------------- */
+
+async function rgSetupAuth() {
+  var user = null;
+  try { var r = await db.auth.getUser(); user = (!r.error && r.data && r.data.user) ? r.data.user : null; } catch(e) {}
+  if (!user) { try { var s = await db.auth.getSession(); user = (s.data && s.data.session) ? s.data.session.user : null; } catch(e) {} }
+  var loginEl = document.getElementById('nav-login');
+  var umdEl   = document.getElementById('userMenu');
+  if (!user) {
+    if (loginEl) loginEl.style.display = 'inline-flex';
+    if (umdEl)   umdEl.style.display = 'none';
+    document.body.classList.add('auth-guest');
+    location.href = 'login.html?returnTo=' + encodeURIComponent(location.pathname + location.search);
+    return null;
+  }
+  var uname = (user.user_metadata && (user.user_metadata.full_name || user.user_metadata.name)) || user.email.split('@')[0];
+  var parts = uname.trim().split(/\s+/);
+  var initials = (parts.length >= 2 ? parts[0][0] + parts[parts.length-1][0] : uname.slice(0,2)).toUpperCase();
+  if (loginEl) loginEl.style.display = 'none';
+  if (umdEl)   umdEl.style.display = 'block';
+  var av=document.getElementById('umdAvatar');   if(av)av.textContent=initials;
+  var nm=document.getElementById('umdName');     if(nm)nm.textContent=uname;
+  var fn=document.getElementById('umdFullName'); if(fn)fn.textContent=uname;
+  var em=document.getElementById('umdEmail');    if(em)em.textContent=user.email||'';
+  var da=document.getElementById('drawerAvatar');if(da)da.textContent=initials;
+  var ml=document.getElementById('mobileUsernameLabel');if(ml)ml.textContent=uname;
+  var ma=document.getElementById('mobileAccountLink');  if(ma)ma.style.display='flex';
+  var mlo=document.getElementById('mobileLogoutContainer');if(mlo)mlo.style.display='block';
+  var mli=document.getElementById('mobileLogin');if(mli)mli.style.display='none';
+  document.body.classList.remove('auth-guest');
+  document.body.classList.add('auth-ready');
+  db.auth.onAuthStateChange(function(event){ if(event==='SIGNED_OUT') location.href='login.html'; });
+  return user;
+}
+
+function rgWireHeader() {
+  var uBtn=document.getElementById('umdToggle'),uDrop=document.getElementById('umdDropdown');
+  if(uBtn&&uDrop&&!uBtn.dataset.wired){uBtn.dataset.wired='1';uBtn.onclick=function(e){e.stopPropagation();uDrop.classList.toggle('active');};document.addEventListener('click',function(e){if(!uDrop.contains(e.target)&&!uBtn.contains(e.target))uDrop.classList.remove('active');});}
+  var lBtn=document.getElementById('logoutBtn'),mBtn=document.getElementById('mobileLogoutBtn');
+  if(lBtn)lBtn.onclick=async function(){await db.auth.signOut();location.href='login.html';};
+  if(mBtn)mBtn.onclick=async function(){await db.auth.signOut();location.href='login.html';};
+  var ham=document.getElementById('hamburgerBtn'),drw=document.getElementById('mobileDrawer');
+  if(ham&&drw&&!ham.dataset.wired){ham.dataset.wired='1';ham.onclick=function(e){e.stopPropagation();drw.style.display=drw.style.display==='block'?'none':'block';};drw.addEventListener('click',function(e){e.stopPropagation();if(e.target.tagName==='A')drw.style.display='none';});document.addEventListener('click',function(e){if(drw.style.display==='block'&&!drw.contains(e.target)&&!ham.contains(e.target))drw.style.display='none';});}
+}
+rgWireHeader();
+
+
+document.addEventListener("click", (e) => {
+  const menu = document.getElementById("userMenu");
+  const dd = document.getElementById("userMenuDropdown");
+  if (!menu || !dd) return;
+  if (!menu.contains(e.target)) dd.classList.remove("active");
+});
+
+// Desktop logout
+document.getElementById("logoutBtn")?.addEventListener("click", async () => {
+  await db.auth.signOut();
+  location.href = "login.html";
+});
+
+// Mobile logout
+document.getElementById("mobileLogoutBtn")?.addEventListener("click", async () => {
+  await db.auth.signOut();
+  location.href = "login.html";
+});
+
+// Mobile drawer toggle
+document.getElementById("hamburgerBtn")?.addEventListener("click", () => {
+  const d = document.getElementById("mobileDrawer");
+  if (!d) return;
+  d.style.display = d.style.display === "block" ? "none" : "block";
+});
+
+async function requireAuth() {
+    const { data: { session } } = await db.auth.getSession();
+    const loginLink = document.getElementById('nav-login');
+
+    if (!session) {
+      loginLink.style.display = 'inline-flex';
+      userMenu.style.display = 'none';
+      return null;
+    }
+
+    loginLink.style.display = 'none';
+    userMenu.style.display = 'inline-block';
+    const email = session.user?.email || 'Account';
+    userMenuToggle.textContent = `👤 ${email} ▾`;
+    return session;
+  }
+
+      
+  // Property snapshot
+  let propertyRow = null;
+
+  async function loadProperty() {
+    if (!propertyId) {
+      setStatus('Missing property_id in URL.', 'err');
+      document.getElementById('propertyPill').textContent = '🏠 Property: (missing id)';
+      return;
+    }
+
+    const { data, error } = await db.from('properties').select('*').eq('id', propertyId).maybeSingle();
+    if (error) { console.error(error); setStatus('Could not load property.', 'err'); return; }
+
+    propertyRow = data || {};
+    const name = propertyRow.property_name || propertyRow.name || propertyRow.address || propertyId;
+    document.getElementById('propertyPill').textContent = `🏠 Property: ${name}`;
+
+    const provider = propertyRow.insurance_provider_current ?? propertyRow.insurance_provider ?? '';
+    const policy = propertyRow.insurance_policy_number_current ?? propertyRow.insurance_policy_number ?? '';
+    const monthly = propertyRow.insurance_monthly_current ?? propertyRow.insurance_monthly ?? null;
+    const annual = propertyRow.insurance_annual_current ?? propertyRow.insurance_annual ?? null;
+    const renewal = propertyRow.insurance_renewal_date_current ?? propertyRow.insurance_renewal_date ?? '';
+
+    const portal = propertyRow.insurance_portal_url_current ?? propertyRow.insurance_portal_url ?? '';
+
+    document.getElementById('snapProvider').textContent = safeText(provider);
+    document.getElementById('snapPolicy').textContent = safeText(policy);
+    document.getElementById('snapMonthly').textContent = money(monthly);
+    document.getElementById('snapAnnual').textContent = money(annual);
+    document.getElementById('snapRenewal').textContent = safeText(renewal);
+    document.getElementById('snapPortal').textContent = safeText(portal);
+
+    document.getElementById('openPortalBtn').disabled = !safeUrl(portal);
+  }
+
+  // History
+  async function loadHistory() {
+    if (!propertyId) return;
+
+    const { data, error } = await db
+      .from('property_insurance_history')
+      .select('*')
+      .eq('property_id', propertyId)
+      .order('policy_year', { ascending: false });
+
+    if (error) {
+      console.error(error);
+      historyBody.innerHTML = `<tr><td colspan="8" class="muted">No history yet (or table not created).</td></tr>`;
+      return;
+    }
+
+    if (!data || data.length === 0) {
+      historyBody.innerHTML = `<tr><td colspan="8" class="muted">No policy records yet.</td></tr>`;
+      return;
+    }
+
+    historyBody.innerHTML = data.map(r => {
+      const portal = safeUrl(r.portal_url);
+      const portalCell = portal ? `<a href="${portal}" target="_blank" rel="noopener">Open</a>` : '—';
+      return `
+        <tr>
+          <td>${safeText(r.policy_year)}</td>
+          <td>${safeText(r.effective_date)}</td>
+          <td>${safeText(r.provider)}<span class="sub">${safeText(r.policy_number)}</span></td>
+          <td>${money(r.premium_annual)}<span class="sub">${money(r.premium_monthly)}</span></td>
+          <td>${safeText(r.renewal_date)}</td>
+          <td>${portalCell}</td>
+          <td>${safeText(r.notes)}</td>
+          <td>
+            <button class="btn btn-ghost" style="padding:7px 10px;" onclick="fillFromRow('${r.id}')">✏️ Edit</button>
+            <button class="btn btn-ghost" style="padding:7px 10px;" onclick="setCurrentFromRow('${r.id}')">⭐ Current</button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  let editingId = null;
+
+  window.fillFromRow = async function(id) {
+    const { data, error } = await db.from('property_insurance_history').select('*').eq('id', id).maybeSingle();
+    if (error || !data) return;
+
+    editingId = id;
+    document.getElementById('policyYear').value = data.policy_year ?? '';
+    document.getElementById('effectiveDate').value = data.effective_date ?? '';
+    document.getElementById('provider').value = data.provider ?? '';
+    document.getElementById('policyNumber').value = data.policy_number ?? '';
+    document.getElementById('startDate').value = data.start_date ?? '';
+    document.getElementById('renewalDate').value = data.renewal_date ?? data.end_date ?? '';
+    document.getElementById('premiumAnnual').value = data.premium_annual ?? '';
+    document.getElementById('premiumMonthly').value = data.premium_monthly ?? '';
+    document.getElementById('deductible').value = data.deductible ?? '';
+    document.getElementById('coverage').value = data.coverage ?? '';
+    document.getElementById('portalUrl').value = data.portal_url ?? '';
+    document.getElementById('notes').value = data.notes ?? '';
+    setStatus('Loaded policy for editing.', '');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  async function updatePropertySnapshotFromRow(row) {
+    const allowed = new Set(Object.keys(propertyRow || {}));
+    const patch = {};
+
+    const monthly = (row.premium_monthly ?? (row.premium_annual ? (Number(row.premium_annual)/12) : null));
+
+    const map = [
+      ['insurance_provider_current', row.provider ?? null],
+      ['insurance_policy_number_current', row.policy_number ?? null],
+      ['insurance_monthly_current', monthly],
+      ['insurance_annual_current', row.premium_annual ?? null],
+      ['insurance_renewal_date_current', row.renewal_date ?? row.end_date ?? null],
+      ['insurance_portal_url_current', row.portal_url ?? null],
+
+      // Back-compat fallbacks:
+      ['insurance_provider', row.provider ?? null],
+      ['insurance_policy_number', row.policy_number ?? null],
+      ['insurance_monthly', monthly],
+      ['insurance_annual', row.premium_annual ?? null],
+      ['insurance_renewal_date', row.renewal_date ?? row.end_date ?? null],
+      ['insurance_portal_url', row.portal_url ?? null],
+    ];
+
+    for (const [k, v] of map) {
+      if (allowed.has(k)) patch[k] = v;
+    }
+
+    if (!Object.keys(patch).length) throw new Error('No insurance columns found on properties.');
+    const { error } = await db.from('properties').update(patch).eq('id', propertyId);
+    if (error) throw error;
+  }
+
+  // Save
+  document.getElementById('saveBtn').addEventListener('click', async () => {
+    if (!propertyId) return setStatus('Missing property_id.', 'err');
+
+    const policyYear = Number(document.getElementById('policyYear').value || '');
+    const effectiveDate = document.getElementById('effectiveDate').value;
+    const provider = (document.getElementById('provider').value || '').trim();
+    const policyNumber = (document.getElementById('policyNumber').value || '').trim();
+    const premiumAnnual = document.getElementById('premiumAnnual').value;
+
+    if (!policyYear || policyYear < 2000) return setStatus('Please enter a valid policy year.', 'err');
+    if (!effectiveDate) return setStatus('Please select an effective date.', 'err');
+    if (!provider) return setStatus('Please enter provider.', 'err');
+    if (!policyNumber) return setStatus('Please enter policy #.', 'err');
+    if (!premiumAnnual) return setStatus('Please enter annual premium.', 'err');
+
+    const payload = {
+      company_id: companyId || null,
+      property_id: propertyId,
+      policy_year: policyYear,
+      effective_date: effectiveDate,
+      provider,
+      policy_number: policyNumber,
+      start_date: document.getElementById('startDate').value || null,
+      end_date: null,
+      renewal_date: document.getElementById('renewalDate').value || null,
+      premium_annual: Number(premiumAnnual),
+      premium_monthly: document.getElementById('premiumMonthly').value ? Number(document.getElementById('premiumMonthly').value) : null,
+      deductible: document.getElementById('deductible').value ? Number(document.getElementById('deductible').value) : null,
+      coverage: (document.getElementById('coverage').value || '').trim() || null,
+      portal_url: (document.getElementById('portalUrl').value || '').trim() || null,
+      notes: (document.getElementById('notes').value || '').trim() || null
+    };
+
+    setStatus('Saving…', '');
+    try {
+      let res;
+      if (editingId) {
+        res = await db.from('property_insurance_history').update(payload).eq('id', editingId).select().maybeSingle();
+      } else {
+        // Avoid duplicates: if same year exists, update it
+        const existing = await db
+          .from('property_insurance_history')
+          .select('id')
+          .eq('property_id', propertyId)
+          .eq('policy_year', policyYear)
+          .maybeSingle();
+
+        if (existing?.data?.id) {
+          editingId = existing.data.id;
+          res = await db.from('property_insurance_history').update(payload).eq('id', editingId).select().maybeSingle();
+        } else {
+          res = await db.from('property_insurance_history').insert(payload).select().maybeSingle();
+          editingId = res?.data?.id || null;
+        }
+      }
+
+      if (res.error) throw res.error;
+
+      setStatus('✅ Saved. Use “Set As Current” to update property snapshot.', 'ok');
+      await loadHistory();
+    } catch (e) {
+      console.error(e);
+      setStatus('❌ Save failed. Make sure property_insurance_history table exists and RLS allows access.', 'err');
+    }
+  });
+
+  // Set current
+  document.getElementById('setCurrentBtn').addEventListener('click', async () => {
+    if (!editingId) return setStatus('Load or save a record first.', 'err');
+    setStatus('Updating property snapshot…', '');
+    try {
+      const { data, error } = await db.from('property_insurance_history').select('*').eq('id', editingId).maybeSingle();
+      if (error || !data) throw (error || new Error('Record not found'));
+      await updatePropertySnapshotFromRow(data);
+      setStatus('✅ Property insurance snapshot updated.', 'ok');
+      await loadProperty();
+    } catch (e) {
+      console.error(e);
+      setStatus('❌ Could not update snapshot. Add insurance snapshot columns to properties.', 'err');
+    }
+  });
+
+  window.setCurrentFromRow = async function(id) {
+    setStatus('Updating property snapshot…', '');
+    try {
+      const { data, error } = await db.from('property_insurance_history').select('*').eq('id', id).maybeSingle();
+      if (error || !data) throw (error || new Error('Record not found'));
+      editingId = id;
+      await updatePropertySnapshotFromRow(data);
+      setStatus('✅ Set this policy as current.', 'ok');
+      await loadProperty();
+    } catch (e) {
+      console.error(e);
+      setStatus('❌ Could not set current. Add insurance columns to properties.', 'err');
+    }
+  }
+
+  // Clear
+  document.getElementById('clearBtn').addEventListener('click', () => {
+    editingId = null;
+    for (const id of ['policyYear','effectiveDate','provider','policyNumber','startDate','renewalDate','premiumAnnual','premiumMonthly','deductible','coverage','portalUrl','notes']) {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    }
+    setStatus('', '');
+  });
+
+  // Links
+  document.getElementById('openPortalBtn').addEventListener('click', () => {
+    const url = safeUrl(propertyRow?.insurance_portal_url_current ?? propertyRow?.insurance_portal_url ?? '');
+    if (url) window.open(url, '_blank', 'noopener');
+  });
+  document.getElementById('escrowBtn').addEventListener('click', () => {
+    const qs = new URLSearchParams();
+    qs.set('property_id', propertyId);
+    if (companyId) qs.set('company_id', companyId);
+    qs.set('return_to', window.location.pathname + window.location.search);
+    window.location.href = `property-escrow-reconciliation.html?${qs.toString()}`;
+  });
+  document.getElementById('backBtn').addEventListener('click', () => {
+    if (returnTo) return location.href = returnTo;
+    if (companyId) location.href = `add-property.html?id=${encodeURIComponent(propertyId)}&company_id=${encodeURIComponent(companyId)}`;
+    else location.href = `add-property.html?id=${encodeURIComponent(propertyId)}`;
+  });
+
+  // Init
+  (async function init() {
+    document.getElementById("footerYear").textContent = new Date().getFullYear();
+    await waitForClientReady();
+    await rgSetupAuth();
+    if (!SUPABASE_ANON_KEY || SUPABASE_ANON_KEY === 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBib2phY25hZ3V0aXBmaGN4bHRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgwMDkwODAsImV4cCI6MjA2MzU4NTA4MH0.ZLCcAzTYljoZycpBGwMtthP5VyAJ4schuIvt4HibGc0') {
+      console.warn('Set window.SUPABASE_ANON_KEY to your anon key (or replace in this file).');
+    }
+
+    await loadProperty();
+    await loadHistory();
+
+    const now = new Date();
+    if (!document.getElementById('policyYear').value) document.getElementById('policyYear').value = now.getFullYear();
+    if (!document.getElementById('effectiveDate').value) document.getElementById('effectiveDate').value = now.toISOString().slice(0,10);
+  })();
+
+</script>
+</body>
+</html>

@@ -1,0 +1,1235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>💸 Add Expense – Rental Genie</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Mono:wght@400;500&display=swap">
+<style>
+/* ── Design tokens ──────────────────────────────────────────── */
+:root {
+  --navy:      #0c1e3a;
+  --navy-mid:  #1a3a6b;
+  --navy-lt:   #1e5799;
+  --sky:       #2d8cf0;
+  --sky-lt:    #e8f0fe;
+  --green:     #16a34a;
+  --green-lt:  #ecfdf5;
+  --border:    #e2e8f0;
+  --bg:        #f1f4f8;
+  --card:      #ffffff;
+  --text:      #0c1e3a;
+  --muted:     #64748b;
+  --danger:    #dc2626;
+  --danger-lt: #fef2f2;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --shadow-sm: 0 1px 4px rgba(12,30,58,.06);
+  --shadow-md: 0 4px 16px rgba(12,30,58,.09);
+  --shadow-lg: 0 8px 32px rgba(12,30,58,.14);
+}
+*,*::before,*::after{box-sizing:border-box;}
+html,body{height:100%;margin:0;}
+body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;}
+
+/* ── Header ─────────────────────────────────────────────────── */
+.header-container{position:sticky;top:0;z-index:1000;background:linear-gradient(135deg,#0c1e3a 0%,#1a3a6b 55%,#1e5799 100%);border-bottom:1px solid rgba(255,255,255,.08);box-shadow:0 2px 20px rgba(12,30,58,.35);}
+.navbar{max-width:1440px;margin:0 auto;padding:13px 22px;display:flex;align-items:center;justify-content:space-between;}
+.brand-area{display:flex;align-items:center;gap:11px;text-decoration:none;}
+.brand-logo{width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.15);box-shadow:0 0 0 1px rgba(255,255,255,.2),0 4px 12px rgba(0,0,0,.2);object-fit:cover;}
+.brand-title{font-size:1.25rem;font-weight:700;color:#fff;letter-spacing:-.3px;}
+.nav-links{display:flex;gap:2px;align-items:center;}
+.nav-links a{display:inline-flex;align-items:center;gap:5px;padding:6px 10px;font-size:13.5px;font-weight:500;color:rgba(255,255,255,.78);text-decoration:none;border-radius:8px;white-space:nowrap;transition:all .18s;}
+.nav-links a:hover{background:rgba(255,255,255,.12);color:#fff;}
+.nav-active{background:rgba(255,255,255,.16)!important;color:#fff!important;}
+#nav-login{padding:7px 16px!important;border-radius:999px!important;border:1px solid rgba(255,255,255,.25)!important;background:rgba(255,255,255,.1)!important;color:#fff!important;font-weight:600!important;}
+/* ── UMD (User Menu Dropdown) ── */
+.umd-wrap { position:relative; }
+.umd-toggle { display:flex; align-items:center; gap:8px; background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.22); border-radius:999px; padding:5px 12px 5px 5px; cursor:pointer; transition:background .18s; color:#fff; }
+.umd-toggle:hover { background:rgba(255,255,255,.18); }
+.umd-avatar { width:28px; height:28px; border-radius:50%; background:linear-gradient(135deg,#38bdf8,#1a3a6b); display:flex; align-items:center; justify-content:center; font-size:.68rem; font-weight:700; color:#fff; flex-shrink:0; }
+.umd-name { font-size:.8rem; color:#fff; font-weight:600; max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.umd-caret { font-size:.6rem; color:rgba(255,255,255,.7); }
+.umd-dropdown { display:none; position:absolute; right:0; top:calc(100% + 8px); background:#fff; border:1px solid #e2e8f0; border-radius:12px; box-shadow:0 8px 32px rgba(12,30,58,.18); min-width:220px; overflow:hidden; z-index:200; }
+.umd-dropdown.open { display:block; }
+.umd-user-row { padding:14px 16px 10px; border-bottom:1px solid #f1f5f9; }
+.umd-user-name { font-size:.88rem; font-weight:700; color:#0c1e3a; }
+.umd-user-email { font-size:.75rem; color:#64748b; margin-top:2px; }
+.umd-section { display:flex; flex-direction:column; padding:6px; border-bottom:1px solid #f1f5f9; }
+.umd-section:last-child { border-bottom:none; }
+.umd-link { display:flex; align-items:center; gap:9px; padding:9px 10px; border-radius:8px; font-size:.84rem; font-weight:600; color:#0c1e3a; text-decoration:none; background:none; border:none; cursor:pointer; width:100%; font-family:'DM Sans',sans-serif; transition:background .15s; }
+.umd-link:hover { background:#f8faff; }
+.umd-link.danger { color:#dc2626; }
+.umd-link.danger:hover { background:#fef2f2; }
+body.auth-ready .umd-wrap { display:inline-block !important; }
+body.auth-guest .umd-wrap { display:none !important; }
+body.auth-ready #nav-login { display:none !important; }
+.hamburger { display:none; font-size:1.4rem; padding:7px 12px; border:1px solid rgba(255,255,255,.22); border-radius:8px; background:rgba(255,255,255,.1); cursor:pointer; color:#fff; font-family:'DM Sans',sans-serif; }
+@media(max-width:860px){ .nav-links{display:none} .hamburger{display:block} .umd-wrap{display:none!important} #nav-login{display:none!important} }
+/* Canonical drawer */
+.drawer { display:none; position:fixed; top:72px; left:12px; right:12px; background:#fff; border:1px solid #e2e8f0; border-radius:18px; z-index:1300; box-shadow:0 16px 48px rgba(12,30,58,.2); overflow:hidden; }
+.drawer-user-row { display:flex !important; align-items:center; gap:12px; padding:16px 16px 14px !important; border-bottom:1px solid #f1f5f9 !important; background:#fafbfc; text-decoration:none; }
+.drawer-avatar { width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,#1a3a6b,#1e5799); color:#fff; font-weight:700; font-size:.78rem; display:flex; align-items:center; justify-content:center; flex-shrink:0; text-transform:uppercase; }
+.drawer-username { font-weight:700; font-size:.95rem; color:#0c1e3a !important; }
+.drawer-grid { display:grid; grid-template-columns:1fr 1fr; padding:8px 10px; gap:2px; }
+.drawer-grid-divider { grid-column:1/-1; height:1px; background:#f1f5f9; margin:2px 0; }
+.drawer-grid a { display:flex; align-items:center; gap:8px; padding:11px 10px; font-weight:600; font-size:.88rem; color:#0c1e3a !important; text-decoration:none; border-radius:9px; transition:background .12s; }
+.drawer-grid a:hover { background:#eff4ff; color:#1a3a6b !important; }
+.drawer-grid a.nav-active { background:#eff4ff !important; color:#1a3a6b !important; font-weight:700 !important; }
+.drawer-login { display:block; padding:11px 16px; font-weight:600; color:#0c1e3a !important; font-size:.9rem; border-top:1px solid #f1f5f9; text-decoration:none; }
+#mobileLogoutContainer { border-top:1px solid #f1f5f9; padding:6px 10px 8px; }
+#mobileLogoutContainer button { width:100%; padding:10px; background:none; border:none; text-align:left; font-weight:700; color:#dc2626; cursor:pointer; font-family:'DM Sans',sans-serif; font-size:.9rem; border-radius:8px; }
+body.auth-ready #mobileAccountLink { display:flex !important; }
+body.auth-ready #mobileLogin { display:none !important; }
+body.auth-ready  #mobileLogoutContainer{display:block!important;}
+body.auth-guest  #mobileAccountLink{display:none!important;}
+body.auth-guest  #mobileLogoutContainer{display:none!important;}
+#mobileLogoutContainer button{width:100%;padding:11px 14px;background:none;border:none;text-align:left;font-weight:700;color:#b91c1c;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.9rem;border-radius:8px;}
+#mobileLogoutContainer button:hover{background:#fef2f2;}
+
+/* ── Auth overlay ────────────────────────────────────────────── */
+/* ── Canonical 3px top shimmer progress bar ──────────────────── */
+#authOverlay {
+  position: fixed; top: 0; left: 0; right: 0;
+  height: 3px; z-index: 9999; pointer-events: none;
+  background: rgba(255,255,255,0);
+  transition: opacity .3s ease;
+}
+.ao-bar-fill {
+  height: 100%; width: 0%;
+  background: linear-gradient(90deg, #2d8cf0, #38bdf8, #2d8cf0);
+  background-size: 200% 100%;
+  transition: width .4s cubic-bezier(.4,0,.2,1);
+  animation: aoShimmer 1.6s linear infinite;
+  box-shadow: 0 0 8px rgba(56,189,248,.5);
+}
+@keyframes aoShimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ── Page layout ─────────────────────────────────────────────── */
+main.page{flex:1;max-width:1100px;margin:0 auto;padding:28px 16px 60px;width:100%;}
+
+/* ── Page hero ───────────────────────────────────────────────── */
+.page-hero{margin-bottom:22px;}
+.page-hero h1{font-size:1.65rem;font-weight:700;color:var(--navy);margin:0 0 6px;letter-spacing:-.3px;display:flex;align-items:center;gap:10px;}
+.page-hero p{font-size:.9rem;color:var(--muted);margin:0;display:flex;align-items:center;gap:6px;}
+.badge{display:inline-flex;align-items:center;padding:2px 9px;border-radius:999px;background:#eff6ff;color:#1d4ed8;font-weight:700;font-size:.78rem;border:1px solid #bfdbfe;}
+
+/* ── Card ────────────────────────────────────────────────────── */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);padding:24px;margin-bottom:18px;}
+.card-title{font-size:1rem;font-weight:700;color:var(--navy);display:flex;align-items:center;gap:9px;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--border);}
+.card-title-icon{width:34px;height:34px;border-radius:9px;background:var(--sky-lt);display:flex;align-items:center;justify-content:center;font-size:1.05rem;flex-shrink:0;}
+
+/* ── Form ────────────────────────────────────────────────────── */
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;}
+@media(max-width:720px){.grid{grid-template-columns:1fr;}}
+label{font-size:.78rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:6px;}
+input,select,textarea{width:100%;padding:10px 13px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:.9rem;font-family:'DM Sans',sans-serif;background:#f8fafc;color:var(--text);transition:border-color .15s,box-shadow .15s;outline:none;appearance:none;box-sizing:border-box;}
+input:focus,select:focus,textarea:focus{border-color:var(--sky);box-shadow:0 0 0 3px rgba(45,140,240,.12);background:#fff;}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;background-size:16px;padding-right:36px;}
+textarea{min-height:90px;resize:vertical;}
+.readonly{background:#f1f5f9!important;color:var(--muted);cursor:not-allowed;}
+
+/* ── Mortgage panel ──────────────────────────────────────────── */
+.mortgage-panel{margin-top:16px;padding:18px;border:1px solid var(--border);border-radius:var(--radius-md);background:#f8fafc;}
+.mortgage-header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px;}
+.mortgage-title{font-weight:700;color:var(--navy);font-size:.95rem;}
+.mortgage-sub{font-size:.82rem;color:var(--muted);margin-top:3px;line-height:1.5;}
+.mortgage-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;}
+@media(max-width:900px){.mortgage-grid{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:560px){.mortgage-grid{grid-template-columns:1fr;}}
+.mortgage-total{margin-top:14px;padding:14px 16px;background:#fff;border:1px dashed #bfdbfe;border-radius:var(--radius-md);display:flex;justify-content:space-between;align-items:center;gap:12px;}
+.mortgage-total-value{font-size:1.25rem;font-weight:700;color:var(--navy);font-variant-numeric:tabular-nums;}
+.mortgage-hint{font-size:.78rem;color:var(--muted);margin-top:2px;}
+.mortgage-badge{padding:3px 10px;border-radius:999px;background:#eff6ff;color:#1d4ed8;font-size:.75rem;font-weight:700;border:1px solid #bfdbfe;}
+
+/* ── Buttons ─────────────────────────────────────────────────── */
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px;justify-content:flex-end;}
+.btn{border:none;border-radius:999px;padding:10px 20px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:7px;font-family:'DM Sans',sans-serif;font-size:.88rem;transition:all .15s;text-decoration:none;white-space:nowrap;}
+.btn-primary{background:var(--green);color:#fff;box-shadow:0 2px 8px rgba(22,163,74,.25);}
+.btn-primary:hover{background:#15803d;transform:translateY(-1px);}
+.btn-primary:disabled{opacity:.5;cursor:default;transform:none;}
+.btn-secondary{background:var(--sky);color:#fff;}
+.btn-secondary:hover{background:#1a7de0;transform:translateY(-1px);}
+.btn-ghost{background:#fff;border:1px solid var(--border);color:var(--text);}
+.btn-ghost:hover{background:#f8fafc;}
+.btn-danger{background:var(--danger-lt);color:var(--danger);border:1px solid #fecaca;}
+.btn-danger:hover{background:#fee2e2;}
+
+/* ── Feedback messages ───────────────────────────────────────── */
+#msg{margin-top:14px;}
+.error{background:var(--danger-lt);border:1px solid #fecaca;color:#b91c1c;padding:11px 14px;border-radius:var(--radius-sm);font-size:.87rem;}
+.success{background:var(--green-lt);border:1px solid #bbf7d0;color:#166534;padding:11px 14px;border-radius:var(--radius-sm);font-size:.87rem;}
+.small{font-size:.82rem;color:var(--muted);margin-top:4px;}
+hr{border:none;border-top:1px solid var(--border);margin:16px 0;}
+
+/* ── Recent expenses table ───────────────────────────────────── */
+.table{width:100%;border-collapse:collapse;margin-top:10px;}
+.table th,.table td{border-bottom:1px solid var(--border);padding:10px 8px;text-align:left;font-size:.88rem;}
+.table th{color:var(--muted);font-size:.72rem;text-transform:uppercase;letter-spacing:.04em;font-weight:700;}
+.right{text-align:right;}
+.table tbody tr:hover{background:#f8fafc;}
+.table td .btn{padding:5px 12px;font-size:.78rem;}
+
+/* ── Embedded mode (inside drawer/iframe) ────────────────────── */
+body.embedded .header-container,
+body.embedded #mobileDrawer,
+body.embedded .site-footer{display:none!important;}
+body.embedded main.page{padding-top:16px!important;}
+
+/* ── Footer ──────────────────────────────────────────────────── */
+.site-footer{background:var(--navy);padding:32px 20px 20px;flex-shrink:0;}
+.footer-content{max-width:1440px;margin:0 auto;display:grid;grid-template-columns:1.6fr repeat(3,1fr);gap:32px;padding-bottom:24px;border-bottom:1px solid rgba(255,255,255,.08);}
+@media(max-width:860px){.footer-content{grid-template-columns:1fr 1fr;}}
+@media(max-width:520px){.footer-content{grid-template-columns:1fr;}}
+.footer-brand .footer-logo-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.footer-brand .footer-logo{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);}
+.footer-brand .footer-name{font-size:1.1rem;font-weight:700;color:#fff;}
+.footer-brand p{font-size:.83rem;color:rgba(255,255,255,.45);line-height:1.55;max-width:220px;margin:0;}
+.footer-section h4{font-size:.72rem;font-weight:700;color:rgba(255,255,255,.55);text-transform:uppercase;letter-spacing:1px;margin:0 0 14px;}
+.footer-section a{display:block;color:rgba(255,255,255,.5);text-decoration:none;font-size:.85rem;margin-bottom:9px;transition:color .15s;}
+.footer-section a:hover{color:rgba(255,255,255,.9);}
+.footer-bottom{max-width:1440px;margin:16px auto 0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;color:rgba(255,255,255,.3);font-size:.78rem;}
+
+/* ── Receipt attachment field ─────────────────────────────── */
+.receipt-field { grid-column: 1 / -1; }
+.receipt-upload-row {
+  display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+}
+.receipt-upload-row input[type="text"] {
+  flex: 1; min-width: 0;
+}
+.receipt-upload-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 9px 14px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border); background: #fff;
+  font-size: .85rem; font-weight: 600; color: var(--text);
+  cursor: pointer; white-space: nowrap; transition: background .15s;
+  font-family: 'DM Sans', sans-serif;
+}
+.receipt-upload-btn:hover { background: #f1f5f9; }
+.receipt-upload-btn input[type="file"] { display: none; }
+.receipt-preview {
+  margin-top: 8px; display: none;
+  align-items: center; gap: 10px;
+  padding: 8px 10px; border-radius: var(--radius-sm);
+  background: #f0fdf4; border: 1px solid #bbf7d0;
+}
+.receipt-preview.has-receipt { display: flex; }
+.receipt-preview img {
+  width: 48px; height: 48px; object-fit: cover;
+  border-radius: 4px; border: 1px solid #e2e8f0; flex-shrink: 0;
+}
+.receipt-preview-icon { font-size: 1.6rem; flex-shrink: 0; }
+.receipt-preview-info { min-width: 0; flex: 1; }
+.receipt-preview-name { font-size: .82rem; font-weight: 700; color: var(--navy); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.receipt-preview-link { font-size: .78rem; color: var(--sky); text-decoration: none; }
+.receipt-preview-link:hover { text-decoration: underline; }
+.receipt-clear-btn {
+  background: none; border: none; cursor: pointer;
+  color: #94a3b8; font-size: 1rem; padding: 2px 4px;
+  border-radius: 4px; flex-shrink: 0;
+}
+.receipt-clear-btn:hover { color: #ef4444; }
+.receipt-uploading { font-size: .82rem; color: var(--muted); display: none; align-items: center; gap: 6px; margin-top: 6px; }
+.receipt-uploading.active { display: flex; }
+</style>
+</head>
+
+<body class="auth-guest">
+<!-- ═══ SUPABASE BOOTSTRAP (body-first: avoids tracking-prevention blocking safeStorage) ═══ -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/* ── rgFiles ────────────────────────────────────────────────────────────────
+   Turns a stored file reference into a short-lived signed link, so pages keep
+   working when the storage buckets are switched from public to private.
+   Accepts a storage path or a stored public URL.
+   Markup:  <a href="#" ${rgFiles.attr('bucket', pathOrUrl)}>Open</a>
+   Then:    rgFiles.hydrate(client, containerEl)  // after markup is in the DOM
+--------------------------------------------------------------------------- */
+window.rgFiles = (function () {
+  function parse(value) {
+    var m = String(value).match(/\/object\/(?:public|sign|authenticated)\/([^/]+)\/([^?]+)/);
+    return m ? { bucket: m[1], path: decodeURIComponent(m[2]) } : null;
+  }
+  function resolve(client, bucket, value, seconds) {
+    if (!value) return Promise.resolve(null);
+    var v = String(value), b = bucket, p = v, wasUrl = false;
+    if (/^(blob:|data:)/i.test(v)) return Promise.resolve(v);
+    if (/^https?:\/\//i.test(v)) {
+      wasUrl = true;
+      var hit = parse(v);
+      if (!hit) return Promise.resolve(v);          // a link someone typed in
+      b = hit.bucket; p = hit.path;
+    }
+    if (!client || !client.storage) return Promise.resolve(wasUrl ? v : null);
+    return client.storage.from(b).createSignedUrl(p, seconds || 3600)
+      .then(function (r) {
+        if (r && r.data && r.data.signedUrl) return r.data.signedUrl;
+        return wasUrl ? v : null;
+      })
+      .catch(function () { return wasUrl ? v : null; });
+  }
+  function attr(bucket, value) {
+    return value ? ' data-rg-file="' + bucket + '|' + encodeURIComponent(value) + '"' : '';
+  }
+  function hydrate(client, root) {
+    var nodes = (root || document).querySelectorAll('[data-rg-file]');
+    Array.prototype.forEach.call(nodes, function (el) {
+      var raw = el.getAttribute('data-rg-file') || '';
+      var i = raw.indexOf('|');
+      if (i < 0) return;
+      el.removeAttribute('data-rg-file');
+      resolve(client, raw.slice(0, i), decodeURIComponent(raw.slice(i + 1))).then(function (url) {
+        if (!url) { el.removeAttribute('href'); el.title = 'File unavailable'; return; }
+        if (el.tagName === 'IMG') el.src = url; else el.href = url;
+      });
+    });
+  }
+  return { resolve: resolve, hydrate: hydrate, attr: attr };
+})();
+</script>
+
+<!-- ══════════════════════════════════════════════════════════════════════════════════════ -->
+
+<!-- Auth overlay -->
+<div id="authOverlay">
+  <div class="ao-bar-fill" id="aoBarFill"></div>
+</div>
+
+<script>
+/* ── Loading progress bar (canonical 3px top shimmer) ────────── */
+function setProgress(pct, statusText, activeStep) {
+  var bar = document.getElementById('aoBarFill');
+  if (bar) bar.style.width = pct + '%';
+  // statusText/activeStep params retained for call-site compatibility
+}
+</script>
+
+<!-- Header -->
+<header class="header-container">
+  <div class="navbar">
+    <a class="brand-area" href="index.html">
+      <img src="images/rg-logo.png" onerror="this.style.display='none'" class="brand-logo" alt="Rental Genie" />
+      <span class="brand-title">Rental Genie</span>
+    </a>
+    <nav class="nav-links" aria-label="Main navigation">
+      <a href="dashboard.html">📊 Dashboard</a>
+      <a href="property-management.html">🏘️ Properties</a>
+      <a href="lease-rent-center.html">💰 Lease &amp; Rent</a>
+      <a href="expense-tracking.html" class="nav-active">💸 Expenses</a>
+      <a href="maintenance-requests.html">🛠 Maintenance</a>
+      <a href="tenant-messages.html">💬 Messages</a>
+      <a href="reports-analytics.html">📈 Reports</a>
+    </nav>
+
+    <!-- UMD -->
+    <div class="umd-wrap" id="userMenu" style="display:none">
+      <button class="umd-toggle" id="umdToggle" aria-haspopup="true" aria-expanded="false">
+        <div class="umd-avatar" id="umdAvatar">?</div>
+        <span class="umd-name" id="umdName">User</span>
+        <span class="umd-caret">▾</span>
+      </button>
+      <div class="umd-dropdown" id="umdDropdown">
+        <div class="umd-user-row">
+          <div class="umd-user-name" id="umdFullName">—</div>
+          <div class="umd-user-email" id="umdEmail">—</div>
+        </div>
+        <div class="umd-section">
+          <a class="umd-link" href="dashboard.html">📊 Dashboard</a>
+          <a class="umd-link" href="account.html">⚙️ Account Settings</a>
+          <a class="umd-link" href="invite-tenant.html">✉️ Invite Tenant</a>
+          <a class="umd-link" href="tenant-portal-picker.html">🏠 Tenant Portal</a>
+        </div>
+        <div class="umd-section">
+          <a class="umd-link" href="reports-analytics.html">📈 Reports &amp; Analytics</a>
+          <a class="umd-link" href="contact-us.html">💬 Contact Support</a>
+        </div>
+        <div class="umd-section">
+          <button class="umd-link danger" id="logoutBtn">🚪 Sign Out</button>
+        </div>
+      </div>
+    </div>
+
+    <a id="nav-login" href="login.html">Log in</a>
+    <button class="hamburger" id="hamburgerBtn" aria-label="Open menu">☰</button>
+  </div>
+</header>
+
+<div class="drawer" id="mobileDrawer">
+  <!-- User row (shown when logged in) -->
+  <a href="account.html" id="mobileAccountLink" style="display:none;" class="drawer-user-row">
+    <span class="drawer-avatar" id="drawerAvatar">?</span>
+    <span class="drawer-username" id="mobileUsernameLabel">Account</span>
+  </a>
+  <!-- 2-col nav grid with row dividers -->
+  <div class="drawer-grid">
+    <a href="dashboard.html">📊 Dashboard</a>
+    <a href="property-management.html">🏘️ Properties</a>
+    <div class="drawer-grid-divider"></div>
+    <a href="lease-rent-center.html">💰 Lease &amp; Rent</a>
+    <a href="expense-tracking.html" class="nav-active">💸 Expenses</a>
+    <div class="drawer-grid-divider"></div>
+    <a href="maintenance-requests.html">🛠 Maintenance</a>
+    <a href="tenant-messages.html">💬 Messages</a>
+    <a href="reports-analytics.html">📈 Reports</a>
+  </div>
+  <!-- Guest login link -->
+  <a href="login.html" id="mobileLogin" class="drawer-login" style="display:none;">Log in</a>
+  <!-- Sign out (shown when logged in) -->
+  <div id="mobileLogoutContainer" style="display:none;">
+    <button id="mobileLogoutBtn">Sign Out</button>
+  </div>
+</div>
+</div>
+
+<!-- Page content -->
+<main class="page">
+  <div class="page-hero">
+    <h1>💸 Add Expense</h1>
+    <p>Track repairs, utilities, HOA, management fees, supplies, and more. Saved to the <span class="badge">expenses</span> table.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">
+      <div class="card-title-icon">📝</div>
+      Expense Details
+    </div>
+
+    <form id="expenseForm">
+      <div class="grid">
+        <div>
+          <label for="propertySelect">🏠 Property</label>
+          <select id="propertySelect" required>
+            <option value="">Select property…</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="datePaid">📅 Date Paid</label>
+          <input type="date" id="datePaid" required />
+        </div>
+
+        <div>
+          <label for="category">🏷️ Category</label>
+          <select id="category" required>
+            <option value="">Select category…</option>
+            <option>Repairs &amp; Maintenance</option>
+            <option>Property Management</option>
+            <option>Utilities</option>
+            <option>HOA</option>
+            <option>Insurance</option>
+            <option>Property Tax</option>
+            <option>Mortgage Payment</option>
+            <option>Mortgage Principal</option>
+            <option>Mortgage Interest</option>
+            <option>Supplies</option>
+            <option>Legal &amp; Professional</option>
+            <option>Advertising</option>
+            <option>Other</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="amount">💰 Amount</label>
+          <input type="number" id="amount" step="0.01" min="0" required placeholder="e.g., 125.50" />
+        </div>
+
+        <div>
+          <label for="vendor">🏪 Vendor</label>
+          <input type="text" id="vendor" placeholder="e.g., ABC Plumbing" />
+        </div>
+
+        <div>
+          <label for="note">🧾 Notes</label>
+          <input type="text" id="note" placeholder="Optional note (invoice #, what was fixed, etc.)" />
+        </div>
+
+        <div style="grid-column:1 / -1">
+          <label for="details">📝 Details</label>
+          <textarea id="details" placeholder="Optional longer notes…"></textarea>
+        </div>
+
+        <div class="receipt-field">
+          <label>🧾 Receipt / Attachment</label>
+          <div class="receipt-upload-row">
+            <input type="text" id="receiptUrl"
+                   placeholder="Paste a URL, or click 📎 to upload a file…" />
+            <label class="receipt-upload-btn" title="Upload a receipt file">
+              📎 Upload
+              <input type="file" id="receiptFile"
+                     accept="image/*,application/pdf,.pdf,.png,.jpg,.jpeg,.webp,.gif" />
+            </label>
+          </div>
+          <div class="receipt-uploading" id="receiptUploading">
+            ⏳ Uploading…
+          </div>
+          <div class="receipt-preview" id="receiptPreview">
+            <span class="receipt-preview-icon" id="receiptPreviewIcon">🧾</span>
+            <img id="receiptPreviewImg" src="" alt="Receipt preview" style="display:none" />
+            <div class="receipt-preview-info">
+              <div class="receipt-preview-name" id="receiptPreviewName">Receipt attached</div>
+              <a class="receipt-preview-link" id="receiptPreviewLink" href="#" target="_blank" rel="noopener">View receipt ↗</a>
+            </div>
+            <button type="button" class="receipt-clear-btn" id="receiptClearBtn" title="Remove receipt">✕</button>
+          </div>
+          <div class="small" style="margin-top:6px;">Supported: images, PDF. Stored securely or linked by URL.</div>
+        </div>
+      </div>
+
+      <!-- Mortgage Split Panel -->
+      <div class="mortgage-panel" id="mortgagePanel" style="display:none;">
+        <div class="mortgage-header">
+          <div>
+            <div class="mortgage-title">🏦 Mortgage Breakdown</div>
+            <div class="mortgage-sub">Enter the split from your mortgage statement. This will create separate expense lines (Principal, Interest, Tax, Insurance, etc.).</div>
+          </div>
+          <span class="mortgage-badge">Split mode</span>
+        </div>
+        <div class="mortgage-grid">
+          <div>
+            <label for="mort_principal">🏦 Principal</label>
+            <input type="number" id="mort_principal" step="0.01" min="0" placeholder="e.g., 350.00" />
+            <div class="small">Not an expense (kept for reporting).</div>
+          </div>
+          <div>
+            <label for="mort_interest">💳 Interest</label>
+            <input type="number" id="mort_interest" step="0.01" min="0" placeholder="e.g., 900.00" />
+          </div>
+          <div>
+            <label for="mort_tax">🏛️ Property Tax (Escrow)</label>
+            <input type="number" id="mort_tax" step="0.01" min="0" placeholder="e.g., 250.00" />
+          </div>
+          <div>
+            <label for="mort_insurance">🛡️ Insurance (Escrow)</label>
+            <input type="number" id="mort_insurance" step="0.01" min="0" placeholder="e.g., 120.00" />
+          </div>
+          <div>
+            <label for="mort_pmi">🧾 PMI</label>
+            <input type="number" id="mort_pmi" step="0.01" min="0" placeholder="e.g., 45.00" />
+          </div>
+          <div>
+            <label for="mort_other">➕ Other</label>
+            <input type="number" id="mort_other" step="0.01" min="0" placeholder="e.g., 0.00" />
+          </div>
+        </div>
+        <div class="mortgage-total">
+          <div>
+            <div style="font-weight:700;color:var(--navy)">Total Payment</div>
+            <div class="mortgage-hint">Amount field will auto-sync to this total.</div>
+          </div>
+          <div class="mortgage-total-value" id="mort_total_display">$0.00</div>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-danger" type="button" id="deleteBtn" style="display:none;margin-right:auto;">🗑 Delete</button>
+        <button class="btn btn-ghost" type="button" id="resetBtn">↩️ Reset</button>
+        <button class="btn btn-ghost" type="button" id="backBtn">⬅️ Back</button>
+        <button class="btn btn-primary" type="submit" id="saveBtn">💾 Save Expense</button>
+      </div>
+
+      <div id="msg"></div>
+    </form>
+  </div>
+
+  <!-- Recent expenses -->
+  <div class="card" id="recentCard">
+    <div class="card-title">
+      <div class="card-title-icon">🕘</div>
+      Recent Expenses
+      <button class="btn btn-ghost" type="button" id="refreshBtn" style="margin-left:auto;padding:6px 14px;font-size:.8rem;">🔄 Refresh</button>
+    </div>
+    <div class="small" style="margin-bottom:12px;">Last 10 expenses for the selected property.</div>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Category</th>
+          <th>Vendor</th>
+          <th class="right">Amount</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="recentBody"></tbody>
+    </table>
+  </div>
+</main>
+
+<!-- Footer -->
+<footer class="site-footer">
+  <div class="footer-content">
+    <div class="footer-brand">
+      <div class="footer-logo-row">
+        <img src="images/rg-logo.png" onerror="this.style.display='none'" class="footer-logo" alt="Rental Genie" />
+        <span class="footer-name">Rental Genie</span>
+      </div>
+      <p>Smart property management for independent landlords.</p>
+    </div>
+    <div class="footer-section">
+      <h4>Navigate</h4>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="property-management.html">Properties</a>
+      <a href="lease-rent-center.html">Lease &amp; Rent</a>
+      <a href="expense-tracking.html">Expenses</a>
+    </div>
+    <div class="footer-section">
+      <h4>Account</h4>
+      <a href="account.html">My Account</a>
+      <a href="invite-tenant.html">Invite Tenant</a>
+      <a href="tenant-portal-picker.html">Tenant Portal</a>
+    </div>
+    <div class="footer-section">
+      <h4>Support</h4>
+      <a href="contact-us.html">Contact Us</a>
+      <a href="contact-us.html">Email Support</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© <span id="footerYear"></span> Rental Genie. All rights reserved.</span>
+    <span><a href="terms.html" style="color:rgba(255,255,255,.4);text-decoration:none;">Terms</a> · <a href="privacy.html" style="color:rgba(255,255,255,.4);text-decoration:none;">Privacy</a></span>
+  </div>
+</footer>
+
+
+<script>
+/* -------------------------------------------------------------
+   SUPABASE CLIENT (match your other Rental Genie pages)
+------------------------------------------------------------- */
+// safeStorage bootstrap — canonical RG pattern
+(function(){
+  var _m=new Map(),_l=null;try{_l=window.localStorage;}catch(e){}
+  var _s={
+    getItem:function(k){try{return(_l&&_l.getItem(k))||_m.get(k)||null;}catch(e){return _m.get(k)||null;}},
+    setItem:function(k,v){try{_l&&_l.setItem(k,v);}catch(e){}_m.set(k,v);},
+    removeItem:function(k){try{_l&&_l.removeItem(k);}catch(e){}_m.delete(k);}
+  };
+  window._rgClient=window._rgClient||window.supabase.createClient(
+    'https://pbojacnagutipfhcxltj.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBib2phY25hZ3V0aXBmaGN4bHRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgwMDkwODAsImV4cCI6MjA2MzU4NTA4MH0.ZLCcAzTYljoZycpBGwMtthP5VyAJ4schuIvt4HibGc0',
+    {auth:{lock:undefined,persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storage:_s}}
+  );
+  window.sb=window.client=window._rgClient;
+})();
+const client=window._rgClient;
+
+
+let activeCompanyId = null;
+
+async function getActiveCompanyId() {
+  const cached = localStorage.getItem("rg_active_company_id");
+  if (cached) return cached;
+
+  const { data: { user } } = await client.auth.getUser();
+  if (!user) return null;
+
+  const { data: mem, error: memErr } = await client
+    .from("company_members")
+    .select("company_id")
+    .eq("user_id", user.id)
+    .limit(1)
+    .maybeSingle();
+
+  if (!memErr && mem?.company_id) {
+    localStorage.setItem("rg_active_company_id", mem.company_id);
+    return mem.company_id;
+  }
+
+  const { data: comp, error: compErr } = await client
+    .from("companies")
+    .select("id")
+    .eq("owner_user_id", user.id)
+    .limit(1)
+    .maybeSingle();
+
+  if (!compErr && comp?.id) {
+    localStorage.setItem("rg_active_company_id", comp.id);
+    return comp.id;
+  }
+
+  return null;
+}
+const qs = new URLSearchParams(location.search);
+const isEmbedded = (window.self !== window.top) || qs.get('embedded') === '1' || qs.get('embed') === '1';
+if (isEmbedded) {
+  document.body.classList.add('embedded');
+  var backBtnEl = document.getElementById('backBtn');
+  if (backBtnEl) backBtnEl.innerHTML = '✖ Cancel';
+}
+const preProperty = qs.get("property") ? decodeURIComponent(qs.get("property")) : "";
+const editId = qs.get("id") ? decodeURIComponent(qs.get("id")) : "";
+const returnTo = qs.get("return") ? decodeURIComponent(qs.get("return")) : "";
+
+const els = {
+  propertySelect: document.getElementById("propertySelect"),
+  datePaid: document.getElementById("datePaid"),
+  category: document.getElementById("category"),
+  amount: document.getElementById("amount"),
+  vendor: document.getElementById("vendor"),
+  note: document.getElementById("note"),
+  details: document.getElementById("details"),
+  receiptUrl: document.getElementById("receiptUrl"),
+  msg: document.getElementById("msg"),
+  deleteBtn: document.getElementById("deleteBtn"),
+  recentBody: document.getElementById("recentBody")
+};
+
+function showMsg(type, text) {
+  els.msg.innerHTML = `<div class="${type}">${text}</div>`;
+}
+
+function money(n){
+  const v = Number(n)||0;
+  return v.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+
+async function loadProperties() {
+  const { data, error } = await client.from("properties")
+    .select("id,name,company_id")
+    .eq("company_id", activeCompanyId)
+    .order("name", { ascending: true });
+
+  if (error) {
+    console.error(error);
+    showMsg("error","❌ Failed to load properties.");
+    return;
+  }
+
+  els.propertySelect.innerHTML = `<option value="">Select property…</option>` + (data||[])
+    .filter(r=>r.name)
+    .map(r=>`<option value="${r.name}" data-company-id="${r.company_id||""}" data-property-id="${r.id||""}">${r.name}</option>`)
+    .join("");
+
+  if (preProperty) {
+    els.propertySelect.value = preProperty;
+  }
+}
+
+async function loadExpenseForEdit(id) {
+  const { data, error } = await client.from("expenses")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (error || !data) {
+    console.error(error);
+    showMsg("error", "❌ Could not load expense for editing.");
+    return;
+  }
+
+  els.propertySelect.value = data.property_name || "";
+  els.datePaid.value = data.date_paid || "";
+  els.category.value = data.category || "";
+  els.amount.value = data.amount ?? "";
+  els.vendor.value = data.vendor || "";
+  els.note.value = data.note || "";
+  els.details.value = data.details || "";
+  if (els.receiptUrl) els.receiptUrl.value = data.receipt_url || "";
+  rgReceiptPath = data.receipt_path || null;
+  if (data.receipt_url) {
+    rgFiles.resolve(client, 'receipts', data.receipt_path || data.receipt_url).then(function (shown) {
+      updateReceiptPreview(data.receipt_url, shown || data.receipt_url);
+    });
+  }
+
+  els.deleteBtn.style.display = "inline-flex";
+}
+
+async function loadRecent() {
+  const property = els.propertySelect.value;
+  if (!property) {
+    els.recentBody.innerHTML = `<tr><td colspan="5" class="small">Select a property to see recent expenses.</td></tr>`;
+    return;
+  }
+
+  const { data, error } = await client.from("expenses")
+    .select("id,property_name,date_paid,category,amount,vendor,note,receipt_url,receipt_path")
+    .eq("property_name", property)
+    .order("date_paid", { ascending: false })
+    .limit(10);
+
+  if (error) {
+    console.error(error);
+    els.recentBody.innerHTML = `<tr><td colspan="5" class="small">Failed to load recent expenses.</td></tr>`;
+    return;
+  }
+
+  const rows = (data||[]).map(r => `
+    <tr>
+      <td>${r.date_paid || "—"}</td>
+      <td>${r.category || "—"}</td>
+      <td>${r.vendor || "—"}</td>
+      <td class="right">$${money(r.amount)}</td>
+      <td style="text-align:center">${(r.receipt_path || r.receipt_url) ? `<a href="#"${rgFiles.attr('receipts', r.receipt_path || r.receipt_url)} target="_blank" rel="noopener" title="View receipt" style="font-size:1.1rem;text-decoration:none;">🧾</a>` : ''}</td>
+      <td>
+        <button class="btn btn-ghost" type="button" onclick="location.href='add-expense.html?id=${encodeURIComponent(r.id)}'">✏️ Edit</button>
+      </td>
+    </tr>
+  `).join("");
+
+  els.recentBody.innerHTML = rows || `<tr><td colspan="5" class="small">No expenses yet.</td></tr>`;
+  rgFiles.hydrate(client, els.recentBody);
+}
+
+
+function parseMoney(v){
+  const n = Number(String(v ?? "").replace(/,/g,"").trim());
+  return Number.isFinite(n) ? n : 0;
+}
+function fmtMoney(n){
+  try { return new Intl.NumberFormat(undefined,{style:"currency",currency:"USD"}).format(Number(n||0)); }
+  catch { return "$" + (Number(n||0).toFixed(2)); }
+}
+function getMortgageBreakdown(){
+  const b = {
+    principal: parseMoney(document.getElementById("mort_principal")?.value),
+    interest: parseMoney(document.getElementById("mort_interest")?.value),
+    tax: parseMoney(document.getElementById("mort_tax")?.value),
+    insurance: parseMoney(document.getElementById("mort_insurance")?.value),
+    pmi: parseMoney(document.getElementById("mort_pmi")?.value),
+    other: parseMoney(document.getElementById("mort_other")?.value),
+  };
+  b.total = b.principal + b.interest + b.tax + b.insurance + b.pmi + b.other;
+  return b;
+}
+function updateMortgageTotalUI(){
+  const b = getMortgageBreakdown();
+  const totalEl = document.getElementById("mort_total_display");
+  if (totalEl) totalEl.textContent = fmtMoney(b.total);
+
+  // keep Amount synced when in Mortgage Payment mode
+  const cat = document.getElementById("category")?.value;
+  const amount = document.getElementById("amount");
+  if (cat === "Mortgage Payment" && amount){
+    amount.value = b.total ? b.total.toFixed(2) : "";
+  }
+}
+function toggleMortgagePanel(){
+  const cat = document.getElementById("category")?.value;
+  const panel = document.getElementById("mortgagePanel");
+  const amount = document.getElementById("amount");
+  if (!panel || !amount) return;
+
+  const on = (cat === "Mortgage Payment");
+  panel.style.display = on ? "block" : "none";
+
+  // lock amount when in mortgage mode (auto-sum)
+  if (on){
+    amount.classList.add("readonly");
+    amount.readOnly = true;
+    updateMortgageTotalUI();
+  } else {
+    amount.classList.remove("readonly");
+    amount.readOnly = false;
+  }
+}
+
+
+/* ============================================================
+   RECEIPT ATTACHMENT
+   - File upload → Supabase Storage (receipts bucket) → receipt_url
+   - Fallback: plain URL text field
+   - updateReceiptPreview(): shows thumbnail or doc icon
+============================================================ */
+function updateReceiptPreview(url, displayUrl) {
+  const preview  = document.getElementById('receiptPreview');
+  const img      = document.getElementById('receiptPreviewImg');
+  const icon     = document.getElementById('receiptPreviewIcon');
+  const nameEl   = document.getElementById('receiptPreviewName');
+  const linkEl   = document.getElementById('receiptPreviewLink');
+  const urlInput = document.getElementById('receiptUrl');
+
+  if (!url) {
+    preview.classList.remove('has-receipt');
+    img.style.display = 'none';
+    return;
+  }
+
+  if (urlInput) urlInput.value = url;
+  linkEl.href = displayUrl || url;
+
+  // Show image thumbnail if it looks like an image URL
+  const previewUrl = displayUrl || url;
+  const isImage = /\.(jpe?g|png|gif|webp|svg)(\?|$)/i.test(url);
+  if (isImage) {
+    img.src = url;
+    img.style.display = 'block';
+    icon.style.display = 'none';
+  } else {
+    img.style.display = 'none';
+    icon.style.display = 'block';
+    icon.textContent = url.toLowerCase().includes('.pdf') ? '📄' : '🧾';
+  }
+
+  // Derive display name from URL
+  try {
+    const parts = new URL(url).pathname.split('/');
+    nameEl.textContent = decodeURIComponent(parts[parts.length - 1]) || 'Receipt attached';
+  } catch {
+    nameEl.textContent = 'Receipt attached';
+  }
+
+  preview.classList.add('has-receipt');
+}
+
+var rgReceiptPath = null;   // storage path of the receipt on this form
+
+async function uploadReceiptFile(file) {
+  const uploading = document.getElementById('receiptUploading');
+  if (uploading) uploading.classList.add('active');
+
+  try {
+    // Try Supabase Storage — bucket must be named 'receipts' and be public
+    const ext      = file.name.split('.').pop();
+    const ts       = Date.now();
+    const path     = `expenses/${activeCompanyId || 'shared'}/${ts}_${file.name.replace(/[^a-zA-Z0-9._-]/g,'_')}`;
+    const { data, error } = await client.storage.from('receipts').upload(path, file, {
+      cacheControl: '3600', upsert: false, contentType: file.type
+    });
+
+    if (!error && data) {
+      const { data: urlData } = client.storage.from('receipts').getPublicUrl(path);
+      const url = urlData?.publicUrl;
+      if (url) {
+        rgReceiptPath = path;
+        const shown = await rgFiles.resolve(client, 'receipts', path);
+        updateReceiptPreview(url, shown || url);
+        return url;
+      }
+    }
+    // Storage not configured or error — fall back to object URL for preview only
+    console.warn('Supabase Storage upload failed (bucket may not exist):', error?.message);
+    const localUrl = URL.createObjectURL(file);
+    updateReceiptPreview(localUrl);
+    // Show a note that this is a local preview only
+    const nameEl = document.getElementById('receiptPreviewName');
+    if (nameEl) nameEl.textContent = file.name + ' (local preview — storage not configured)';
+    return ''; // don't save local blob URL to DB
+  } catch(e) {
+    console.warn('Receipt upload error:', e);
+    return '';
+  } finally {
+    if (uploading) uploading.classList.remove('active');
+  }
+}
+
+// Wire up file input
+(function wireReceiptInput() {
+  const fileInput  = document.getElementById('receiptFile');
+  const urlInput   = document.getElementById('receiptUrl');
+  const clearBtn   = document.getElementById('receiptClearBtn');
+
+  if (fileInput) {
+    fileInput.addEventListener('change', async function() {
+      const file = this.files && this.files[0];
+      if (!file) return;
+      await uploadReceiptFile(file);
+      this.value = ''; // reset so same file can be re-selected
+    });
+  }
+
+  if (urlInput) {
+    urlInput.addEventListener('input', function() {
+      const url = this.value.trim();
+      rgReceiptPath = null;
+      if (url) updateReceiptPreview(url);
+      else {
+        const preview = document.getElementById('receiptPreview');
+        if (preview) preview.classList.remove('has-receipt');
+      }
+    });
+    urlInput.addEventListener('blur', function() {
+      const url = this.value.trim();
+      if (url) updateReceiptPreview(url);
+    });
+  }
+
+  if (clearBtn) {
+    clearBtn.addEventListener('click', function() {
+      if (urlInput) urlInput.value = '';
+      const preview = document.getElementById('receiptPreview');
+      const img     = document.getElementById('receiptPreviewImg');
+      if (preview) preview.classList.remove('has-receipt');
+      if (img)     { img.src = ''; img.style.display = 'none'; }
+    });
+  }
+})();
+/* ============================================================ */
+
+async function saveExpense(e) {
+  e.preventDefault();
+  els.msg.innerHTML = "";
+
+  const payload = {
+    property_name: els.propertySelect.value,
+      company_id: (els.propertySelect.selectedOptions[0]?.dataset?.companyId) || activeCompanyId,
+    date_paid: els.datePaid.value,
+    category: els.category.value,
+    amount: Number(els.amount.value || 0),
+    vendor: (els.vendor.value || "").trim() || null,
+    note: (els.note.value || "").trim() || null,
+    details: (els.details.value || "").trim() || null,
+    receipt_url: (els.receiptUrl?.value || "").trim() || null,
+    receipt_path: rgReceiptPath || null
+  };
+
+  if (!payload.property_name || !payload.date_paid || !payload.category) {
+    showMsg("error","❌ Please fill Property, Date Paid, Category.");
+    return;
+  }
+
+  
+  // Mortgage split: create multiple expense rows (Principal, Interest, Tax, Insurance, PMI, etc.)
+  if (payload.category === "Mortgage Payment") {
+    if (editId) {
+      showMsg("error","⚠️ Mortgage split edit is not supported yet. Please Delete and re-add the payment to keep lines consistent.");
+      return;
+    }
+
+    const b = getMortgageBreakdown();
+    if (!b.total || b.total <= 0) {
+      showMsg("error","❌ Please enter the mortgage breakdown (total must be > 0).");
+      return;
+    }
+
+    // Force payload.amount to match the computed total
+    payload.amount = b.total;
+
+    const detailsObj = {
+      type: "mortgage_split",
+      breakdown: b,
+      total: b.total
+    };
+
+    const base = {
+      company_id: payload.company_id,
+      property_name: payload.property_name,
+      date_paid: payload.date_paid,
+      vendor: payload.vendor,
+      note: payload.note || "Mortgage payment (split)",
+      details: JSON.stringify(detailsObj)
+    };
+
+    const rows = [];
+    if (b.principal > 0) rows.push({ ...base, category: "Mortgage Principal", amount: Number(b.principal.toFixed(2)) });
+    if (b.interest > 0) rows.push({ ...base, category: "Mortgage Interest", amount: Number(b.interest.toFixed(2)) });
+    if (b.tax > 0) rows.push({ ...base, category: "Property Tax", amount: Number(b.tax.toFixed(2)) });
+    if (b.insurance > 0) rows.push({ ...base, category: "Insurance", amount: Number(b.insurance.toFixed(2)) });
+    if (b.pmi > 0) rows.push({ ...base, category: "PMI", amount: Number(b.pmi.toFixed(2)) });
+    if (b.other > 0) rows.push({ ...base, category: "Other", amount: Number(b.other.toFixed(2)) });
+
+    if (!rows.length) {
+      showMsg("error","❌ Nothing to save. Please enter at least one breakdown amount.");
+      return;
+    }
+
+    const { error } = await client.from("expenses").insert(rows);
+    if (error) {
+      console.error(error);
+      showMsg("error","❌ Save failed: " + error.message);
+      return;
+    }
+
+    showMsg("success",`✅ Mortgage payment saved (${rows.length} lines). Total: ${fmtMoney(b.total)}`);
+    await loadRecent();
+    if (isEmbedded) {
+      try { window.parent.postMessage({ type: "rg_expense_saved", property: payload.property_name }, "*"); } catch(_) {}
+    }
+    return;
+  }
+
+
+  let resp;
+  if (editId) {
+    resp = await client.from("expenses").update(payload).eq("id", editId);
+  } else {
+    resp = await client.from("expenses").insert(payload);
+  }
+
+  if (resp.error) {
+    console.error(resp.error);
+    showMsg("error","❌ Save failed: " + resp.error.message);
+    return;
+  }
+
+  showMsg("success","✅ Expense saved.");
+  await loadRecent();
+  // Notify parent (expense-tracking drawer) to refresh + close
+  if (isEmbedded) {
+    try { window.parent.postMessage({ type: "rg_expense_saved", property: payload.property_name }, "*"); } catch(_) {}
+  }
+
+  // optional redirect
+  const backUrl = returnTo || `expense-tracking.html?property=${encodeURIComponent(payload.property_name)}`;
+  // If caller wants to stay, they can omit return param.
+  // We keep user here for MVP so they can add multiple expenses quickly.
+}
+
+async function deleteExpense() {
+  if (!editId) return;
+  const ok = confirm("Delete this expense?");
+  if (!ok) return;
+
+  const { error } = await client.from("expenses").delete().eq("id", editId);
+  if (error) {
+    console.error(error);
+    showMsg("error","❌ Delete failed: " + error.message);
+    return;
+  }
+  showMsg("success","✅ Deleted.");
+  if (isEmbedded) {
+    // In drawer: notify parent to close + refresh, don't navigate
+    try { window.parent.postMessage({ type: "rg_expense_deleted" }, "*"); } catch(_) {}
+    return;
+  }
+  setTimeout(()=>{
+    const prop = els.propertySelect.value || "";
+    location.href = `add-expense.html${prop ? `?property=${encodeURIComponent(prop)}` : ""}`;
+  }, 350);
+}
+
+document.getElementById("expenseForm").addEventListener("submit", saveExpense);
+document.getElementById("resetBtn").addEventListener("click", () => {
+  // Smart reset: clear inputs but preserve date=today and URL-pre-selected property
+  els.category.value = "";
+  els.amount.value   = "";
+  els.vendor.value   = "";
+  els.note.value     = "";
+  els.details.value  = "";
+  els.datePaid.value = new Date().toISOString().slice(0,10);
+  if (preProperty) els.propertySelect.value = preProperty;
+  // Hide mortgage panel and clear its fields
+  const mp = document.getElementById("mortgagePanel");
+  if (mp) mp.style.display = "none";
+  ["mort_principal","mort_interest","mort_tax","mort_insurance","mort_pmi","mort_other"]
+    .forEach(function(id){ var el=document.getElementById(id); if(el) el.value=""; });
+  var mtd = document.getElementById("mort_total_display");
+  if (mtd) mtd.textContent = "$0.00";
+  els.msg.innerHTML = "";
+});
+document.getElementById("backBtn").addEventListener("click", ()=>{
+  if (isEmbedded) {
+    // Inside drawer iframe — signal parent to close, don't navigate
+    try { window.parent.postMessage({ type: "rg_expense_close" }, "*"); } catch(_) {}
+    return;
+  }
+  const prop = els.propertySelect.value || preProperty || "";
+  if (returnTo) location.href = returnTo;
+  else if (prop) location.href = `expense-tracking.html?property=${encodeURIComponent(prop)}`;
+  else history.back();
+});
+document.getElementById("deleteBtn").addEventListener("click", deleteExpense);
+document.getElementById("refreshBtn").addEventListener("click", loadRecent);
+els.propertySelect.addEventListener("change", loadRecent);
+
+(async function init(){
+  // Default date paid = today (nice UX)
+  const today = new Date();
+  document.getElementById("datePaid").value = today.toISOString().slice(0,10);
+
+  activeCompanyId = await getActiveCompanyId();
+  if (!activeCompanyId) {
+    showMsg("error","❌ No company/account found for this login. Please refresh or contact admin.");
+    return;
+  }
+
+  await loadProperties();
+  if (editId) await loadExpenseForEdit(editId);
+  await loadRecent();
+})();
+
+// Mortgage split UI wiring
+document.getElementById("category")?.addEventListener("change", toggleMortgagePanel);
+["mort_principal","mort_interest","mort_tax","mort_insurance","mort_pmi","mort_other"].forEach((id)=>{
+  document.getElementById(id)?.addEventListener("input", updateMortgageTotalUI);
+});
+toggleMortgagePanel();
+
+</script>
+<script>
+/* ── Auth + header wiring ── */
+(function(){
+  document.addEventListener('DOMContentLoaded', async function(){
+    setProgress(5,'Connecting…',0);
+    document.getElementById('footerYear').textContent = new Date().getFullYear();
+
+    // Embedded mode detection
+    if(window.self !== window.top) document.body.classList.add('embedded');
+
+    try {
+      setProgress(40,'Authenticating…',1);
+      var _c = window._rgClient;
+      var r = await _c.auth.getUser();
+      var user = (!r.error && r.data?.user) ? r.data.user : null;
+      if(!user){ var s=await _c.auth.getSession(); user=s.data?.session?.user||null; }
+
+      var uname = user
+        ? (user.user_metadata?.full_name||user.user_metadata?.name||(user.email?user.email.split('@')[0]:'Account'))
+        : null;
+
+      if(user){
+        document.body.classList.remove('auth-guest');
+        document.body.classList.add('auth-ready');
+        var el=document.getElementById('usernameLabel'); if(el)el.textContent=uname;
+        var mu=document.getElementById('mobileUsernameLabel'); if(mu)mu.textContent=uname;
+        var uN=document.getElementById('umdName'); if(uN)uN.textContent=uname;
+        var uFN=document.getElementById('umdFullName'); if(uFN)uFN.textContent=uname;
+        var uEM=document.getElementById('umdEmail'); if(uEM)uEM.textContent=user.email||'';
+        var uA=document.getElementById('umdAvatar');
+        if(uA){var _p=uname.split(' ');uA.textContent=(_p.length>=2?_p[0][0]+_p[_p.length-1][0]:uname.slice(0,2)).toUpperCase();}
+        var uMenu=document.getElementById('userMenu'); if(uMenu)uMenu.style.display=window.innerWidth>860?'block':'none';
+        var dA=document.getElementById('drawerAvatar'); if(dA){var _p2=uname.split(' ');dA.textContent=(_p2.length>=2?_p2[0][0]+_p2[_p2.length-1][0]:uname.slice(0,2)).toUpperCase();}
+        var mA=document.getElementById('mobileAccountLink'); if(mA)mA.style.display='block';
+        var mLo=document.getElementById('mobileLogoutContainer'); if(mLo)mLo.style.display='block';
+        var mLi=document.getElementById('mobileLogin'); if(mLi)mLi.style.display='none';
+      } else {
+        document.body.classList.add('auth-guest');
+      }
+    } catch(e){ console.warn('auth check error:',e); }
+
+    setProgress(100,'Ready!',3);
+    // Dismiss overlay
+    var ov=document.getElementById('authOverlay');
+    if(ov){ov.style.opacity='0';setTimeout(function(){if(ov.parentNode)ov.parentNode.removeChild(ov);},320);}
+  });
+
+  // Dropdown toggle
+  document.addEventListener('DOMContentLoaded', function(){
+    var uBtn=document.getElementById('umdToggle');
+    var uDrop=document.getElementById('umdDropdown');
+    if(uBtn&&uDrop){
+      uBtn.onclick=function(e){e.stopPropagation();uDrop.classList.toggle('open');};
+      document.addEventListener('click',function(e){
+        if(uDrop&&!uDrop.contains(e.target)&&!uBtn.contains(e.target))uDrop.classList.remove('open');
+      });
+    }
+    var ham=document.getElementById('hamburgerBtn');
+    var drw=document.getElementById('mobileDrawer');
+    if(ham&&drw){
+      ham.onclick=function(e){e.stopPropagation();drw.style.display=drw.style.display==='block'?'none':'block';};
+      document.addEventListener('click',function(e){
+        if(drw&&!drw.contains(e.target)&&!ham.contains(e.target))drw.style.display='none';
+      });
+    }
+    async function doSignOut(){await window._rgClient.auth.signOut();location.href='login.html';}
+    var lb=document.getElementById('logoutBtn');
+    if(lb)lb.onclick=doSignOut;
+    var mlb=document.getElementById('mobileLogoutBtn');
+    if(mlb)mlb.onclick=doSignOut;
+    // UMD toggle
+    var uBtn=document.getElementById('umdToggle');
+    var uDrop=document.getElementById('umdDropdown');
+    if(uBtn&&uDrop){
+      uBtn.onclick=function(e){e.stopPropagation();uDrop.classList.toggle('open');uBtn.setAttribute('aria-expanded',uDrop.classList.contains('open'));};
+      document.addEventListener('click',function(){uDrop.classList.remove('open');});
+    }
+  });
+}());
+</script>
+</body>
+</html>

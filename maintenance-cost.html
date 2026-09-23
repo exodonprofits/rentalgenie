@@ -1,0 +1,1270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Maintenance Cost Report – Rental Genie</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap">
+<link rel="dns-prefetch" href="https://pbojacnagutipfhcxltj.supabase.co">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+/* ── Design tokens (property-management / property-overview source) ── */
+:root {
+  --navy:        #0c1e3a;
+  --navy-mid:    #1a3a6b;
+  --navy-light:  #1e5799;
+  --sky:         #2d8cf0;
+  --sky-soft:    #e8f0fe;
+  --border:      #e2e8f0;
+  --bg:          #f1f4f8;
+  --card:        #ffffff;
+  --text:        #0c1e3a;
+  --muted:       #64748b;
+  --success:     #10b981;
+  --success-bg:  #ecfdf5;
+  --success-bdr: #a7f3d0;
+  --warn-bg:     #fffbeb;
+  --warn-bdr:    #fde68a;
+  --warn-text:   #92400e;
+  --danger:      #ef4444;
+  --danger-bg:   #fef2f2;
+  --danger-bdr:  #fecaca;
+  --danger-text: #7f1d1d;
+  --info-bg:     #eff6ff;
+  --info-bdr:    #bfdbfe;
+  --info-text:   #1e40af;
+  --radius-sm:   8px;
+  --radius-md:   12px;
+  --radius-lg:   16px;
+  --radius-xl:   20px;
+  --shadow-sm:   0 1px 4px rgba(12,30,58,.06);
+  --shadow-md:   0 4px 16px rgba(12,30,58,.09);
+  --shadow-lg:   0 8px 32px rgba(12,30,58,.14);
+  --header-grad: linear-gradient(135deg,#0c1e3a 0%,#1a3a6b 55%,#1e5799 100%);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: 'DM Sans', -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Auth Overlay ───────────────────────────────────────────── */
+#authOverlay {
+  position: fixed; inset: 0; z-index: 9999;
+  background: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column; gap: 16px; transition: opacity .35s;
+}
+#authOverlay.hidden { opacity: 0; pointer-events: none; }
+.spinner-ring {
+  width: 44px; height: 44px; border-radius: 50%;
+  border: 3px solid rgba(12,30,58,.1);
+  border-top-color: var(--sky);
+  animation: spin .75s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+#authOverlay p { font-size: .88rem; color: var(--muted); font-weight: 500; }
+
+/* ── Header ─────────────────────────────────────────────────── */
+.header-container {
+  position: sticky; top: 0; z-index: 1000;
+  background: var(--header-grad);
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  box-shadow: 0 2px 20px rgba(12,30,58,.35);
+}
+.navbar {
+  max-width: 1440px; margin: 0 auto; padding: 0 22px;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 64px; gap: 12px;
+}
+.brand-area {
+  display: flex; align-items: center; gap: 11px;
+  text-decoration: none; flex-shrink: 0;
+}
+.brand-logo {
+  width: 38px; height: 38px; border-radius: 9px;
+  background: rgba(255,255,255,.12);
+  box-shadow: 0 0 0 1px rgba(255,255,255,.2), 0 2px 8px rgba(0,0,0,.2);
+  object-fit: cover; flex-shrink: 0;
+}
+.brand-title { font-size: 1.15rem; font-weight: 700; color: #fff; letter-spacing: -.2px; }
+
+.nav-links { display: flex; gap: 2px; align-items: center; }
+.nav-links a {
+  display: flex; align-items: center; gap: 5px;
+  text-decoration: none; font-size: .8rem; font-weight: 600;
+  padding: 6px 10px; color: rgba(255,255,255,.72);
+  border-radius: var(--radius-sm); transition: all .18s; white-space: nowrap;
+}
+.nav-links a:hover  { color: #fff; background: rgba(255,255,255,.1); }
+.nav-links a.nav-active { color: #fff; background: rgba(255,255,255,.15); }
+
+/* UMD */
+.umd-wrap { position: relative; }
+.umd-toggle {
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.22);
+  border-radius: 999px; padding: 5px 12px 5px 5px;
+  cursor: pointer; transition: background .18s;
+}
+.umd-toggle:hover { background: rgba(255,255,255,.18); }
+.umd-avatar {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--sky), var(--navy-mid));
+  display: flex; align-items: center; justify-content: center;
+  font-size: .68rem; font-weight: 700; color: #fff; flex-shrink: 0;
+}
+.umd-name  { font-size: .8rem; color: #fff; font-weight: 600; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.umd-caret { font-size: .6rem; color: rgba(255,255,255,.7); }
+.umd-dropdown {
+  display: none; position: absolute; right: 0; top: calc(100% + 8px);
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); box-shadow: var(--shadow-lg);
+  min-width: 220px; overflow: hidden; z-index: 200;
+}
+.umd-dropdown.open { display: block; animation: fadeUp .15s ease both; }
+.umd-user-row { padding: 14px 16px 10px; border-bottom: 1px solid var(--border); }
+.umd-user-name  { font-size: .88rem; font-weight: 700; color: var(--navy); }
+.umd-user-email { font-size: .75rem; color: var(--muted); margin-top: 2px; }
+.umd-section { display: flex; flex-direction: column; padding: 6px; border-bottom: 1px solid var(--border); }
+.umd-section:last-child { border-bottom: none; }
+.umd-link {
+  display: flex; align-items: center; gap: 9px;
+  padding: 9px 10px; border-radius: var(--radius-sm);
+  font-size: .84rem; font-weight: 600; color: var(--text);
+  text-decoration: none; background: none; border: none;
+  cursor: pointer; width: 100%; font-family: 'DM Sans', sans-serif;
+  transition: background .15s;
+}
+.umd-link:hover { background: var(--bg); }
+.umd-link.danger { color: var(--danger); }
+.umd-link.danger:hover { background: var(--danger-bg); }
+
+#nav-login {
+  background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.25);
+  color: #fff; padding: 7px 14px; border-radius: 999px;
+  font-weight: 600; text-decoration: none; font-size: .82rem;
+}
+.hamburger {
+  display: none; padding: 7px 10px;
+  border: 1px solid rgba(255,255,255,.25); border-radius: var(--radius-sm);
+  background: rgba(255,255,255,.1); cursor: pointer;
+  color: #fff; font-size: 1rem; transition: background .18s;
+}
+.hamburger:hover { background: rgba(255,255,255,.2); }
+@media(max-width:900px) { .nav-links { display: none; } .hamburger { display: block; } }
+
+.drawer {
+  display: none; position: fixed;
+  top: 72px; left: 12px; right: 12px;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 8px;
+  z-index: 999; box-shadow: var(--shadow-lg);
+}
+.drawer a, .drawer button {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 14px; border-radius: var(--radius-sm);
+  font-weight: 600; font-size: .88rem;
+  text-decoration: none; color: var(--text);
+  background: none; border: none; cursor: pointer;
+  width: 100%; font-family: 'DM Sans', sans-serif; transition: background .15s;
+}
+.drawer a:hover, .drawer button:hover { background: var(--bg); }
+.drawer a.nav-active { background: var(--sky-soft); color: var(--navy-mid); }
+.drawer-divider { height: 1px; background: var(--border); margin: 4px 0; }
+.drawer-signout { color: var(--danger) !important; }
+
+/* ── Nav badges ─────────────────────────────────────────────── */
+.rg-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 18px; height: 18px; padding: 0 5px;
+  border-radius: 999px; font-size: 11px; font-weight: 700;
+  background: var(--danger); color: #fff; margin-left: 3px;
+}
+.rg-badge.hidden { display: none; }
+
+/* ── Layout ─────────────────────────────────────────────────── */
+main {
+  flex: 1; max-width: 1440px; width: 100%;
+  margin: 0 auto; padding: 28px 22px 64px;
+  animation: fadeUp .35s ease both;
+}
+
+/* ── Page header ────────────────────────────────────────────── */
+.page-header {
+  display: flex; align-items: flex-start;
+  justify-content: space-between; gap: 16px;
+  flex-wrap: wrap; margin-bottom: 22px;
+}
+.page-title { font-size: 1.65rem; font-weight: 700; color: var(--navy); letter-spacing: -.4px; line-height: 1.2; }
+.page-sub   { font-size: .88rem; color: var(--muted); margin-top: 4px; font-weight: 500; }
+.page-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+
+/* ── Filter bar ─────────────────────────────────────────────── */
+.filter-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 16px 20px;
+  box-shadow: var(--shadow-sm); margin-bottom: 22px;
+  display: flex; align-items: flex-end; gap: 14px; flex-wrap: wrap;
+}
+.filter-group { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 160px; }
+.filter-label {
+  font-size: .7rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .45px; color: var(--muted);
+}
+.filter-select {
+  padding: 9px 13px; border: 1.5px solid var(--border);
+  border-radius: var(--radius-md); font-family: 'DM Sans', sans-serif;
+  font-size: .88rem; font-weight: 600; color: var(--text);
+  background: #f8fafc; outline: none; cursor: pointer;
+  transition: border-color .15s, box-shadow .15s;
+  appearance: none; -webkit-appearance: none;
+}
+.filter-select:focus {
+  border-color: var(--sky); background: #fff;
+  box-shadow: 0 0 0 3px rgba(45,140,240,.1);
+}
+.filter-actions { display: flex; gap: 8px; flex-shrink: 0; flex-wrap: wrap; align-items: flex-end; }
+
+/* ── Buttons ────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 9px 16px; border-radius: var(--radius-md);
+  border: 1.5px solid var(--border); background: var(--card);
+  color: var(--navy); font-family: 'DM Sans', sans-serif;
+  font-size: .83rem; font-weight: 600; text-decoration: none;
+  cursor: pointer; transition: all .16s; white-space: nowrap;
+}
+.btn:hover { background: var(--bg); border-color: #cbd5e1; transform: translateY(-1px); }
+.btn.primary {
+  background: var(--header-grad); border-color: transparent; color: #fff;
+  box-shadow: 0 2px 10px rgba(12,30,58,.22);
+}
+.btn.primary:hover { filter: brightness(1.1); box-shadow: 0 4px 18px rgba(12,30,58,.3); }
+.btn.sm { padding: 7px 12px; font-size: .78rem; }
+
+/* ── KPI strip ──────────────────────────────────────────────── */
+.kpi-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px; margin-bottom: 22px;
+}
+@media(max-width:900px) { .kpi-strip { grid-template-columns: 1fr 1fr; } }
+@media(max-width:480px) { .kpi-strip { grid-template-columns: 1fr; } }
+
+.kpi-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 18px 18px 16px;
+  box-shadow: var(--shadow-sm); position: relative; overflow: hidden;
+  transition: transform .18s, box-shadow .18s;
+}
+.kpi-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.kpi-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  background: var(--header-grad);
+}
+.kpi-card.danger-accent::before { background: linear-gradient(90deg,var(--danger),#f87171); }
+.kpi-card.warn-accent::before   { background: linear-gradient(90deg,#f59e0b,#fbbf24); }
+.kpi-card.info-accent::before   { background: linear-gradient(90deg,var(--sky),#38bdf8); }
+.kpi-card.navy-accent::before   { background: var(--header-grad); }
+
+.kpi-label {
+  font-size: .7rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .5px; color: var(--muted); margin-bottom: 8px;
+}
+.kpi-value {
+  font-size: 1.7rem; font-weight: 700; color: var(--navy);
+  letter-spacing: -.5px; font-family: 'DM Mono', monospace; line-height: 1;
+}
+.kpi-sub { font-size: .75rem; color: var(--muted); margin-top: 6px; font-weight: 500; min-height: 1em; }
+
+/* ── Charts grid ────────────────────────────────────────────── */
+.charts-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 18px; margin-bottom: 20px;
+}
+@media(max-width:960px) { .charts-grid { grid-template-columns: 1fr; } }
+
+/* ── Section cards ──────────────────────────────────────────── */
+.section-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius-xl); box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+.card-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; flex-wrap: wrap; padding: 18px 22px 0;
+}
+.card-title { font-size: .95rem; font-weight: 700; color: var(--navy); display: flex; align-items: center; gap: 8px; }
+.card-sub   { font-size: .78rem; color: var(--muted); margin-top: 3px; }
+.card-body  { padding: 14px 22px 22px; }
+
+/* Chart wrappers */
+.chart-wrap { position: relative; height: 260px; margin-top: 8px; }
+.chart-wrap canvas { width: 100% !important; height: 100% !important; }
+.pie-wrap {
+  position: relative; height: 260px; margin-top: 8px;
+  display: flex; align-items: center; justify-content: center;
+}
+.pie-no-data {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column; gap: 8px;
+  color: var(--muted); font-size: .88rem; font-weight: 500;
+}
+
+/* ── Table ──────────────────────────────────────────────────── */
+.table-wrap {
+  overflow: auto; border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+}
+table { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 620px; }
+thead th {
+  padding: 11px 14px; background: #f8fafc;
+  font-size: .68rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .4px; color: var(--muted); text-align: left;
+  border-bottom: 1px solid var(--border); position: sticky; top: 0;
+  white-space: nowrap;
+}
+thead th.num { text-align: right; }
+tbody td {
+  padding: 12px 14px; font-size: .87rem; color: var(--text);
+  border-bottom: 1px solid var(--border); vertical-align: middle;
+}
+tbody td.num { text-align: right; font-family: 'DM Mono', monospace; font-size: .83rem; font-weight: 600; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr { transition: background .15s; }
+tbody tr:hover { background: #f8fafc; }
+
+/* Amount colour */
+.amount-cell { color: var(--danger-text); font-weight: 700; }
+
+/* ── Category chip ──────────────────────────────────────────── */
+.cat-chip {
+  display: inline-flex; align-items: center;
+  padding: 2px 9px; border-radius: 999px;
+  font-size: .73rem; font-weight: 700;
+  background: var(--warn-bg); border: 1px solid var(--warn-bdr);
+  color: var(--warn-text); white-space: nowrap;
+}
+
+/* ── Empty state ────────────────────────────────────────────── */
+.empty-row td { text-align: center; padding: 40px 20px; color: var(--muted); font-size: .88rem; }
+
+/* ── Mobile bottom nav ──────────────────────────────────────── */
+.mobile-nav {
+  position: fixed; left: 0; right: 0; bottom: 0; display: none; z-index: 1200;
+  padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+  background: var(--header-grad);
+  border-top: 1px solid rgba(255,255,255,.08);
+  box-shadow: 0 -4px 20px rgba(12,30,58,.25);
+}
+.mobile-nav-inner { max-width: 1440px; margin: 0 auto; display: grid; grid-template-columns: repeat(6,1fr); gap: 5px; }
+.mnav {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 4px; padding: 10px 8px; border-radius: 8px;
+  border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.07);
+  color: rgba(255,255,255,.6); font-size: 11px; font-weight: 700;
+  text-decoration: none; text-align: center;
+}
+.mnav .ico { font-size: 22px; line-height: 1; }
+.mnav.active { background: rgba(255,255,255,.18); color: #fff; border-color: rgba(255,255,255,.25); }
+.mobile-pad { display: none; height: 86px; }
+@media(max-width:860px) { .mobile-nav { display: block; } .mobile-pad { display: block; } }
+
+/* ── Footer ─────────────────────────────────────────────────── */
+.site-footer { background: var(--navy); padding: 28px 20px 20px; margin-top: 40px; }
+.footer-content {
+  max-width: 1440px; margin: 0 auto;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 28px; padding-bottom: 18px;
+}
+.footer-section h4 { font-size: .75rem; font-weight: 700; color: rgba(255,255,255,.75); text-transform: uppercase; letter-spacing: .8px; margin: 0 0 12px; }
+.footer-section a  { display: block; color: rgba(255,255,255,.4); text-decoration: none; margin-bottom: 8px; font-size: .82rem; }
+.footer-section a:hover { color: rgba(255,255,255,.85); }
+.footer-bottom { text-align: center; padding-top: 14px; border-top: 1px solid rgba(255,255,255,.08); color: rgba(255,255,255,.28); font-size: .82rem; }
+@media(max-width:600px) { .site-footer { display: none; } }
+
+@media(max-width:600px) {
+  main { padding: 20px 14px 40px; }
+  .page-title { font-size: 1.35rem; }
+  .card-head, .card-body { padding-left: 16px; padding-right: 16px; }
+}
+
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }
+
+/* ── Mobile drawer: 2-col grid (canonical) ── */
+.drawer {
+  display: none; position: fixed; top: 70px; left: 12px; right: 12px;
+  background: #fff; border: 1px solid var(--border);
+  border-radius: 16px; padding: 10px 10px 6px; z-index: 1300;
+  box-shadow: 0 16px 40px rgba(12,30,58,.18);
+  max-height: calc(100vh - 90px); overflow-y: auto;
+}
+.drawer-user-row {
+  display: flex !important; align-items: center; gap: 10px;
+  padding: 10px 12px 12px !important; border-bottom: 1px solid #f1f5f9 !important;
+  font-weight: 700 !important; color: #0c1e3a !important;
+  font-size: 0.95rem !important; text-decoration: none;
+}
+.drawer-avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: linear-gradient(135deg, #1a3a6b, #1e5799);
+  color: #fff; font-weight: 700; font-size: 0.75rem;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; text-transform: uppercase;
+}
+.drawer-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 8px 0; }
+.drawer-grid a {
+  display: flex; align-items: center; gap: 7px; padding: 11px 12px;
+  border-bottom: none !important; font-weight: 600; text-decoration: none;
+  color: #0c1e3a; font-size: 0.88rem; border-radius: 10px;
+  background: #f8fafc; border: 1px solid #f1f5f9 !important; transition: background .12s;
+}
+.drawer-grid a:hover { background: #eff4ff; color: #1a3a6b; }
+.drawer-grid a.nav-active { background: linear-gradient(135deg,#eff4ff,#e8f0fe); color: #1a3a6b; border-color: #bfdbfe !important; font-weight: 700; }
+.drawer-login { display: flex; align-items: center; gap: 8px; padding: 11px 12px; font-weight: 600; color: #0c1e3a; font-size: 0.9rem; border-top: 1px solid #f1f5f9; text-decoration: none; margin-top: 4px; }
+#mobileLogoutContainer { border-top: 1px solid #f1f5f9; margin-top: 4px; padding-top: 4px; }
+#mobileLogoutContainer button { width: 100%; padding: 11px 12px; background: none; border: none; text-align: left; font-weight: 700; color: #dc2626; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; border-radius: 8px; }
+#mobileLogoutContainer button:hover { background: #fef2f2; }
+
+/* ── Auth state CSS ── */
+body.auth-ready #nav-login { display: none !important; }
+body.auth-ready .umd-wrap  { display: block !important; }
+body.auth-guest .umd-wrap  { display: none !important; }
+body.auth-ready #mobileLogin { display: none !important; }
+body.auth-ready #mobileAccountLink { display: flex !important; }
+body.auth-ready #mobileLogoutContainer { display: block !important; }
+body.auth-guest #mobileLogin { display: flex !important; }
+body.auth-guest #mobileAccountLink { display: none !important; }
+body.auth-guest #mobileLogoutContainer { display: none !important; }
+</style>
+</head>
+<body>
+
+<!-- ── Auth Overlay ──────────────────────────────────────────── -->
+<div id="authOverlay">
+  <div class="spinner-ring"></div>
+  <p>Loading maintenance data…</p>
+</div>
+
+<!-- ── Header ────────────────────────────────────────────────── -->
+<header class="header-container">
+  <div class="navbar">
+    <a class="brand-area" href="dashboard.html">
+      <img src="images/rg-logo.png" class="brand-logo" alt="Rental Genie"
+           onerror="this.style.display='none'" />
+      <span class="brand-title">Rental Genie</span>
+    </a>
+
+    <nav class="nav-links" aria-label="Main navigation">
+      <a href="dashboard.html">📊 Dashboard</a>
+      <a href="property-management.html">🏘️ Properties</a>
+      <a href="lease-rent-center.html">💰 Lease &amp; Rent</a>
+      <a href="expense-tracking.html">💸 Expenses</a>
+      <a href="maintenance-requests.html" class="nav-active">🛠 Maintenance</a>
+      <a href="tenant-messages.html">💬 Messages</a>
+      <a href="reports-analytics.html">📈 Reports</a>
+    </nav>
+
+    <!-- UMD -->
+    <div class="umd-wrap" id="userMenu">
+      <button class="umd-toggle" id="umdToggle" aria-haspopup="true" aria-expanded="false">
+        <div class="umd-avatar" id="umdAvatar">?</div>
+        <span class="umd-name"  id="umdName">User</span>
+        <span class="umd-caret">▾</span>
+      </button>
+      <div class="umd-dropdown" id="umdDropdown">
+        <div class="umd-user-row">
+          <div class="umd-user-name"  id="umdFullName">—</div>
+          <div class="umd-user-email" id="umdEmail">—</div>
+        </div>
+        <div class="umd-section">
+          <a class="umd-link" href="dashboard.html">📊 Dashboard</a>
+          <a class="umd-link" href="account.html">⚙️ Account Settings</a>
+        </div>
+        <div class="umd-section">
+          <button class="umd-link danger" id="logoutBtn">🚪 Sign Out</button>
+        </div>
+      </div>
+    </div>
+
+    <a id="nav-login" href="login.html" style="display:none">Log in</a>
+    <button class="hamburger" id="hamburgerBtn" aria-label="Open menu">☰</button>
+  </div>
+</header>
+
+<div class="drawer" id="mobileDrawer">
+  <a href="account.html" id="mobileAccountLink" style="display:none;" class="drawer-user-row">
+    <span class="drawer-avatar" id="drawerAvatar">?</span>
+    <span id="mobileUsernameLabel">Account</span>
+  </a>
+  <div class="drawer-grid">
+    <a href="dashboard.html">📊 Dashboard</a>
+    <a href="property-management.html">🏘️ Properties</a>
+    <a href="lease-rent-center.html">💰 Lease &amp; Rent</a>
+    <a href="expense-tracking.html">💸 Expenses</a>
+    <a href="maintenance-requests.html" class="nav-active">🛠 Maintenance</a>
+    <a href="tenant-messages.html">💬 Messages</a>
+    <a href="reports-analytics.html">📈 Reports</a>
+  </div>
+  <a href="login.html" id="mobileLogin" class="drawer-login">Log in</a>
+  <div id="mobileLogoutContainer" style="display:none;">
+    <button id="mobileLogoutBtn">Sign Out</button>
+  </div>
+</div>
+
+<!-- ── Main ──────────────────────────────────────────────────── -->
+<main>
+
+  <!-- Page header -->
+  <div class="page-header">
+    <div>
+      <div class="page-title">🛠 Maintenance Cost Report</div>
+      <div class="page-sub">Spending on maintenance across your portfolio — by period, property, and vendor.</div>
+    </div>
+    <div class="page-actions">
+      <a class="btn" id="historyLink" href="maintenance-history.html">📋 View History ↗</a>
+      <button class="btn primary" id="downloadBtn">⬇️ Export CSV</button>
+    </div>
+  </div>
+
+  <!-- ── Filters ──────────────────────────────────────────────── -->
+  <div class="filter-card">
+    <div class="filter-group">
+      <label class="filter-label" for="propertySelect">Property</label>
+      <select class="filter-select" id="propertySelect">
+        <option value="all">All Properties</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label class="filter-label" for="periodSelect">Time Period</label>
+      <select class="filter-select" id="periodSelect">
+        <option value="last-30">Last 30 Days</option>
+        <option value="last-90">Last 90 Days</option>
+        <option value="last-180">Last 180 Days</option>
+        <option value="year" selected>This Year (YTD)</option>
+        <option value="last-year">Last Year</option>
+        <option value="all-time">All Time</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- ── KPI Strip ───────────────────────────────────────────── -->
+  <div class="kpi-strip">
+    <div class="kpi-card danger-accent">
+      <div class="kpi-label">💰 Total Maintenance Cost</div>
+      <div class="kpi-value" id="totalCost">$0</div>
+      <div class="kpi-sub" id="totalCostSub">Selected property &amp; period</div>
+    </div>
+    <div class="kpi-card warn-accent">
+      <div class="kpi-label">📅 Avg per Month</div>
+      <div class="kpi-value" id="avgMonthly">$0</div>
+      <div class="kpi-sub">Across months in this period</div>
+    </div>
+    <div class="kpi-card danger-accent">
+      <div class="kpi-label">📈 Highest Monthly Spend</div>
+      <div class="kpi-value" id="highestMonth">$0</div>
+      <div class="kpi-sub" id="highestMonthLabel">—</div>
+    </div>
+    <div class="kpi-card info-accent">
+      <div class="kpi-label">🔢 Expense Entries</div>
+      <div class="kpi-value" id="expenseCount">0</div>
+      <div class="kpi-sub">Individual maintenance records</div>
+    </div>
+  </div>
+
+  <!-- ── Charts ──────────────────────────────────────────────── -->
+  <div class="charts-grid">
+
+    <!-- Monthly bar chart -->
+    <div class="section-card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">📅 Monthly Maintenance Cost</div>
+          <div class="card-sub">Spend by month for the selected period</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="chart-wrap">
+          <canvas id="monthlyChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vendor pie -->
+    <div class="section-card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">🔧 Cost by Vendor</div>
+          <div class="card-sub">Top vendors by total spend</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="pie-wrap">
+          <canvas id="vendorPieChart"></canvas>
+          <div class="pie-no-data" id="pieNoData" style="display:none">
+            <span style="font-size:2rem">📭</span>
+            <span>No vendor data for this period</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Expense ledger table ─────────────────────────────────── -->
+  <div class="section-card">
+    <div class="card-head">
+      <div>
+        <div class="card-title">🧾 Maintenance Expense Ledger</div>
+        <div class="card-sub">All maintenance expenses for the selected filters</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Property</th>
+              <th>Category</th>
+              <th>Vendor</th>
+              <th class="num">Amount</th>
+              <th>Note</th>
+            </tr>
+          </thead>
+          <tbody id="expenseTableBody">
+            <tr class="empty-row"><td colspan="6">Loading maintenance expenses…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ── Footer ─────────────────────────────────────────────────── -->
+<footer class="site-footer">
+  <div class="footer-content">
+    <div class="footer-section">
+      <h4>Navigate</h4>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="property-management.html">Property Management</a>
+      <a href="lease-rent-center.html">Lease &amp; Rent Center</a>
+      <a href="expense-tracking.html">Expense Tracking</a>
+    </div>
+    <div class="footer-section">
+      <h4>Support &amp; Legal</h4>
+      <a href="contact-us.html">Contact Us</a>
+      <a href="contact-us.html">Help Center</a>
+      <a href="terms.html">Terms of Service</a>
+      <a href="privacy.html">Privacy Policy</a>
+    </div>
+    <div class="footer-section">
+      <h4>Account</h4>
+      <a href="account.html">My Account</a>
+      <a href="maintenance-requests.html">Maintenance Requests</a>
+      <a href="maintenance-history.html">Maintenance History</a>
+    </div>
+  </div>
+  <div class="footer-bottom">© <span id="footerYear"></span> Rental Genie. All rights reserved.</div>
+</footer>
+
+<!-- Mobile Bottom Nav -->
+<nav class="mobile-nav" aria-label="Mobile navigation">
+  <div class="mobile-nav-inner">
+    <a class="mnav" href="dashboard.html"><div class="ico">📊</div></a>
+    <a class="mnav" href="property-management.html"><div class="ico">🏘️</div></a>
+    <a class="mnav" href="lease-rent-center.html"><div class="ico">💰</div></a>
+    <a class="mnav" href="expense-tracking.html"><div class="ico">💸</div></a>
+    <a class="mnav active" href="maintenance-requests.html"><div class="ico">🛠️</div></a>
+    <a class="mnav" href="reports-analytics.html"><div class="ico">📈</div></a>
+  </div>
+</nav>
+<div class="mobile-pad" aria-hidden="true"></div>
+
+<!-- Supabase: isolated body tag, prevents Cloudflare corruption -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/* ============================================================
+   SUPABASE — safeStorage (window._rgClient pattern)
+============================================================ */
+(function () {
+  var mem = new Map();
+  var wrap = function (s) {
+    return {
+      getItem:    function (k) { try { return (s && s.getItem(k)) || mem.get(k) || null; } catch (e) { return mem.get(k) || null; } },
+      setItem:    function (k, v) { try { s && s.setItem(k, v); } catch (e) {} mem.set(k, v); },
+      removeItem: function (k) { try { s && s.removeItem(k); } catch (e) {} mem.delete(k); }
+    };
+  };
+  var ls = null; try { ls = window.localStorage; } catch (e) {}
+  window._rgClient = window.supabase.createClient(
+    'https://pbojacnagutipfhcxltj.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBib2phY25hZ3V0aXBmaGN4bHRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgwMDkwODAsImV4cCI6MjA2MzU4NTA4MH0.ZLCcAzTYljoZycpBGwMtthP5VyAJ4schuIvt4HibGc0',
+    { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, lock: undefined, storage: wrap(ls) } }
+  );
+}());
+var sb = window._rgClient;
+
+/* ============================================================
+   HELPERS
+============================================================ */
+function $(id) { return document.getElementById(id); }
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function fmtMoney(v) {
+  return '$' + Number(v || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+function fmtDate(iso) {
+  if (!iso) return '—';
+  var d = new Date(iso);
+  return isNaN(d) ? '—' : d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: '2-digit' });
+}
+function hideOverlay() {
+  var o = $('authOverlay');
+  if (o) { o.classList.add('hidden'); setTimeout(function () { o.style.display = 'none'; }, 380); }
+}
+
+/* ============================================================
+   HEADER — UMD wiring
+============================================================ */
+(function wireHeader() {
+  var toggle = $('umdToggle'), drop = $('umdDropdown');
+  if (toggle && drop) {
+    toggle.addEventListener('click', function (e) {
+      e.stopPropagation();
+      drop.classList.toggle('open');
+      toggle.setAttribute('aria-expanded', drop.classList.contains('open'));
+    });
+    document.addEventListener('click', function () { drop.classList.remove('open'); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') drop.classList.remove('open'); });
+  }
+  function doSignOut() { sb.auth.signOut().catch(function(){}).then(function(){ location.href = 'login.html'; }); }
+  var lb = $('logoutBtn');       if (lb) lb.addEventListener('click', doSignOut);
+  var mb = $('mobileLogoutBtn'); if (mb) mb.addEventListener('click', doSignOut);
+  var ham = $('hamburgerBtn'), drw = $('mobileDrawer');
+  if (ham && drw) {
+    ham.addEventListener('click', function (e) {
+      e.stopPropagation();
+      drw.style.display = drw.style.display === 'block' ? 'none' : 'block';
+    });
+    document.addEventListener('click', function (e) {
+      if (drw.style.display === 'block' && !drw.contains(e.target) && !ham.contains(e.target))
+        drw.style.display = 'none';
+    });
+  }
+}());
+
+/* ============================================================
+   AUTH SETUP
+============================================================ */
+/* ============================================================
+   AUTH — rgSetupAuth (canonical pattern, matches property-management)
+============================================================ */
+async function rgSetupAuth() {
+  var user = null;
+  try {
+    var r = await window._rgClient.auth.getUser();
+    user = (!r.error && r.data && r.data.user) ? r.data.user : null;
+  } catch(e) {}
+  if (!user) {
+    try {
+      var s = await window._rgClient.auth.getSession();
+      user = (s.data && s.data.session && s.data.session.user) ? s.data.session.user : null;
+    } catch(e) {}
+  }
+
+  var loginEl = $('nav-login');
+  var umdEl   = $('userMenu');
+
+  if (!user) {
+    hideOverlay();
+    if (loginEl) loginEl.style.display = 'inline-flex';
+    if (umdEl)   umdEl.style.display   = 'none';
+    var returnTo = encodeURIComponent(location.pathname + location.search);
+    location.href = 'login.html?returnTo=' + returnTo;
+    return null;
+  }
+
+  var uname    = (user.user_metadata && (user.user_metadata.full_name || user.user_metadata.name)) || user.email.split('@')[0];
+  var parts    = uname.trim().split(/\s+/);
+  var initials = (parts.length >= 2 ? parts[0][0] + parts[parts.length-1][0] : uname.slice(0,2)).toUpperCase();
+
+  if (loginEl) loginEl.style.display = 'none';
+  if (umdEl)   umdEl.style.display   = 'block';
+
+  var av = $('umdAvatar');    if (av) av.textContent = initials;
+  var nm = $('umdName');      if (nm) nm.textContent = uname;
+  var fn = $('umdFullName');  if (fn) fn.textContent = uname;
+  var em = $('umdEmail');     if (em) em.textContent = user.email || '';
+  var da = $('drawerAvatar'); if (da) da.textContent = initials;
+  var ml = $('mobileUsernameLabel'); if (ml) ml.textContent = uname;
+  var ma = $('mobileAccountLink');   if (ma) ma.style.display = 'flex';
+  var mlo= $('mobileLogoutContainer'); if (mlo) mlo.style.display = 'block';
+  var mli= $('mobileLogin');         if (mli) mli.style.display = 'none';
+
+  document.body.classList.remove('auth-guest');
+  document.body.classList.add('auth-ready');
+
+  window._rgClient.auth.onAuthStateChange(function(event) {
+    if (event === 'SIGNED_OUT') location.href = 'login.html';
+  });
+  return user;
+}
+
+async function waitForClientReady(ms) {
+  ms = ms || 4000;
+  if (window._rgClient && window._rgClient.auth) return window._rgClient;
+  return new Promise(function(resolve, reject) {
+    var elapsed = 0;
+    var t = setInterval(function() {
+      elapsed += 25;
+      if (window._rgClient && window._rgClient.auth) {
+        clearInterval(t); resolve(window._rgClient);
+      } else if (elapsed >= ms) {
+        clearInterval(t); reject(new Error('Supabase client not ready'));
+      }
+    }, 25);
+  });
+}
+
+/* ============================================================
+   STATE
+============================================================ */
+var allExpenses          = [];
+var monthlyChartInstance = null;
+var vendorPieInstance    = null;
+
+var propertySelect = $('propertySelect');
+var periodSelect   = $('periodSelect');
+
+/* ============================================================
+   DATE RANGE HELPER (expanded set of periods)
+============================================================ */
+function getDateRange() {
+  var now    = new Date();
+  var endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+  var startDate;
+  switch (periodSelect.value) {
+    case 'last-30':
+      startDate = new Date(now); startDate.setDate(startDate.getDate() - 30); startDate.setHours(0,0,0,0); break;
+    case 'last-90':
+      startDate = new Date(now); startDate.setDate(startDate.getDate() - 90); startDate.setHours(0,0,0,0); break;
+    case 'last-180':
+      startDate = new Date(now); startDate.setDate(startDate.getDate() - 180); startDate.setHours(0,0,0,0); break;
+    case 'last-year':
+      startDate = new Date(now.getFullYear() - 1, 0, 1, 0,0,0,0);
+      endDate   = new Date(now.getFullYear() - 1, 11, 31, 23,59,59,999); break;
+    case 'all-time':
+      startDate = new Date(2000, 0, 1); break;
+    case 'year':
+    default:
+      startDate = new Date(now.getFullYear(), 0, 1, 0,0,0,0); break;
+  }
+  return { startDate: startDate, endDate: endDate };
+}
+
+/* ============================================================
+   FILTER + AGGREGATE
+============================================================ */
+function getFilteredExpenses() {
+  var propertyFilter = propertySelect.value;
+  var range = getDateRange();
+  var filtered = allExpenses.filter(function (item) {
+    var d = new Date(item.date_paid);
+    if (isNaN(d)) return false;
+    var inRange   = d >= range.startDate && d <= range.endDate;
+    var inProp    = propertyFilter === 'all' || item.property_name === propertyFilter;
+    return inRange && inProp;
+  });
+  return { filtered: filtered, startDate: range.startDate, endDate: range.endDate };
+}
+
+/* ============================================================
+   UPDATE STATS, TABLE, CHARTS
+============================================================ */
+function updateAll() {
+  var result    = getFilteredExpenses();
+  var filtered  = result.filtered;
+  var startDate = result.startDate;
+  var endDate   = result.endDate;
+
+  /* ── KPI aggregates ── */
+  var total = filtered.reduce(function (s, r) { return s + (r.amount || 0); }, 0);
+  var count = filtered.length;
+
+  var monthDiff = (endDate.getFullYear() - startDate.getFullYear()) * 12
+    + (endDate.getMonth() - startDate.getMonth()) + 1;
+  var monthsCount = monthDiff > 0 ? monthDiff : 1;
+  var avg = total / monthsCount;
+
+  /* Highest month */
+  var monthlyTotals = {};
+  filtered.forEach(function (r) {
+    var d = new Date(r.date_paid);
+    if (isNaN(d)) return;
+    var key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+    monthlyTotals[key] = (monthlyTotals[key] || 0) + (r.amount || 0);
+  });
+  var highestKey = null, highest = 0;
+  Object.keys(monthlyTotals).forEach(function (k) {
+    if (monthlyTotals[k] > highest) { highest = monthlyTotals[k]; highestKey = k; }
+  });
+
+  /* ── DOM updates ── */
+  var tc = $('totalCost');   if (tc) tc.textContent = fmtMoney(total);
+  var am = $('avgMonthly');  if (am) am.textContent = fmtMoney(avg);
+  var ec = $('expenseCount');if (ec) ec.textContent = count;
+  var hm = $('highestMonth');if (hm) hm.textContent = fmtMoney(highest);
+  var hl = $('highestMonthLabel');
+  if (hl) {
+    if (highestKey) {
+      var parts = highestKey.split('-');
+      var lbl = new Date(Number(parts[0]), Number(parts[1]) - 1, 1)
+        .toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+      hl.textContent = lbl;
+    } else {
+      hl.textContent = '—';
+    }
+  }
+
+  /* KPI sub for total */
+  var propName = propertySelect.value === 'all' ? 'all properties' : propertySelect.value;
+  var tcs = $('totalCostSub'); if (tcs) tcs.textContent = propName;
+
+  /* ── Table ── */
+  renderTable(filtered);
+
+  /* ── Charts ── */
+  renderMonthlyChart(filtered, startDate, endDate);
+  renderVendorPie(filtered);
+
+  /* ── History link ── */
+  updateHistoryLink();
+}
+
+/* ============================================================
+   RENDER TABLE
+============================================================ */
+function renderTable(rows) {
+  var tbody = $('expenseTableBody');
+  if (!tbody) return;
+  if (!rows.length) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="6">No maintenance expenses found for this selection.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.map(function (r) {
+    return '<tr>'
+      + '<td style="white-space:nowrap">' + esc(fmtDate(r.date_paid)) + '</td>'
+      + '<td>' + esc(r.property_name || '—') + '</td>'
+      + '<td><span class="cat-chip">' + esc(r.category || '—') + '</span></td>'
+      + '<td>' + esc(r.vendor || 'N/A') + '</td>'
+      + '<td class="num amount-cell">' + fmtMoney(r.amount || 0) + '</td>'
+      + '<td style="max-width:220px;color:var(--muted);font-size:.82rem">' + esc(r.note || '—') + '</td>'
+      + '</tr>';
+  }).join('');
+}
+
+/* ============================================================
+   RENDER MONTHLY BAR CHART
+============================================================ */
+function renderMonthlyChart(expenses, startDate, endDate) {
+  if (monthlyChartInstance) { monthlyChartInstance.destroy(); monthlyChartInstance = null; }
+
+  /* Build month buckets */
+  var cursor = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
+  var months = [], monthlyTotals = {};
+  while (cursor <= endDate) {
+    var key = cursor.getFullYear() + '-' + String(cursor.getMonth() + 1).padStart(2, '0');
+    months.push(key);
+    monthlyTotals[key] = 0;
+    cursor.setMonth(cursor.getMonth() + 1);
+  }
+  expenses.forEach(function (r) {
+    var d = new Date(r.date_paid);
+    if (isNaN(d)) return;
+    var k = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+    if (monthlyTotals[k] !== undefined) monthlyTotals[k] += (r.amount || 0);
+  });
+
+  var labels = months.map(function (k) {
+    var p = k.split('-');
+    return new Date(Number(p[0]), Number(p[1]) - 1, 1).toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+  });
+  var data   = months.map(function (k) { return monthlyTotals[k]; });
+
+  var maxVal = Math.max.apply(null, data.concat([0]));
+  var step   = maxVal <= 500 ? 50 : maxVal <= 2000 ? 100 : maxVal <= 10000 ? 500 : 1000;
+  var niceMax = Math.ceil((maxVal * 1.12) / step) * step || step;
+
+  var ctx = $('monthlyChart');
+  if (!ctx) return;
+  monthlyChartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Maintenance Cost',
+        data: data,
+        backgroundColor: 'rgba(239,68,68,.75)',
+        hoverBackgroundColor: 'rgba(239,68,68,.95)',
+        borderRadius: 5,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 500 },
+      scales: {
+        y: {
+          min: 0, max: niceMax,
+          ticks: {
+            maxTicksLimit: 6,
+            callback: function (v) { return '$' + Number(v).toLocaleString(); },
+            color: '#94a3b8', font: { family: "'DM Mono', monospace", size: 11 }
+          },
+          grid: { color: 'rgba(226,232,240,.6)', drawBorder: false }
+        },
+        x: {
+          grid: { display: false },
+          ticks: { color: '#94a3b8', font: { family: "'DM Sans', sans-serif", size: 11 } }
+        }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(12,30,58,.9)',
+          titleFont: { family: "'DM Sans', sans-serif" },
+          bodyFont:  { family: "'DM Mono', monospace" },
+          callbacks: {
+            label: function (ctx) { return ' $' + Number(ctx.parsed.y || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+          }
+        }
+      }
+    }
+  });
+}
+
+/* ============================================================
+   RENDER VENDOR PIE (doughnut)
+============================================================ */
+function renderVendorPie(expenses) {
+  if (vendorPieInstance) { vendorPieInstance.destroy(); vendorPieInstance = null; }
+  var noData = $('pieNoData'), pieCanvas = $('vendorPieChart');
+
+  var totals = {};
+  expenses.forEach(function (r) {
+    var vendor = r.vendor || 'Unknown';
+    totals[vendor] = (totals[vendor] || 0) + (r.amount || 0);
+  });
+
+  var labels = Object.keys(totals);
+  var values = Object.values(totals);
+
+  if (!labels.length) {
+    if (noData) noData.style.display = 'flex';
+    return;
+  }
+  if (noData) noData.style.display = 'none';
+
+  var COLORS = ['#ef4444','#f59e0b','#2d8cf0','#10b981','#8b5cf6','#ec4899','#06b6d4','#f97316','#6366f1','#84cc16'];
+
+  vendorPieInstance = new Chart(pieCanvas, {
+    type: 'doughnut',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: values,
+        backgroundColor: COLORS.slice(0, labels.length),
+        borderWidth: 2,
+        borderColor: '#fff',
+        hoverOffset: 6,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 500 },
+      cutout: '58%',
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: { font: { family: "'DM Sans', sans-serif", size: 11 }, padding: 10,
+                    usePointStyle: true, pointStyleWidth: 8, boxHeight: 8 }
+        },
+        tooltip: {
+          backgroundColor: 'rgba(12,30,58,.9)',
+          titleFont: { family: "'DM Sans', sans-serif" },
+          bodyFont:  { family: "'DM Mono', monospace" },
+          callbacks: {
+            label: function (ctx) {
+              var total = ctx.dataset.data.reduce(function (a, b) { return a + b; }, 0);
+              var pct   = total ? ((ctx.parsed / total) * 100).toFixed(1) : 0;
+              return ' $' + Number(ctx.parsed).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' (' + pct + '%)';
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+/* ============================================================
+   HISTORY LINK
+============================================================ */
+function updateHistoryLink() {
+  var link = $('historyLink');
+  if (!link) return;
+  var prop = propertySelect.value;
+  link.href = prop === 'all'
+    ? 'maintenance-history.html'
+    : 'maintenance-history.html?property=' + encodeURIComponent(prop);
+}
+
+/* ============================================================
+   LOAD PROPERTIES
+============================================================ */
+function loadProperties() {
+  var urlParams    = new URLSearchParams(window.location.search);
+  var urlProperty  = urlParams.get('property') ? decodeURIComponent(urlParams.get('property')) : null;
+
+  return sb.from('properties').select('name').order('name')
+    .then(function (res) {
+      if (res.error) { console.error('loadProperties error:', res.error); return; }
+      (res.data || []).forEach(function (p) {
+        var opt = document.createElement('option');
+        opt.value = p.name; opt.textContent = p.name;
+        propertySelect.appendChild(opt);
+      });
+      if (urlProperty) {
+        var found = Array.from(propertySelect.options).some(function (o) { return o.value === urlProperty; });
+        if (found) propertySelect.value = urlProperty;
+      }
+    });
+}
+
+/* ============================================================
+   LOAD MAINTENANCE EXPENSES
+============================================================ */
+function loadMaintenanceExpenses() {
+  return sb.from('expenses')
+    .select('id, property_name, date_paid, category, vendor, amount, note')
+    .ilike('category', '%maintenance%')
+    .order('date_paid', { ascending: false })
+    .then(function (res) {
+      if (res.error) { console.error('loadMaintenanceExpenses error:', res.error); return; }
+      allExpenses = res.data || [];
+    });
+}
+
+/* ============================================================
+   CSV EXPORT
+============================================================ */
+function downloadCSV() {
+  var filtered = getFilteredExpenses().filtered;
+  if (!filtered.length) {
+    alert('No maintenance expenses to export for this selection.');
+    return;
+  }
+  var rows = [['Date','Property','Category','Vendor','Amount','Note']].concat(
+    filtered.map(function (r) {
+      return [
+        r.date_paid ? new Date(r.date_paid).toLocaleDateString() : '',
+        r.property_name || '',
+        r.category || '',
+        r.vendor || '',
+        (r.amount || 0).toFixed(2),
+        (r.note || '').replace(/[\r\n]+/g, ' ')
+      ];
+    })
+  );
+  var csv  = rows.map(function (r) { return r.map(function (c) { return '"' + String(c).replace(/"/g, '""') + '"'; }).join(','); }).join('\n');
+  var blob = new Blob([csv], { type: 'text/csv' });
+  var url  = URL.createObjectURL(blob);
+  var a    = document.createElement('a');
+  var propPart = propertySelect.value === 'all' ? 'all-properties' : propertySelect.value.replace(/\s+/g, '-');
+  a.href = url; a.download = 'maintenance-cost-' + propPart + '.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+
+/* ============================================================
+   NAV BADGE SYSTEM
+============================================================ */
+(function () {
+  var KEY = 'rg_genie_memory_v1';
+  function readMem() { try { return JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) { return {}; } }
+  function basename(href) {
+    try { return new URL(href, location.href).pathname.split('/').pop() || ''; }
+    catch (e) { return (href || '').split('?')[0].split('#')[0].split('/').pop(); }
+  }
+  function setBadge(a, count) {
+    if (!a) return;
+    var b = a.querySelector('.rg-badge[data-rg-badge="1"]');
+    if (!b) { b = document.createElement('span'); b.className = 'rg-badge hidden'; b.setAttribute('data-rg-badge', '1'); a.appendChild(b); }
+    var n = Number(count || 0) || 0;
+    b.textContent = n > 0 ? (n > 99 ? '99+' : String(n)) : '';
+    b.classList.toggle('hidden', n <= 0);
+  }
+  function apply() {
+    var mem = readMem(); var badges = mem.badges || {};
+    var propAtt   = Number(mem.property_attention_count   || badges.property_attention_count  || mem.vacant_count || 0) || 0;
+    var leaseAtt  = Number(mem.lease_rent_attention_count || badges.lease_rent_attention_count || mem.rent_attention_count || 0) || 0;
+    var maintOpen = Number(mem.maintenance_open_count     || badges.maintenance_open_count    || 0) || 0;
+    document.querySelectorAll('a[href]').forEach(function (a) {
+      var f = basename(a.getAttribute('href') || '');
+      if (['property-management.html', 'property-overview.html'].includes(f)) setBadge(a, propAtt);
+      if (['lease-rent-center.html'].includes(f)) setBadge(a, leaseAtt);
+      if (['maintenance-requests.html'].includes(f)) setBadge(a, maintOpen);
+    });
+  }
+  document.addEventListener('DOMContentLoaded', apply);
+}());
+
+/* ============================================================
+   INIT
+============================================================ */
+document.getElementById('footerYear').textContent = new Date().getFullYear();
+
+document.addEventListener('DOMContentLoaded', async function () {
+  try {
+    await waitForClientReady();
+    var user = await rgSetupAuth();
+    if (!user) return;
+    hideOverlay();
+    await loadProperties();
+    await loadMaintenanceExpenses();
+    updateAll();
+    propertySelect.addEventListener('change', updateAll);
+    periodSelect.addEventListener('change', updateAll);
+    $('downloadBtn').addEventListener('click', downloadCSV);
+  } catch(e) {
+    console.error('Init error:', e);
+    hideOverlay();
+  }
+});
+</script>
+</body>
+</html>

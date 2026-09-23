@@ -1,0 +1,1261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🏛 Property Tax – Rental Genie</title>
+
+
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono&display=swap" rel="stylesheet">
+<style>
+    /* -------------------------------------------------------------
+       GLOBAL (match add-property.html)
+    ------------------------------------------------------------- */
+    :root{
+      --container: 1440px;
+      --border: rgba(226,232,240,1);
+      --panel-2: rgba(255,255,255,0.92);
+      --muted: #475569;
+      --text: #0f172a;
+      --focus: 0 0 0 3px rgba(56, 189, 248, 0.35);
+    }
+
+    body {
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto;
+      margin: 0;
+      background-color: #f7f9fb;
+      color: #333;
+      font-size: 16px;
+    }
+    .page {
+      max-width: 1440px;
+      margin: 20px auto;
+      padding: 0 16px 32px;
+    }
+
+    /* -------------------------------------------------------------
+       HEADER — copied from add-property.html (desktop + mobile)
+    ------------------------------------------------------------- */
+    .header-container {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      width: 100%;
+      margin-left: calc(50% - 50vw);
+      margin-right: calc(50% - 50vw);
+      background: linear-gradient(135deg, #0c1e3a, #1a3a6b, #1e5799);
+      border-bottom: 1px solid rgba(255,255,255,0.25);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    .navbar {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 14px 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .brand-area { display: flex; align-items: center; gap: 10px; }
+    .brand-logo {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, #f0faff, #bae6fd 40%, #0ea5e9 75%);
+      box-shadow: 0px 0px 0px 2px rgba(14,165,233,0.25),
+                  0px 8px 16px rgba(0,0,0,0.15);
+      object-fit: cover;
+    }
+    .brand-title {
+      font-size: 1.45rem;
+      font-weight: 800;
+      color: #e2e8f0;
+      letter-spacing: 0.3px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.12);
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-wrap: wrap;
+      font-size: 14px;
+    }
+    .nav-links a {
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 600;
+      color: #cbd5e1;
+      padding: 3px 7px;
+      border-radius: 999px;
+      transition: .2s;
+    }
+    .nav-links a:hover { background: rgba(255,255,255,0.75); }
+    .nav-active {
+      background: rgba(255,255,255,0.18) !important;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+    }
+
+/* ── Auth display (CSS-driven — body class toggled by rgSetupAuth) ── */
+body.auth-ready #nav-login { display: none !important; }
+body.auth-ready .umd-wrap { display: block !important; }
+body.auth-guest .umd-wrap { display: none !important; }
+body.auth-ready #mobileLogin { display: none !important; }
+body.auth-ready #mobileAccountLink { display: block !important; }
+body.auth-ready #mobileLogoutContainer { display: block !important; }
+body.auth-guest #mobileLogin { display: block !important; }
+body.auth-guest #mobileAccountLink { display: none !important; }
+body.auth-guest #mobileLogoutContainer { display: none !important; }
+
+/* ── UMD pill ── */
+.umd-wrap { position: relative; }
+.umd-toggle {
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.22);
+  border-radius: 999px; padding: 5px 12px 5px 5px;
+  cursor: pointer; transition: background .18s; color: #fff;
+  font-family: 'DM Sans', sans-serif;
+}
+.umd-toggle:hover { background: rgba(255,255,255,.18); }
+.umd-toggle .umd-avatar {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: linear-gradient(135deg, #38bdf8, #1a3a6b);
+  display: flex; align-items: center; justify-content: center;
+  font-size: .68rem; font-weight: 700; color: #fff; flex-shrink: 0;
+}
+.umd-toggle .umd-name { font-size: .8rem; color: #fff; font-weight: 600; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.umd-caret { font-size: .6rem; color: rgba(255,255,255,.7); }
+.umd-dropdown {
+  display: none; position: absolute; right: 0; top: calc(100% + 8px);
+  background: #fff; border: 1px solid #e2e8f0;
+  border-radius: 12px; box-shadow: 0 8px 32px rgba(12,30,58,.18);
+  min-width: 220px; overflow: hidden; z-index: 1100;
+}
+.umd-dropdown.active { display: block; animation: umdFadeIn .15s ease both; }
+@keyframes umdFadeIn { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:translateY(0)} }
+.umd-user-row { padding: 14px 16px 10px; border-bottom: 1px solid #f1f5f9; }
+.umd-user-name  { font-size: .88rem; font-weight: 700; color: #0c1e3a; }
+.umd-user-email { font-size: .75rem; color: #64748b; margin-top: 2px; }
+.umd-section { display: flex; flex-direction: column; padding: 6px; border-bottom: 1px solid #f1f5f9; }
+.umd-section:last-child { border-bottom: none; }
+.umd-link {
+  display: flex; align-items: center; gap: 9px;
+  padding: 9px 10px; border-radius: 8px;
+  font-size: .84rem; font-weight: 600; color: #0c1e3a;
+  text-decoration: none; background: none; border: none;
+  cursor: pointer; width: 100%; font-family: 'DM Sans', sans-serif; transition: background .15s;
+}
+.umd-link:hover { background: #f8faff; }
+.umd-link.danger { color: #dc2626; }
+.umd-link.danger:hover { background: #fef2f2; }
+
+/* ── Hamburger ── */
+.hamburger {
+  display: none; font-size: 1.4rem; padding: 7px 12px;
+  border: 1px solid rgba(255,255,255,.22); border-radius: 8px;
+  background: rgba(255,255,255,.1); cursor: pointer; color: #fff;
+  font-family: 'DM Sans', sans-serif;
+}
+@media (max-width: 860px) { .nav-links { display: none; } .hamburger { display: block; } }
+
+/* ── Mobile drawer ── */
+.drawer {
+  display: none; position: fixed; top: 70px; left: 12px; right: 12px;
+  background: #fff; border: 1px solid #e2e8f0; border-radius: 16px;
+  padding: 10px 10px 6px; z-index: 1300;
+  box-shadow: 0 16px 40px rgba(12,30,58,.18);
+  max-height: calc(100vh - 90px); overflow-y: auto;
+}
+.drawer-user-row {
+  display: flex !important; align-items: center; gap: 10px;
+  padding: 10px 12px 12px !important; border-bottom: 1px solid #f1f5f9 !important;
+  font-weight: 700 !important; color: #0c1e3a !important;
+  font-size: 0.95rem !important; text-decoration: none;
+}
+.drawer-avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: linear-gradient(135deg, #1a3a6b, #1e5799);
+  color: #fff; font-weight: 700; font-size: 0.75rem;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; text-transform: uppercase;
+}
+.drawer-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 8px 0; }
+.drawer-grid a {
+  display: flex; align-items: center; gap: 7px; padding: 11px 12px;
+  border-bottom: none !important; font-weight: 600; text-decoration: none;
+  color: #0c1e3a; font-size: 0.88rem; border-radius: 10px;
+  background: #f8fafc; border: 1px solid #f1f5f9 !important; transition: background .12s;
+}
+.drawer-grid a:hover { background: #eff4ff; color: #1a3a6b; }
+.drawer-grid a.nav-active { background: linear-gradient(135deg,#eff4ff,#e8f0fe); color: #1a3a6b; border-color: #bfdbfe !important; font-weight: 700; }
+.drawer-login { display: flex; align-items: center; gap: 8px; padding: 11px 12px; font-weight: 600; color: #0c1e3a; font-size: 0.9rem; border-top: 1px solid #f1f5f9; text-decoration: none; margin-top: 4px; }
+#mobileLogoutContainer { border-top: 1px solid #f1f5f9; margin-top: 4px; padding-top: 4px; }
+#mobileLogoutContainer button { width: 100%; padding: 11px 12px; background: none; border: none; text-align: left; font-weight: 700; color: #dc2626; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; border-radius: 8px; }
+#mobileLogoutContainer button:hover { background: #fef2f2; }
+
+    /* Mobile Drawer (same as add-property) */
+    .drawer {
+      display: none;
+      position: fixed;
+      top: 76px;
+      left: 12px;
+      right: 12px;
+      background: white;
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+      padding: 12px;
+      z-index: 999;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+    }
+    .drawer a {
+      display: block;
+      padding: 12px;
+      color: #0f172a;
+      font-weight: 600;
+      text-decoration: none;
+      border-bottom: 1px solid #e2e8f0;
+      border-radius: 10px;
+    }
+    .drawer a:hover { background: #f8fafc; }
+    .drawer a:last-child { border-bottom: none; }
+
+    #mobileLogoutContainer {
+      border-top: 1px solid #e2e8f0;
+      margin-top: 10px;
+      padding-top: 10px;
+      display: none;
+    }
+    #mobileLogoutContainer button {
+      width: 100%;
+      border: none;
+      background: none;
+      padding: 12px;
+      text-align: left;
+      font-weight: 700;
+      color: #dc2626;
+      cursor: pointer;
+      border-radius: 10px;
+    }
+    #mobileLogoutContainer button:hover { background: #f8fafc; }
+
+    /* -------------------------------------------------------------
+       PAGE CONTENT (keep existing Property Tax layout)
+    ------------------------------------------------------------- */
+    .hero {
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+      display:flex; align-items:flex-start; justify-content:space-between; gap:12px;
+      margin-bottom: 14px;
+    }
+    .hero h1 { margin:0; font-size: 1.6rem; font-weight: 800; color:#1a3c5e; }
+    .hero p { margin:6px 0 0; color:#333; font-weight: 400; font-size: 0.95rem; }
+
+    .pill {
+      display:inline-flex; align-items:center; gap:8px;
+      padding: 8px 12px; border-radius: 999px; font-weight: 800;
+      border: 1px solid #e2e8f0; background:#fff;
+      color:#0f172a;
+      white-space: nowrap;
+    }
+    .pill-link {
+      display:inline-flex; align-items:center; gap:6px;
+      padding: 8px 14px; border-radius: 999px; font-weight: 700; font-size: .88rem;
+      border: 1px solid #cbd5e1; background:#fff; color:#0f172a;
+      text-decoration:none; white-space:nowrap; transition: all .15s;
+    }
+    .pill-link:hover { background:#0c1e3a; color:#fff; border-color:#0c1e3a; }
+
+    .grid {
+      display:grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 14px;
+    }
+    .card {
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+    }
+    .card h2 { margin:0 0 10px; font-size: 1.05rem; font-weight: 900; }
+    .muted { color:#64748b; font-weight: 600; }
+
+    .form-grid { display:grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    label {
+      font-weight: bold;
+      display: block;
+      margin-top: 14px;
+      color: #1a3c5e;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      margin-top: 5px;
+      box-sizing: border-box;
+      font-family: inherit;
+      color: #333;
+      background: #fff;
+    }
+    textarea { min-height: 88px; resize: vertical; }
+    input:focus, select:focus, textarea:focus { border-color: #38bdf8; box-shadow: 0 0 0 3px rgba(56,189,248,0.25); }
+
+    .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .btn {
+      border: none;
+      border-radius: 999px;
+      padding: 10px 14px;
+      cursor: pointer;
+      font-weight: 900;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      transition: .2s;
+    }
+    .btn-primary { background:#0ea5e9; color:white; }
+    .btn-primary:hover { filter: brightness(0.95); }
+    .btn-ghost { background:#fff; color:#0f172a; border:1px solid #cbd5e1; }
+    .btn-ghost:hover { background:#f8fafc; }
+    .btn-danger { background:#ef4444; color:white; }
+    .btn-danger:hover { filter: brightness(0.95); }
+
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border-bottom: 1px solid #e5e7eb; padding: 10px 8px; text-align:left; vertical-align: top; }
+    th { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color:#64748b; }
+    td { font-weight: 700; color:#0f172a; }
+    td .sub { display:block; margin-top:4px; font-size: 12px; font-weight:700; color:#64748b; }
+
+    .status {
+      margin-top: 10px;
+      font-weight: 800;
+      color:#0f172a;
+    }
+    .status.ok { color:#16a34a; }
+    .status.err { color:#dc2626; }
+
+    @media (max-width: 980px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 760px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .page { margin-top: 12px; }
+      .pill { max-width: 100%; }
+    }
+
+    /* -------------------------------------------------------------
+       FOOTER — copied from add-property.html
+    ------------------------------------------------------------- */
+    .site-footer {
+      margin-top: 40px;
+      padding: 30px 20px 20px;
+      background: white;
+      border-top: 1px solid #e5e7eb;
+      font-size: 0.9rem;
+      color: #475569;
+    }
+    .footer-content {
+      max-width: 1440px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 30px;
+      padding-bottom: 20px;
+    }
+    .footer-section h4 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #1e3a8a;
+      margin-top: 0;
+      margin-bottom: 12px;
+    }
+    .footer-section a,
+    .footer-section p {
+      display: block;
+      color: #475569;
+      text-decoration: none;
+      margin-bottom: 8px;
+      transition: color 0.2s;
+    }
+    .footer-section a:hover { color: #0ea5e9; }
+    .footer-bottom {
+      text-align: center;
+      padding-top: 15px;
+      border-top: 1px solid #e5e7eb;
+      margin-top: 15px;
+    }
+    @media (max-width: 600px) {
+      .footer-content { grid-template-columns: 1fr; text-align: center; }
+      .footer-section h4 { margin-top: 20px; }
+    }
+
+    /* Hide footer on small mobile (match add-property) */
+    @media (max-width: 600px) {
+      .site-footer { display: none !important; }
+    }
+
+    /* =========================================================
+       MOBILE BOTTOM NAV (copied from add-property.html)
+    ========================================================= */
+    .mobile-nav{
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: none;
+      z-index: 1200;
+      padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+      background: linear-gradient(135deg, #0c1e3a, #1a3a6b, #1e5799);
+      border-bottom: 1px solid rgba(255,255,255,0.25);
+      border-top: 1px solid var(--border);
+      box-shadow: 0 -10px 24px rgba(0,0,0,.18);
+    }
+    .mobile-nav-inner{
+      max-width: var(--container);
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 5px;
+    }
+    .mnav{
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      padding: 10px 8px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: var(--panel-2);
+      color: var(--muted);
+      font-weight: 800;
+      font-size: 11px;
+      text-decoration: none;
+      text-align: center;
+    }
+    .mnav .ico{
+      font-size: 30px;
+      line-height: 1;
+    }
+    .mnav.active{
+      color: var(--text);
+      border-color: rgba(76,110,245,.55);
+      box-shadow: var(--focus);
+    }
+    .mobile-pad{
+      display: none;
+      height: 86px;
+    }
+    @media (max-width: 860px){
+      .mobile-nav{ display: block; }
+      .mobile-pad{ display: block; }
+    }
+
+    /* Hide footer on mobile */
+    @media (max-width: 600px) {
+      .site-footer {
+        display: none !important;
+      }
+    
+    }
+
+    /* add space add then bottom of the page */
+    @media (max-width: 860px){
+      main.page{
+        padding-bottom: calc(110px + env(safe-area-inset-bottom));
+      }
+    }
+
+
+
+/* ✅ Mobile: move the Property pill under the description */
+@media (max-width: 760px) {
+  .hero{
+    flex-direction: column;      /* stack items */
+    align-items: flex-start;
+    gap: 10px;
+    box-sizing: border-box;
+  }
+
+  /* make the pill become the 2nd row, full width */
+  .hero .pill{
+    /*width: 100%;*/
+    white-space: normal;         /* allow wrap if long */
+    justify-content: flex-start; /* align left like your text */
+  }
+}
+
+  </style>
+</head>
+
+<body>
+
+<!-- ========================================================= -->
+<!-- HEADER ══════════════════════════════════════════════════════ -->
+<header class="header-container">
+  <div class="navbar">
+    <a class="brand-area" href="index.html">
+      <img src="images/rg-logo.png" onerror="this.style.display='none'" class="brand-logo" alt="Rental Genie" />
+      <span class="brand-title">Rental Genie</span>
+    </a>
+    <nav class="nav-links" aria-label="Main navigation">
+      <a href="dashboard.html">📊 Dashboard</a>
+      <a href="property-management.html" class="nav-active">🏘️ Properties</a>
+      <a href="lease-rent-center.html">💰 Lease &amp; Rent</a>
+      <a href="expense-tracking.html">💸 Expenses</a>
+      <a href="maintenance-requests.html">🛠 Maintenance</a>
+      <a href="tenant-messages.html">💬 Messages</a>
+      <a href="reports-analytics.html">📈 Reports</a>
+    </nav>
+    <!-- UMD pill with avatar initials -->
+    <div class="umd-wrap" id="userMenu">
+      <button class="umd-toggle" id="umdToggle" aria-haspopup="true" aria-expanded="false">
+        <div class="umd-avatar" id="umdAvatar">?</div>
+        <span class="umd-name" id="umdName">User</span>
+        <span class="umd-caret">▾</span>
+      </button>
+      <div class="umd-dropdown" id="umdDropdown">
+        <div class="umd-user-row">
+          <div class="umd-user-name"  id="umdFullName">—</div>
+          <div class="umd-user-email" id="umdEmail">—</div>
+        </div>
+        <div class="umd-section">
+          <a class="umd-link" href="dashboard.html">📊 Dashboard</a>
+          <a class="umd-link" href="account.html">⚙️ Account Settings</a>
+          <a class="umd-link" href="invite-tenant.html">✉️ Invite Tenant</a>
+          <a class="umd-link" href="tenant-portal-picker.html">🏠 Tenant Portal</a>
+        </div>
+        <div class="umd-section">
+          <a class="umd-link" href="reports-analytics.html">📈 Reports &amp; Analytics</a>
+          <a class="umd-link" href="contact-us.html">💬 Contact Support</a>
+        </div>
+        <div class="umd-section">
+          <button class="umd-link danger" id="logoutBtn">🚪 Sign Out</button>
+        </div>
+      </div>
+    </div>
+    <a id="nav-login" href="login.html" style="display:none">Log in</a>
+    <button class="hamburger" id="hamburgerBtn" aria-label="Open menu">☰</button>
+  </div>
+</header>
+
+<div class="drawer" id="mobileDrawer">
+  <a href="account.html" id="mobileAccountLink" style="display:none;" class="drawer-user-row">
+    <span class="drawer-avatar" id="drawerAvatar">?</span>
+    <span id="mobileUsernameLabel">Account</span>
+  </a>
+  <div class="drawer-grid">
+    <a href="dashboard.html">📊 Dashboard</a>
+    <a href="property-management.html" class="nav-active">🏘️ Properties</a>
+    <a href="lease-rent-center.html">💰 Lease &amp; Rent</a>
+    <a href="expense-tracking.html">💸 Expenses</a>
+    <a href="maintenance-requests.html">🛠 Maintenance</a>
+    <a href="tenant-messages.html">💬 Messages</a>
+    <a href="reports-analytics.html">📈 Reports</a>
+  </div>
+  <a href="login.html" id="mobileLogin" class="drawer-login">Log in</a>
+  <div id="mobileLogoutContainer" style="display:none;">
+    <button id="mobileLogoutBtn">Sign Out</button>
+  </div>
+</div>
+
+<main class="page">
+
+  <div class="hero">
+    <div>
+      <h1>🏛 Property Tax</h1>
+      <p class="muted">Track yearly tax changes and keep your dashboard current.</p>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <div class="pill" id="propertyPill">🏠 Property: —</div>
+      <a class="pill-link" id="overviewBackBtn" href="property-overview.html">⬅ Property Overview</a>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h2>➕ Add / Update Tax Record</h2>
+      <div class="form-grid">
+        <div>
+          <label>📅 Tax Year
+            <input id="taxYear" type="number" min="2000" max="2100" placeholder="2026" />
+          </label>
+        </div>
+        <div>
+          <label>✅ Effective Date
+            <input id="effectiveDate" type="date" />
+          </label>
+        </div>
+
+        <div>
+          <label>💰 Annual Tax
+            <input id="taxAnnual" type="number" step="0.01" placeholder="4800" />
+          </label>
+        </div>
+        <div>
+          <label>🗓 Monthly Tax (optional)
+            <input id="taxMonthly" type="number" step="0.01" placeholder="400" />
+          </label>
+        </div>
+
+        <div>
+          <label>📆 Due Date (optional)
+            <input id="dueDate" type="date" />
+          </label>
+        </div>
+        <div>
+          <label>🔢 Account # (optional)
+            <input id="accountNumber" type="text" placeholder="123-456-789" />
+          </label>
+        </div>
+
+        <div style="grid-column: 1 / -1;">
+          <label>🌐 Tax Portal URL (optional)
+            <input id="portalUrl" type="url" placeholder="https://..." />
+          </label>
+        </div>
+
+        <div style="grid-column: 1 / -1;">
+          <label>📝 Notes (optional)
+            <textarea id="notes" placeholder="Escrow adjusted, county reassessment, etc."></textarea>
+          </label>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top: 12px;">
+        <button class="btn btn-primary" id="saveTaxBtn" type="button">💾 Save Record</button>
+        <button class="btn btn-ghost" id="setCurrentBtn" type="button">⭐ Set As Current</button>
+        <button class="btn btn-ghost" id="clearBtn" type="button">🧹 Clear</button>
+      </div>
+
+      <div class="status" id="status"></div>
+    </div>
+
+    <div class="card">
+      <h2>📌 Current Snapshot (from Property)</h2>
+      <div class="muted" style="margin-bottom: 10px;">
+        Dashboards should read “current” values from the property record for speed.
+      </div>
+      <table>
+        <tbody>
+          <tr><th>Current Tax (Monthly)</th><td id="snapMonthly">—</td></tr>
+          <tr><th>Current Tax (Annual)</th><td id="snapAnnual">—</td></tr>
+          <tr><th>Current Tax Year</th><td id="snapYear">—</td></tr>
+          <tr><th>Due Date</th><td id="snapDue">—</td></tr>
+          <tr><th>Account #</th><td id="snapAcct">—</td></tr>
+          <tr><th>Portal</th><td id="snapPortal">—</td></tr>
+        </tbody>
+      </table>
+
+      <div class="row" style="margin-top: 12px;">
+        <button class="btn btn-ghost" id="backBtn" type="button">⬅️ Back</button>
+        <button class="btn btn-ghost" id="openPortalBtn" type="button">🌐 Open Portal</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top: 14px;">
+    <h2>🗂 Tax History</h2>
+    <div class="muted" style="margin-bottom: 10px;">
+      Each year can have a different annual bill. Save a new record when taxes change.
+    </div>
+    <div style="overflow:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>Year</th>
+            <th>Effective</th>
+            <th>Annual</th>
+            <th>Monthly</th>
+            <th>Due</th>
+            <th>Account</th>
+            <th>Portal</th>
+            <th>Notes</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="historyBody">
+          <tr><td colspan="9" class="muted">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="mobile-pad" aria-hidden="true"></div>
+</main>
+
+<!-- FOOTER (match add-property.html) -->
+<footer class="site-footer">
+  <div class="footer-content">
+    <div class="footer-section">
+      <h4>Quick Links</h4>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="property-management.html">Property Management</a>
+      <a href="lease-center.html">Lease Center</a>
+      <a href="lease-rent-center.html">Rent Center</a>
+      <a href="expense-tracking.html">Expense Tracking</a>
+    </div>
+
+    <div class="footer-section">
+      <h4>Support & Legal</h4>
+      <a href="contact-us.html">Contact Us</a>
+      <a href="contact-us.html">Help Center</a>
+      <a href="terms.html">Terms of Service</a>
+      <a href="privacy.html">Privacy Policy</a>
+    </div>
+
+    <div class="footer-section">
+      <h4>Connect</h4>
+      <p>Email: support@rentalgenie.app</p>
+      
+      
+      
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    © <span id="footerYear"></span> Rental Genie. All rights reserved.
+  </div>
+</footer>
+
+<!-- ===== MOBILE BOTTOM NAV (match add-property.html) ===== -->
+<nav class="mobile-nav" aria-label="GenieSphere mobile navigation">
+  <div class="mobile-nav-inner">
+    <a class="mnav" href="property-management.html" data-nav="household"><div class="ico">🏘️</div></a>
+    <a class="mnav" href="lease-center.html" data-nav="business"><div class="ico">📄</div></a>
+    <a class="mnav" href="lease-rent-center.html" data-nav="investment"><div class="ico">💰</div></a>
+    <a class="mnav" href="expense-tracking.html" data-nav="leisure"><div class="ico">💸</div></a>
+    <a class="mnav" href="maintenance-requests.html" data-nav="leisure"><div class="ico">🛠️</div></a>
+    <a class="mnav" href="reports-analytics.html" data-nav="leisure"><div class="ico">📈</div></a>
+  </div>
+</nav>
+
+
+<!-- Supabase CDN: must be in <body> so safeStorage/localStorage is available -->
+
+<!-- Supabase: isolated tag so Cloudflare email-obfuscation cannot corrupt it -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function() {
+"use strict";
+  // ----------------------------
+  // URL params
+  // ----------------------------
+  const params = new URLSearchParams(location.search);
+  const propertyId = params.get('property_id') || params.get('id') || '';
+  const companyId = params.get('company_id') || '';
+  const returnTo = params.get('return_to') || '';
+  const prefillYear = params.get('tax_year') || '';
+
+  const statusEl = document.getElementById('status');
+  const historyBody = document.getElementById('historyBody');
+
+  function setStatus(msg, type) {
+    statusEl.className = 'status ' + (type || '');
+    statusEl.textContent = msg || '';
+  }
+  function money(v) {
+    if (v === null || v === undefined || v === '') return '—';
+    const n = Number(v);
+    if (Number.isNaN(n)) return String(v);
+    return n.toLocaleString(undefined, { style: 'currency', currency: 'USD' });
+  }
+  function safeText(v) {
+    return (v === null || v === undefined || v === '') ? '—' : String(v);
+  }
+  function safeUrl(v) {
+    if (!v) return '';
+    try { return new URL(v).toString(); } catch { return ''; }
+  }
+
+  // ----------------------------
+    // ----------------------------
+  // safeStorage bootstrap — prevents tracking-prevention warnings
+  let db = null;
+  (function(){
+    var _m=new Map(),_l=null;try{_l=window.localStorage;}catch(e){}
+    var _s={
+      getItem:function(k){try{return(_l&&_l.getItem(k))||_m.get(k)||null;}catch(e){return _m.get(k)||null;}},
+      setItem:function(k,v){try{_l&&_l.setItem(k,v);}catch(e){}_m.set(k,v);},
+      removeItem:function(k){try{_l&&_l.removeItem(k);}catch(e){}_m.delete(k);}
+    };
+    window._rgClient=window._rgClient||window.supabase.createClient(
+      'https://pbojacnagutipfhcxltj.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBib2phY25hZ3V0aXBmaGN4bHRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgwMDkwODAsImV4cCI6MjA2MzU4NTA4MH0.ZLCcAzTYljoZycpBGwMtthP5VyAJ4schuIvt4HibGc0',
+      {auth:{lock:undefined,persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storage:_s}}
+    );
+    db=window._rgClient;
+  })();
+
+  // initSupabase: no-op now — db is set above synchronously
+  async function initSupabase() { /* db already initialised via safeStorage bootstrap */ }
+
+  // Poll until window._rgClient is ready (guards against async CDN load)
+  async function waitForClientReady(ms) {
+    ms = ms || 4000;
+    if (window._rgClient && window._rgClient.auth) return window._rgClient;
+    return new Promise(function(resolve, reject) {
+      var elapsed = 0;
+      var t = setInterval(function() {
+        elapsed += 25;
+        if (window._rgClient && window._rgClient.auth) {
+          clearInterval(t);
+          db = window._rgClient;
+          resolve(window._rgClient);
+        } else if (elapsed >= ms) {
+          clearInterval(t);
+          reject(new Error("Supabase client not ready after " + ms + "ms"));
+        }
+      }, 25);
+    });
+  }
+
+  /* -------------------------------------------------------------
+     Auth header (match add-property.html behavior)
+  ------------------------------------------------------------- */
+  
+/* ── rgSetupAuth: CSS-class driven, avatar initials, matches property-management ── */
+async function rgSetupAuth() {
+  document.body.classList.remove('auth-ready', 'auth-guest');
+  var user = null;
+  try {
+    var r = await window._rgClient.auth.getUser();
+    user = (!r.error && r.data?.user) ? r.data.user : null;
+  } catch(e) {}
+  if (!user) {
+    try {
+      var s = await window._rgClient.auth.getSession();
+      user = s.data?.session?.user || null;
+    } catch(e) {}
+  }
+  var uname = user?.user_metadata?.full_name || user?.user_metadata?.name ||
+              (user?.email ? user.email.split('@')[0] : '') || 'Account';
+  var initials = (function(n){ var p=n.trim().split(/\s+/); return (p.length>=2?p[0][0]+p[p.length-1][0]:n.slice(0,2)).toUpperCase(); })(uname);
+
+  // Populate UMD
+  var _uA = document.getElementById('umdAvatar');   if (_uA) _uA.textContent = initials;
+  var _uN = document.getElementById('umdName');     if (_uN) _uN.textContent = uname;
+  var _uFN= document.getElementById('umdFullName'); if (_uFN) _uFN.textContent = uname;
+  var _uEM= document.getElementById('umdEmail');    if (_uEM) _uEM.textContent = user?.email || '';
+  var _dA = document.getElementById('drawerAvatar');if (_dA) _dA.textContent = initials;
+  var _ml = document.getElementById('mobileUsernameLabel'); if (_ml) _ml.textContent = uname;
+
+  // CSS classes + imperative style (belt-and-suspenders for inline-style elements)
+  var _loginEl  = document.getElementById('nav-login');
+  var _umdEl    = document.getElementById('userMenu');
+  if (user) {
+    if (_loginEl) _loginEl.style.display = 'none';
+    if (_umdEl)   _umdEl.style.display   = 'block';
+  } else {
+    if (_loginEl) _loginEl.style.display = 'inline-flex';
+    if (_umdEl)   _umdEl.style.display   = 'none';
+  }
+  document.body.classList.add(user ? 'auth-ready' : 'auth-guest');
+
+  window._rgClient.auth.onAuthStateChange(function(_e, sess) {
+    document.body.classList.remove('auth-ready', 'auth-guest');
+    document.body.classList.add(sess?.user ? 'auth-ready' : 'auth-guest');
+    var _li2 = document.getElementById('nav-login');
+    var _um2 = document.getElementById('userMenu');
+    if (sess?.user) {
+      if (_li2) _li2.style.display = 'none';
+      if (_um2) _um2.style.display = 'block';
+    } else {
+      if (_li2) _li2.style.display = 'inline-flex';
+      if (_um2) _um2.style.display = 'none';
+    }
+    var n = sess?.user?.user_metadata?.full_name || sess?.user?.email?.split('@')[0] || 'Account';
+    var i = (function(n){ var p=n.trim().split(/\s+/); return (p.length>=2?p[0][0]+p[p.length-1][0]:n.slice(0,2)).toUpperCase(); })(n);
+    var _uA2=document.getElementById('umdAvatar');    if(_uA2) _uA2.textContent=i;
+    var _uN2=document.getElementById('umdName');      if(_uN2) _uN2.textContent=n;
+    var _ml2=document.getElementById('mobileUsernameLabel'); if(_ml2) _ml2.textContent=n;
+    var _dA2=document.getElementById('drawerAvatar'); if(_dA2) _dA2.textContent=i;
+  });
+  return user;
+}
+
+/* ── rgWireHeader: dropdown + hamburger drawer ── */
+function rgWireHeader() {
+  var uMenuBtn  = document.getElementById('umdToggle');
+  var uMenuDrop = document.getElementById('umdDropdown');
+  if (uMenuBtn && uMenuDrop && !uMenuBtn.dataset.wired) {
+    uMenuBtn.dataset.wired = '1';
+    uMenuBtn.onclick = function(e) { e.stopPropagation(); uMenuDrop.classList.toggle('active'); };
+    document.addEventListener('click', function(e) {
+      if (!uMenuDrop.contains(e.target) && !uMenuBtn.contains(e.target))
+        uMenuDrop.classList.remove('active');
+    });
+  }
+  var logoutBtn  = document.getElementById('logoutBtn');
+  var mLogoutBtn = document.getElementById('mobileLogoutBtn');
+  if (logoutBtn)  logoutBtn.onclick  = async function() { await window._rgClient.auth.signOut(); location.href='login.html'; };
+  if (mLogoutBtn) mLogoutBtn.onclick = async function() { await window._rgClient.auth.signOut(); location.href='login.html'; };
+  var ham = document.getElementById('hamburgerBtn');
+  var drw = document.getElementById('mobileDrawer');
+  if (ham && drw && !ham.dataset.wired) {
+    ham.dataset.wired = '1';
+    ham.onclick = function(e) { e.stopPropagation(); drw.style.display = drw.style.display === 'block' ? 'none' : 'block'; };
+    drw.addEventListener('click', function(e) { e.stopPropagation(); if (e.target.tagName === 'A') drw.style.display = 'none'; });
+    document.addEventListener('click', function(e) {
+      if (drw.style.display === 'block' && !drw.contains(e.target) && !ham.contains(e.target)) drw.style.display = 'none';
+    });
+  }
+}
+rgWireHeader();
+
+
+  // Dropdown toggles
+  const userMenuBtn = document.getElementById("userMenuBtn");
+  const userMenuDropdown = document.getElementById("userMenuDropdown");
+  if (userMenuBtn && userMenuDropdown) {
+    userMenuBtn.onclick = () => userMenuDropdown.classList.toggle("active");
+    document.addEventListener("click", (e) => {
+      if (!userMenuDropdown.contains(e.target) && !userMenuBtn.contains(e.target)) {
+        userMenuDropdown.classList.remove("active");
+      }
+    });
+  }
+
+  // Logout buttons
+  const logoutBtn = document.getElementById("logoutBtn");
+  if (logoutBtn) {
+    logoutBtn.onclick = async () => {
+      await db.auth.signOut();
+      location.href = "login.html";
+    };
+  }
+  const mobileLogoutBtn = document.getElementById("mobileLogoutBtn");
+  if (mobileLogoutBtn) {
+    mobileLogoutBtn.onclick = async () => {
+      await db.auth.signOut();
+      location.href = "login.html";
+    };
+  }
+
+  // Mobile hamburger
+  const hamburger = document.getElementById("hamburgerBtn");
+  const drawer = document.getElementById("mobileDrawer");
+  if (hamburger && drawer) {
+    hamburger.onclick = () => {
+      drawer.style.display = drawer.style.display === "block" ? "none" : "block";
+    };
+    drawer.addEventListener("click", (e) => {
+      if (e.target.tagName === "A" || e.target.id === "mobileLogoutBtn") {
+        drawer.style.display = "none";
+      }
+    });
+  }
+
+  // ----------------------------
+  // Load property snapshot
+  // ----------------------------
+  let propertyRow = null;
+
+  async function loadProperty() {
+    if (!propertyId) {
+      setStatus('Missing property_id in URL.', 'err');
+      document.getElementById('propertyPill').textContent = '🏠 Property: (missing id)';
+      return;
+    }
+
+    const { data, error } = await db
+      .from('properties')
+      .select('*')
+      .eq('id', propertyId)
+      .maybeSingle();
+
+    if (error) {
+      console.error(error);
+      setStatus('Could not load property.', 'err');
+      return;
+    }
+
+    propertyRow = data || {};
+    const name = propertyRow.property_name || propertyRow.name || propertyRow.address || propertyId;
+    document.getElementById('propertyPill').textContent = `🏠 Property: ${name}`;
+    // Wire 'Property Overview' back link with current params
+    const _overviewBtn = document.getElementById('overviewBackBtn');
+    if (_overviewBtn) {
+      const _ov = new URLSearchParams();
+      if (propertyId) { _ov.set('id', propertyId); _ov.set('property_id', propertyId); }
+      if (companyId)  _ov.set('company_id', companyId);
+      if (name)       _ov.set('property', name);
+      _overviewBtn.href = 'property-overview.html?' + _ov.toString();
+    }
+
+    // Snapshot (use multiple possible column names safely)
+    const snapMonthly = propertyRow.tax_monthly_current ?? propertyRow.tax_monthly ?? null;
+    const snapAnnual  = propertyRow.tax_annual_current ?? propertyRow.tax_annual ?? null;
+    const snapYear    = propertyRow.tax_year_current ?? propertyRow.tax_year ?? null;
+
+    document.getElementById('snapMonthly').textContent = money(snapMonthly);
+    document.getElementById('snapAnnual').textContent  = money(snapAnnual);
+    document.getElementById('snapYear').textContent    = safeText(snapYear);
+
+    document.getElementById('snapDue').textContent     = safeText(propertyRow.tax_due_date_current ?? propertyRow.tax_due_date ?? '');
+    document.getElementById('snapAcct').textContent    = safeText(propertyRow.tax_account_number ?? propertyRow.tax_account ?? '');
+    document.getElementById('snapPortal').textContent  = safeText(propertyRow.tax_portal_url_current ?? propertyRow.tax_portal_url ?? '');
+
+    const pUrl = safeUrl(propertyRow.tax_portal_url_current ?? propertyRow.tax_portal_url ?? '');
+    document.getElementById('openPortalBtn').disabled = !pUrl;
+
+    // Prefill year if provided
+    if (prefillYear) document.getElementById('taxYear').value = prefillYear;
+  }
+
+  // ----------------------------
+  // History
+  // ----------------------------
+  async function loadHistory() {
+    if (!propertyId) return;
+
+    const { data, error } = await db
+      .from('property_tax_history')
+      .select('*')
+      .eq('property_id', propertyId)
+      .order('tax_year', { ascending: false });
+
+    if (error) {
+      console.error(error);
+      historyBody.innerHTML = `<tr><td colspan="9" class="muted">No history yet (or table not created).</td></tr>`;
+      return;
+    }
+
+    if (!data || data.length === 0) {
+      historyBody.innerHTML = `<tr><td colspan="9" class="muted">No history records yet.</td></tr>`;
+      return;
+    }
+
+    historyBody.innerHTML = data.map(r => {
+      const portal = safeUrl(r.portal_url);
+      const portalCell = portal ? `<a href="${portal}" target="_blank" rel="noopener">Open</a>` : '—';
+      return `
+        <tr>
+          <td>${safeText(r.tax_year)}</td>
+          <td>${safeText(r.effective_date)}</td>
+          <td>${money(r.tax_annual)}</td>
+          <td>${money(r.tax_monthly)}</td>
+          <td>${safeText(r.due_date)}</td>
+          <td>${safeText(r.account_number)}</td>
+          <td>${portalCell}</td>
+          <td>${safeText(r.notes)}</td>
+          <td>
+            <button class="btn btn-ghost" style="padding:7px 10px;" onclick="fillFromRow('${r.id}')">✏️ Edit</button>
+            <button class="btn btn-ghost" style="padding:7px 10px;" onclick="setCurrentFromRow('${r.id}')">⭐ Current</button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  let editingId = null;
+  window.fillFromRow = async function(id) {
+    const { data, error } = await db
+      .from('property_tax_history')
+      .select('*')
+      .eq('id', id)
+      .maybeSingle();
+    if (error || !data) return;
+
+    editingId = id;
+    document.getElementById('taxYear').value = data.tax_year ?? '';
+    document.getElementById('effectiveDate').value = data.effective_date ?? '';
+    document.getElementById('taxAnnual').value = data.tax_annual ?? '';
+    document.getElementById('taxMonthly').value = data.tax_monthly ?? '';
+    document.getElementById('dueDate').value = data.due_date ?? '';
+    document.getElementById('accountNumber').value = data.account_number ?? '';
+    document.getElementById('portalUrl').value = data.portal_url ?? '';
+    document.getElementById('notes').value = data.notes ?? '';
+    setStatus('Loaded record for editing. Save will update this year record.', '');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // ----------------------------
+  // Save record (insert or update)
+  // ----------------------------
+  document.getElementById('saveTaxBtn').addEventListener('click', async () => {
+    if (!propertyId) return setStatus('Missing property_id.', 'err');
+
+    const taxYear = Number(document.getElementById('taxYear').value || '');
+    const effectiveDate = document.getElementById('effectiveDate').value;
+    const taxAnnual = document.getElementById('taxAnnual').value;
+    const taxMonthly = document.getElementById('taxMonthly').value;
+    const dueDate = document.getElementById('dueDate').value;
+    const accountNumber = document.getElementById('accountNumber').value.trim();
+    const portalUrl = document.getElementById('portalUrl').value.trim();
+    const notes = document.getElementById('notes').value.trim();
+
+    if (!taxYear || taxYear < 2000) return setStatus('Please enter a valid tax year.', 'err');
+    if (!effectiveDate) return setStatus('Please select an effective date.', 'err');
+    if (!taxAnnual) return setStatus('Please enter an annual tax amount.', 'err');
+
+    const payload = {
+      company_id: companyId || null,
+      property_id: propertyId,
+      tax_year: taxYear,
+      effective_date: effectiveDate,
+      tax_annual: Number(taxAnnual),
+      tax_monthly: taxMonthly ? Number(taxMonthly) : null,
+      due_date: dueDate || null,
+      account_number: accountNumber || null,
+      portal_url: portalUrl || null,
+      notes: notes || null
+    };
+
+    setStatus('Saving…', '');
+
+    try {
+      let res;
+      if (editingId) {
+        res = await db.from('property_tax_history').update(payload).eq('id', editingId).select().maybeSingle();
+      } else {
+        // If record for same year exists, update it (prevents duplicates)
+        const existing = await db
+          .from('property_tax_history')
+          .select('id')
+          .eq('property_id', propertyId)
+          .eq('tax_year', taxYear)
+          .maybeSingle();
+
+        if (existing?.data?.id) {
+          editingId = existing.data.id;
+          res = await db.from('property_tax_history').update(payload).eq('id', editingId).select().maybeSingle();
+        } else {
+          res = await db.from('property_tax_history').insert(payload).select().maybeSingle();
+        }
+      }
+
+      if (res.error) throw res.error;
+
+      setStatus('✅ Saved. Use “Set As Current” to update the property snapshot.', 'ok');
+      await loadHistory();
+    } catch (e) {
+      console.error(e);
+      setStatus('❌ Save failed. Make sure property_tax_history table exists and RLS allows access.', 'err');
+    }
+  });
+
+  // ----------------------------
+  // Set As Current (updates properties snapshot safely)
+  // ----------------------------
+  async function updatePropertySnapshotFromRow(row) {
+    const allowed = new Set(Object.keys(propertyRow || {}));
+    const patch = {};
+
+    const map = [
+      ['tax_monthly_current', row.tax_monthly ?? (row.tax_annual ? (Number(row.tax_annual)/12) : null)],
+      ['tax_annual_current', row.tax_annual ?? null],
+      ['tax_year_current', row.tax_year ?? null],
+      ['tax_due_date_current', row.due_date ?? null],
+      ['tax_account_number', row.account_number ?? null],
+      ['tax_account_number_current', row.account_number ?? null],
+      ['tax_portal_url_current', row.portal_url ?? null],
+      // Back-compat fallbacks:
+      ['tax_monthly', row.tax_monthly ?? (row.tax_annual ? (Number(row.tax_annual)/12) : null)],
+      ['tax_annual', row.tax_annual ?? null],
+      ['tax_year', row.tax_year ?? null],
+      ['tax_due_date', row.due_date ?? null],
+      ['tax_account', row.account_number ?? null],
+      ['tax_portal_url', row.portal_url ?? null],
+    ];
+
+    for (const [k, v] of map) {
+      if (allowed.has(k)) patch[k] = v;
+    }
+
+    if (Object.keys(patch).length === 0) {
+      throw new Error('No matching tax columns found on properties. Add snapshot columns or keep using tax_monthly only.');
+    }
+
+    const { error } = await db.from('properties').update(patch).eq('id', propertyId);
+    if (error) throw error;
+  }
+
+  document.getElementById('setCurrentBtn').addEventListener('click', async () => {
+    if (!editingId) return setStatus('Load or save a record first, then set it as current.', 'err');
+
+    const { data, error } = await db.from('property_tax_history').select('*').eq('id', editingId).maybeSingle();
+    if (error || !data) return setStatus('Could not load record.', 'err');
+
+    setStatus('Updating property snapshot…', '');
+    try {
+      await updatePropertySnapshotFromRow(data);
+      setStatus('✅ Property snapshot updated.', 'ok');
+      await loadProperty();
+    } catch (e) {
+      console.error(e);
+      setStatus('❌ Could not update property snapshot. Add tax snapshot columns to properties (or keep only tax_monthly).', 'err');
+    }
+  });
+
+  window.setCurrentFromRow = async function(id) {
+    const { data, error } = await db.from('property_tax_history').select('*').eq('id', id).maybeSingle();
+    if (error || !data) return;
+    editingId = id;
+    try {
+      await updatePropertySnapshotFromRow(data);
+      setStatus('✅ Set this record as current.', 'ok');
+      await loadProperty();
+    } catch (e) {
+      console.error(e);
+      setStatus('❌ Could not set as current. Add tax snapshot columns to properties (or keep only tax_monthly).', 'err');
+    }
+  }
+
+  document.getElementById('clearBtn').addEventListener('click', () => {
+    editingId = null;
+    document.getElementById('taxYear').value = '';
+    document.getElementById('effectiveDate').value = '';
+    document.getElementById('taxAnnual').value = '';
+    document.getElementById('taxMonthly').value = '';
+    document.getElementById('dueDate').value = '';
+    document.getElementById('accountNumber').value = '';
+    document.getElementById('portalUrl').value = '';
+    document.getElementById('notes').value = '';
+    setStatus('', '');
+  });
+
+  document.getElementById('openPortalBtn').addEventListener('click', () => {
+    const url = safeUrl(propertyRow?.tax_portal_url_current ?? propertyRow?.tax_portal_url ?? '');
+    if (url) window.open(url, '_blank', 'noopener');
+  });
+
+  document.getElementById('backBtn').addEventListener('click', () => {
+    if (returnTo) return location.href = returnTo;
+    if (companyId) {
+      location.href = `add-property.html?id=${encodeURIComponent(propertyId)}&company_id=${encodeURIComponent(companyId)}`;
+    } else {
+      location.href = `add-property.html?id=${encodeURIComponent(propertyId)}`;
+    }
+  });
+
+  // ----------------------------
+  // Init
+  // ----------------------------
+  (async function init() {
+    const footerYearEl = document.getElementById("footerYear");
+    if (footerYearEl) footerYearEl.textContent = new Date().getFullYear();
+
+    try {
+      await waitForClientReady();
+      const user = await rgSetupAuth();
+      if (!user) {
+        const returnTo = encodeURIComponent(location.pathname + location.search);
+        location.href = 'login.html?returnTo=' + returnTo;
+        return;
+      }
+      await loadProperty();
+      await loadHistory();
+    } catch(e) {
+      console.error('Init error:', e);
+    }
+  })();
+
+})(); // end outer IIFE
+</script>
+</body>
+</html>

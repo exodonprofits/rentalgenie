@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>✏️ Edit HOA – Rental Genie</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap');
+:root{--navy:#0c1e3a;--mid:#1a3a6b;--lt:#1e5799;--accent:#2d8cf0;--bg:#f1f4f8;--surface:#fff;--border:#e2e8f0;--text:#0c1e3a;--muted:#64748b;--danger:#dc2626;--radius:14px;--shadow:0 2px 12px rgba(12,30,58,0.07);--shadow-md:0 6px 24px rgba(12,30,58,0.12)}
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);font-family:'DM Sans',-apple-system,sans-serif;color:var(--text);display:flex;flex-direction:column;min-height:100vh}
+@keyframes fadeup{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* Header */
+.header-container{position:sticky;top:0;z-index:1000;width:100%;margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw);background:linear-gradient(135deg,var(--navy) 0%,var(--mid) 55%,var(--lt) 100%);box-shadow:0 2px 20px rgba(12,30,58,0.3);border-bottom:1px solid rgba(255,255,255,0.08)}
+.navbar{max-width:1440px;margin:0 auto;padding:14px 22px;display:flex;justify-content:space-between;align-items:center}
+.brand-area{display:flex;align-items:center;gap:10px}
+.brand-logo{width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,0.15);box-shadow:0 0 0 1px rgba(255,255,255,0.2);object-fit:cover}
+.brand-title{font-size:1.3rem;font-weight:700;color:#fff}
+.nav-links{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
+.nav-links a{text-decoration:none;font-size:13.5px;font-weight:500;color:rgba(255,255,255,0.8);padding:5px 8px;border-radius:999px;transition:background .2s}
+.nav-links a:hover{background:rgba(255,255,255,0.12);color:#fff}
+.nav-active{background:rgba(255,255,255,0.18)!important;color:#fff!important}
+#nav-login{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.25);color:#fff!important;padding:7px 14px;border-radius:999px;font-weight:600}
+.user-menu{position:relative;display:none}
+.user-menu-toggle{background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);color:#fff;padding:5px 10px;border-radius:999px;cursor:pointer;font-weight:600}
+.user-menu-dropdown{position:absolute;right:0;top:42px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);min-width:150px;display:none;box-shadow:var(--shadow-md)}
+.user-menu-dropdown.open{display:block}
+.user-menu-dropdown a,.user-menu-dropdown button{display:block;padding:10px 14px;font-size:.95rem;background:none;border:none;cursor:pointer;text-align:left;text-decoration:none;color:var(--text);width:100%}
+.user-menu-dropdown a:hover,.user-menu-dropdown button:hover{background:#f1f5f9}
+.hamburger{display:none;padding:6px 12px;border:1px solid rgba(255,255,255,0.25);border-radius:8px;background:rgba(255,255,255,0.1);color:#fff;cursor:pointer;font-size:1.1rem}
+@media(max-width:820px){.nav-links{display:none}.hamburger{display:block}}
+.drawer{display:none;position:fixed;top:76px;left:12px;right:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px;z-index:999;box-shadow:var(--shadow-md)}
+.drawer a{display:block;padding:12px;border-bottom:1px solid var(--border);font-weight:600;text-decoration:none;color:var(--navy)}
+.drawer a:last-of-type{border-bottom:none}
+#mobileLogoutContainer{border-top:1px solid var(--border);margin-top:10px;padding-top:10px}
+#mobileLogoutContainer button{width:100%;padding:12px;background:none;border:none;text-align:left;font-weight:600;color:var(--danger);cursor:pointer}
+
+/* Page */
+.page{flex:1;max-width:800px;margin:0 auto;padding:28px 16px 60px;width:100%;animation:fadeup .3s ease both}
+
+/* Status */
+.status-msg{display:none;padding:11px 14px;border-radius:8px;font-size:.85rem;font-weight:600;margin-bottom:16px}
+.status-msg.ok{background:#f0fdf4;border:1px solid #bbf7d0;color:#166534;display:block}
+.status-msg.err{background:#fef2f2;border:1px solid #fecaca;color:#7f1d1d;display:block}
+.status-msg.info{background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;display:block}
+
+/* Page hero */
+.page-hero{margin-bottom:20px}
+h1{margin:0 0 4px;font-size:1.5rem;font-weight:700;color:var(--navy);letter-spacing:-.4px}
+.page-sub{margin:0;font-size:.88rem;color:var(--muted)}
+.property-pill{display:inline-flex;align-items:center;gap:6px;margin-top:10px;padding:6px 12px;background:rgba(45,140,240,.08);border:1px solid rgba(45,140,240,.2);border-radius:999px;font-size:.82rem;font-weight:600;color:var(--accent)}
+
+/* Card */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;margin-bottom:14px}
+.card-header{padding:14px 20px 12px;border-bottom:1px solid var(--border);background:#f8fafc;display:flex;align-items:center;gap:10px}
+.card-title{font-size:.88rem;font-weight:700;color:var(--navy);margin:0}
+.card-body{padding:20px}
+
+/* Form */
+.form-section{margin-bottom:22px}
+.form-section:last-child{margin-bottom:0}
+.section-label{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:560px){.form-row{grid-template-columns:1fr}}
+.form-group{display:flex;flex-direction:column;gap:5px}
+.field-label{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--muted)}
+.field-hint{font-size:.72rem;color:var(--muted);line-height:1.4}
+input[type=text],input[type=number],input[type=email],input[type=url],textarea{padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.9rem;color:var(--text);background:#f8fafc;width:100%;appearance:none;transition:border-color .15s,box-shadow .15s}
+input:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(45,140,240,0.12);outline:none}
+input::placeholder,textarea::placeholder{color:#b0bec5}
+textarea{min-height:80px;resize:vertical}
+
+/* Buttons */
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
+.btn{display:inline-flex;align-items:center;gap:7px;padding:11px 20px;border-radius:999px;font-size:.88rem;font-weight:600;cursor:pointer;border:none;transition:filter .15s;white-space:nowrap}
+.btn-primary{background:var(--navy);color:#fff;box-shadow:0 2px 8px rgba(12,30,58,0.2)}
+.btn-primary:hover{filter:brightness(1.12)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;filter:none}
+.btn-ghost{background:var(--surface);color:var(--navy);border:1px solid var(--border)}
+.btn-ghost:hover{background:#f1f5f9}
+
+/* Status pill (record context) */
+.record-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:999px;font-size:.78rem;font-weight:600;border:1px solid var(--border);background:#f8fafc;color:var(--muted);margin-bottom:14px}
+
+/* Footer */
+.site-footer{margin-top:auto;padding:28px 20px 20px;background:var(--navy)}
+.footer-content{max-width:1440px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:28px;padding-bottom:18px}
+.footer-section h4{font-size:.75rem;font-weight:700;color:rgba(255,255,255,.75);text-transform:uppercase;letter-spacing:.8px;margin:0 0 12px}
+.footer-section a,.footer-section p{display:block;color:rgba(255,255,255,.4);text-decoration:none;margin-bottom:8px;font-size:.82rem}
+.footer-section a:hover{color:rgba(255,255,255,.85)}
+.footer-bottom{text-align:center;padding-top:14px;border-top:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.28);font-size:.82rem}
+@media(max-width:600px){.site-footer{display:none}}
+</style>
+</head>
+<body>
+
+<header class="header-container">
+  <div class="navbar">
+    <div class="brand-area">
+      <img src="images/rg-logo.png" class="brand-logo" alt="Rental Genie" />
+      <div class="brand-title">Rental Genie</div>
+    </div>
+    <nav class="nav-links">
+      <a href="dashboard.html">📊 Dashboard</a>
+      <a href="property-management.html" class="nav-active">🏘️ Property Management</a>
+      <a href="lease-rent-center.html">💰 Lease &amp; Rent Center</a>
+      <a href="expense-tracking.html">💸 Expense Tracking</a>
+      <a href="maintenance-requests.html">🛠 Maintenance Requests</a>
+      <a href="tenant-messages.html">💬 Messages</a>
+      <a href="reports-analytics.html">📈 Reports &amp; Analytics</a>
+      <a id="nav-login" href="login.html">Log in</a>
+      <div class="user-menu" id="userMenu">
+        <button class="user-menu-toggle" id="userMenuBtn"><span id="usernameLabel">User</span> ▾</button>
+        <div class="user-menu-dropdown" id="userMenuDropdown">
+          <a href="account.html">Account</a>
+          <button id="logoutBtn">Sign Out</button>
+        </div>
+      </div>
+    </nav>
+    <button class="hamburger" id="hamburgerBtn">☰</button>
+  </div>
+</header>
+
+<div class="drawer" id="mobileDrawer">
+  <a href="account.html" id="mobileAccountLink" style="display:none;">Hello, <span id="mobileUsernameLabel">User</span> (Account)</a>
+  <a href="dashboard.html">📊 Dashboard</a>
+  <a href="property-management.html">🏘️ Property Management</a>
+  <a href="lease-rent-center.html">💰 Lease &amp; Rent Center</a>
+  <a href="expense-tracking.html">💸 Expense Tracking</a>
+  <a href="maintenance-requests.html">🛠 Maintenance Requests</a>
+  <a href="tenant-messages.html">💬 Messages</a>
+  <a href="reports-analytics.html">📈 Reports &amp; Analytics</a>
+  <a href="login.html" id="mobileLogin">Log in</a>
+  <div id="mobileLogoutContainer" style="display:none;"><button id="mobileLogoutBtn">Sign Out</button></div>
+</div>
+
+<main class="page">
+  <div class="page-hero">
+    <h1>✏️ Edit HOA Info</h1>
+    <p class="page-sub">Update HOA fee, contact details, and portal link for this property.</p>
+    <div class="property-pill" id="propertyPill">🏠 Loading…</div>
+  </div>
+
+  <div class="status-msg" id="statusMsg"></div>
+
+  <div class="card">
+    <div class="card-header">
+      <span id="recordPill" class="record-pill">🏘️ HOA Record</span>
+    </div>
+    <div class="card-body">
+      <form id="hoaForm">
+        <input type="hidden" id="hoaRecordId" />
+
+        <!-- Payment Details -->
+        <div class="form-section">
+          <div class="section-label">💵 Payment Details</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="field-label" for="feeAmount">HOA Fee Amount ($)</label>
+              <input type="number" id="feeAmount" step="0.01" min="0" placeholder="e.g. 200.00" />
+              <span class="field-hint">Monthly or as billed by HOA</span>
+            </div>
+            <div class="form-group">
+              <label class="field-label" for="dueDay">Due Day of Month</label>
+              <input type="number" id="dueDay" min="1" max="31" placeholder="e.g. 15" />
+              <span class="field-hint">1–31 (e.g. 15 = 15th of each month)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Contact Details -->
+        <div class="form-section">
+          <div class="section-label">📇 HOA Contact</div>
+          <div class="form-group" style="margin-bottom:12px">
+            <label class="field-label" for="hoaName">HOA Name</label>
+            <input type="text" id="hoaName" placeholder="e.g. Maple Ridge HOA" />
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="field-label" for="contactName">Contact Person</label>
+              <input type="text" id="contactName" placeholder="e.g. Jane Smith" />
+            </div>
+            <div class="form-group">
+              <label class="field-label" for="contactPhone">Phone</label>
+              <input type="text" id="contactPhone" placeholder="e.g. (555) 123-4567" />
+            </div>
+          </div>
+          <div class="form-group" style="margin-top:12px">
+            <label class="field-label" for="contactEmail">Email Address</label>
+            <input type="email" id="contactEmail" placeholder="hoa@example.com" />
+          </div>
+        </div>
+
+        <!-- Portal & Notes -->
+        <div class="form-section">
+          <div class="section-label">🌐 Portal &amp; Notes</div>
+          <div class="form-group" style="margin-bottom:12px">
+            <label class="field-label" for="hoaWebsite">HOA Portal URL</label>
+            <input type="url" id="hoaWebsite" placeholder="https://myhoa.com/login" />
+            <span class="field-hint">Landlord/owner login for paying dues online</span>
+          </div>
+          <div class="form-group" style="margin-bottom:12px">
+            <label class="field-label" for="notes">Notes</label>
+            <textarea id="notes" rows="3" placeholder="Parking rules, trash schedule, community notices…"></textarea>
+          </div>
+          <div class="form-group">
+            <label class="field-label" for="updatedBy">Updated By</label>
+            <input type="text" id="updatedBy" placeholder="Auto-filled from your account" />
+          </div>
+        </div>
+
+        <div class="btn-row">
+          <button type="submit" class="btn btn-primary" id="saveBtn">💾 Save Changes</button>
+          <a class="btn btn-ghost" id="cancelLink" href="hoa-info.html">🔙 Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="footer-content">
+    <div class="footer-section">
+      <h4>Quick Links</h4>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="property-management.html">Property Management</a>
+      <a href="lease-rent-center.html">Lease &amp; Rent Center</a>
+      <a href="expense-tracking.html">Expense Tracking</a>
+    </div>
+    <div class="footer-section">
+      <h4>Support &amp; Legal</h4>
+      <a href="contact-us.html">Contact Us</a>
+      <a href="help-center.html">Help Center</a>
+      <a href="terms.html">Terms of Service</a>
+      <a href="privacy.html">Privacy Policy</a>
+    </div>
+    <div class="footer-section">
+      <h4>Connect</h4>
+      <p>Email: <a href="/cdn-cgi/l/email-protection#96e5e3e6e6f9e4e2d6e4f3f8e2f7faf1f3f8fff3b8f7e6e6"><span class="__cf_email__" data-cfemail="a3d0d6d3d3ccd1d7e3d1c6cdd7c2cfc4c6cdcac68dc2d3d3">[email&#160;protected]</span></a></p>
+      <p>Facebook (coming soon) · Twitter (coming soon)</p>
+    </div>
+  </div>
+  <div class="footer-bottom">© <span id="footerYear"></span> Rental Genie. All rights reserved.</div>
+</footer>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+/* ---- Supabase + safeStorage ---- */
+(function(){
+  var _m=new Map();
+  var _w=function(s){return{getItem:function(k){try{return(s&&s.getItem(k))||_m.get(k)||null}catch(e){return _m.get(k)||null}},setItem:function(k,v){try{s&&s.setItem(k,v)}catch(e){}_m.set(k,v)},removeItem:function(k){try{s&&s.removeItem(k)}catch(e){}_m.delete(k)}}};
+  var _ls=null;try{_ls=window.localStorage}catch(e){}
+  window._rgClient=window.supabase.createClient('https://pbojacnagutipfhcxltj.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBib2phY25hZ3V0aXBmaGN4bHRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgwMDkwODAsImV4cCI6MjA2MzU4NTA4MH0.ZLCcAzTYljoZycpBGwMtthP5VyAJ4schuIvt4HibGc0',{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,lock:undefined,storage:_w(_ls)}});
+}());
+var db=window._rgClient;
+
+/* ---- Helpers ---- */
+function $(id){return document.getElementById(id)}
+function setStatus(msg,kind){var e=$('statusMsg');e.className='status-msg'+(kind?' '+kind:'');e.textContent=msg;if(!kind)e.style.display='none';if(msg&&kind)window.scrollTo({top:0,behavior:'smooth'})}
+
+/* ---- URL context ---- */
+var _params=new URLSearchParams(location.search);
+var _property=decodeURIComponent(_params.get('property')||'');
+
+/* ---- Auth ---- */
+function setupAuth(){
+  db.auth.getUser().then(function(r){
+    var u=r.data&&r.data.user;
+    if(!u)return;
+    var name=(u.user_metadata&&(u.user_metadata.full_name||u.user_metadata.name))||(u.email?u.email.split('@')[0]:'User');
+    var nl=$('nav-login');if(nl)nl.style.display='none';
+    var um=$('userMenu');if(um)um.style.display='inline-block';
+    var ul=$('usernameLabel');if(ul)ul.textContent=name;
+    var ml=$('mobileLogin');if(ml)ml.style.display='none';
+    var ma=$('mobileAccountLink');if(ma)ma.style.display='block';
+    var mn=$('mobileUsernameLabel');if(mn)mn.textContent=name;
+    var lo=$('mobileLogoutContainer');if(lo)lo.style.display='block';
+    // Auto-fill updatedBy
+    var ub=$('updatedBy');if(ub&&!ub.value)ub.value=name;
+  }).catch(function(){});
+}
+$('logoutBtn').addEventListener('click',function(){db.auth.signOut().then(function(){location.href='login.html'})});
+var mlb=$('mobileLogoutBtn');if(mlb)mlb.addEventListener('click',function(){db.auth.signOut().then(function(){location.href='login.html'})});
+$('userMenuBtn').addEventListener('click',function(){$('userMenuDropdown').classList.toggle('open')});
+document.addEventListener('click',function(e){var dd=$('userMenuDropdown'),mb=$('userMenuBtn');if(dd&&mb&&!mb.contains(e.target)&&!dd.contains(e.target))dd.classList.remove('open')});
+$('hamburgerBtn').addEventListener('click',function(){var d=$('mobileDrawer');d.style.display=d.style.display==='block'?'none':'block'});
+document.addEventListener('click',function(e){var d=$('mobileDrawer'),h=$('hamburgerBtn');if(d&&d.style.display==='block'&&!d.contains(e.target)&&!h.contains(e.target))d.style.display='none'});
+
+/* ---- Init property context ---- */
+function initContext(){
+  $('propertyPill').textContent='🏠 '+(  _property||'(No property specified)');
+  var cl=$('cancelLink');
+  if(cl)cl.href='hoa-info.html'+(_property?'?property='+encodeURIComponent(_property):'');
+}
+
+/* ---- Load existing HOA record ---- */
+function loadHOA(){
+  if(!_property)return Promise.resolve();
+  return db.from('property_hoa').select('*').eq('property_name',_property).order('created_at',{ascending:false}).limit(1).then(function(r){
+    if(r.error){console.error('HOA load error:',r.error);return}
+    if(!r.data||!r.data.length){$('recordPill').textContent='🏘️ New HOA Record';return}
+    var info=r.data[0];
+    $('hoaRecordId').value=info.id||'';
+    $('hoaName').value=info.hoa_name||'';
+    $('feeAmount').value=info.fee_amount||'';
+    $('dueDay').value=info.due_day||'';
+    $('contactName').value=info.contact_name||'';
+    $('contactPhone').value=info.contact_phone||'';
+    $('contactEmail').value=info.contact_email||'';
+    $('hoaWebsite').value=info.website||'';
+    $('notes').value=info.notes||'';
+    $('recordPill').textContent=info.hoa_name?'🏘️ Editing: '+info.hoa_name:'🏘️ Editing HOA Record';
+  });
+}
+
+/* ---- Save ---- */
+$('hoaForm').addEventListener('submit',function(e){
+  e.preventDefault();
+  var id=$('hoaRecordId').value;
+  var feeRaw=$('feeAmount').value;
+  var dueRaw=$('dueDay').value;
+
+  var hoaData={
+    property_name:_property,
+    hoa_name:($('hoaName').value||'').trim(),
+    fee_amount:feeRaw?parseFloat(feeRaw):null,
+    due_day:dueRaw?parseInt(dueRaw,10):null,
+    contact_name:($('contactName').value||'').trim(),
+    contact_phone:($('contactPhone').value||'').trim(),
+    contact_email:($('contactEmail').value||'').trim(),
+    website:($('hoaWebsite').value||'').trim(),
+    notes:($('notes').value||'').trim()
+  };
+
+  if(!_property){setStatus('No property specified in URL.','err');return}
+
+  var btn=$('saveBtn');btn.disabled=true;btn.textContent='Saving…';
+  setStatus('Saving…','info');
+
+  var op=id
+    ?db.from('property_hoa').update(hoaData).eq('id',id)
+    :db.from('property_hoa').insert([hoaData]);
+
+  op.then(function(r){
+    if(r.error)throw r.error;
+    // Write history record
+    var history={
+      property_name:_property,
+      hoa_name:hoaData.hoa_name,
+      fee_amount:hoaData.fee_amount,
+      updated_by:($('updatedBy').value||'User').trim(),
+      notes:hoaData.notes,
+      action:id?'updated':'created'
+    };
+    return db.from('hoa_history').insert([history]).then(function(hr){
+      if(hr.error)console.warn('HOA history insert failed:',hr.error.message);
+    });
+  }).then(function(){
+    setStatus('✅ HOA info saved!','ok');
+    btn.disabled=false;btn.textContent='💾 Save Changes';
+    setTimeout(function(){location.href='hoa-info.html?property='+encodeURIComponent(_property)},900);
+  }).catch(function(err){
+    setStatus('❌ Save failed: '+(err&&err.message||'Unexpected error.'),'err');
+    btn.disabled=false;btn.textContent='💾 Save Changes';
+  });
+});
+
+/* ---- Init ---

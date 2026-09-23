@@ -1,0 +1,238 @@
+{
+  "name": "Rental Analyzer API",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "rental-analyzer",
+        "options": {
+          "responseHeaders": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "id": "WebhookEntry",
+      "name": "Webhook (POST /rental-analyzer)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [ 240, 260 ],
+      "webhookMethods": {
+        "POST": true
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $json;\n\n// Frontend may POST either raw address or a structured payload\nlet address = body.address || body.addr || '';\nlet price   = Number(body.purchase_price || body.price || 0) || null;\nlet estRent = Number(body.est_rent || body.rent || 0) || null;\nconst req   = body.request || { listing: true, rent_estimate: true, comps: false };\n\n// Basic normalization\naddress = String(address).trim();\n\nreturn [{ address, price, estRent, req }];"
+      },
+      "id": "ParseInput",
+      "name": "Parse Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [ 530, 260 ]
+    },
+    {
+      "parameters": {
+        "url": "https://nominatim.openstreetmap.org/search",
+        "options": {
+          "queryParametersUi": {
+            "parameter": [
+              { "name": "q", "value": "={{$json[\"address\"]}}" },
+              { "name": "format", "value": "json" },
+              { "name": "limit", "value": "1" },
+              { "name": "addressdetails", "value": "1" }
+            ]
+          }
+        }
+      },
+      "id": "Geocode",
+      "name": "Geocode (Nominatim)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [ 770, 260 ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const g = items[0].json;\nconst first = (Array.isArray(g) && g.length) ? g[0] : null;\nif (!first) {\n  return [{ geo: null, state: null, city: null, lat: null, lon: null }];\n}\nconst addr = first.address || {};\nconst state = addr.state || addr.state_code || null;\nconst city = addr.city || addr.town || addr.village || addr.county || null;\nreturn [{\n  geo: first,\n  state,\n  city,\n  lat: first.lat ? Number(first.lat) : null,\n  lon: first.lon ? Number(first.lon) : null\n}];"
+      },
+      "id": "ParseGeocode",
+      "name": "Parse Geocode",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [ 980, 260 ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.rentcast.io/v1/rents/estimate",
+        "options": {
+          "queryParametersUi": {
+            "parameter": [
+              { "name": "address", "value": "={{$items(\"ParseInput\")[0].json.address}}" }
+            ]
+          },
+          "headerParametersUi": {
+            "parameter": [
+              { "name": "X-Api-Key", "value": "={{$env.RENTCAST_API_KEY || $vars.RENTCAST_API_KEY || ''}}" }
+            ]
+          }
+        }
+      },
+      "id": "RentEstimate",
+      "name": "RentCast – Rent Estimate (optional)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [ 1210, 130 ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "url": "https://api.rentcast.io/v1/rents/comps",
+        "options": {
+          "queryParametersUi": {
+            "parameter": [
+              { "name": "latitude",  "value": "={{$items(\"ParseGeocode\")[0].json.lat}}" },
+              { "name": "longitude", "value": "={{$items(\"ParseGeocode\")[0].json.lon}}" },
+              { "name": "radius",    "value": "1" },
+              { "name": "limit",     "value": "10" }
+            ]
+          },
+          "headerParametersUi": {
+            "parameter": [
+              { "name": "X-Api-Key", "value": "={{$env.RENTCAST_API_KEY || $vars.RENTCAST_API_KEY || ''}}" }
+            ]
+          }
+        }
+      },
+      "id": "RentComps",
+      "name": "RentCast – Rental Comps (optional)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [ 1210, 320 ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "url": "https://api.rentcast.io/v1/sales/comps",
+        "options": {
+          "queryParametersUi": {
+            "parameter": [
+              { "name": "latitude",  "value": "={{$items(\"ParseGeocode\")[0].json.lat}}" },
+              { "name": "longitude", "value": "={{$items(\"ParseGeocode\")[0].json.lon}}" },
+              { "name": "radius",    "value": "1" },
+              { "name": "limit",     "value": "10" }
+            ]
+          },
+          "headerParametersUi": {
+            "parameter": [
+              { "name": "X-Api-Key", "value": "={{$env.RENTCAST_API_KEY || $vars.RENTCAST_API_KEY || ''}}" }
+            ]
+          }
+        }
+      },
+      "id": "SalesComps",
+      "name": "RentCast – Sales Comps (optional)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [ 1210, 510 ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const input  = $items(\"ParseInput\")[0].json;\nconst geo    = $items(\"ParseGeocode\")[0].json;\nconst rentE  = $items(\"RentEstimate\")[0]?.json || null;\nconst rentCs = $items(\"RentComps\")[0]?.json || [];\nconst saleCs = $items(\"SalesComps\")[0]?.json || [];\n\n// Smart defaults if provider missing\nlet price = input.price || null; // you can also integrate a listing price provider later\nlet rentEstimate = input.estRent || (rentE && (rentE.rent || rentE.estimate || rentE.monthlyRent)) || null;\n\n// Taxes/insurance/HOA defaults (state-aware)\nconst state = geo.state || '';\nconst priceForEst = Number(price || 0);\n\n// Conservative defaults: FL tends to have higher insurance\nconst defaultTaxPct = 0.015;               // 1.5% of price\nconst defaultInsPct = state === 'Florida' || state === 'FL' ? 0.010 : 0.005; // 1.0% in FL, else 0.5%\nconst defaultHOA    = 0;                    // monthly\n\nconst taxes_annual = Math.round(priceForEst ? priceForEst * defaultTaxPct : 0);\nconst insurance_estimate = Math.round(priceForEst ? priceForEst * defaultInsPct : 0);\nconst hoa_monthly = defaultHOA;\n\n// Normalize comps (both rent & sales) to a shared schema\nfunction normAddr(c){ return c.formattedAddress || c.address || c.fullAddress || c.streetAddress || null; }\nfunction normNum(x){ const n = Number(x); return isNaN(n)? null : n; }\n\nconst comps = [];\n(rentCs || []).forEach(c=>{\n  comps.push({\n    address: normAddr(c),\n    beds: normNum(c.beds),\n    baths: normNum(c.baths),\n    sqft: normNum(c.squareFootage || c.sqft),\n    type: c.propertyType || 'Rental',\n    date: c.date || c.leaseDate || null,\n    rent: normNum(c.rent || c.estimatedRent),\n    price: null,\n    ppsqft: c.squareFootage ? (Number(c.rent)/Number(c.squareFootage)) : null,\n    source: 'RentCast (rental)'\n  });\n});\n(saleCs || []).forEach(c=>{\n  comps.push({\n    address: normAddr(c),\n    beds: normNum(c.beds),\n    baths: normNum(c.baths),\n    sqft: normNum(c.squareFootage || c.sqft),\n    type: c.propertyType || 'Sale',\n    date: c.soldDate || c.closeDate || c.date || null,\n    rent: null,\n    price: normNum(c.price || c.lastSalePrice),\n    ppsqft: c.squareFootage ? (Number(c.price)/Number(c.squareFootage)) : null,\n    source: 'RentCast (sales)'\n  });\n});\n\nreturn [{\n  listing: {\n    price: price,\n    taxes_annual,\n    insurance_estimate,\n    hoa_monthly\n  },\n  rent_estimate: rentEstimate,\n  comps,\n  meta: {\n    address: input.address,\n    lat: geo.lat,\n    lon: geo.lon,\n    city: geo.city,\n    state: geo.state,\n    provider_notes: 'RentCast optional; fallbacks applied when no key/data.'\n  }\n}];"
+      },
+      "id": "AssemblePayload",
+      "name": "Assemble Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [ 1450, 320 ]
+    },
+    {
+      "parameters": {
+        "responseBody": "={{$json}}",
+        "responseCode": 200
+      },
+      "id": "Respond",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [ 1680, 320 ]
+    }
+  ],
+  "connections": {
+    "Webhook (POST /rental-analyzer)": {
+      "main": [
+        [
+          { "node": "Parse Input", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Parse Input": {
+      "main": [
+        [
+          { "node": "Geocode (Nominatim)", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Geocode (Nominatim)": {
+      "main": [
+        [
+          { "node": "Parse Geocode", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Parse Geocode": {
+      "main": [
+        [
+          { "node": "RentCast – Rent Estimate (optional)", "type": "main", "index": 0 },
+          { "node": "RentCast – Rental Comps (optional)", "type": "main", "index": 0 },
+          { "node": "RentCast – Sales Comps (optional)", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "RentCast – Rent Estimate (optional)": {
+      "main": [
+        [
+          { "node": "Assemble Payload", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "RentCast – Rental Comps (optional)": {
+      "main": [
+        [
+          { "node": "Assemble Payload", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "RentCast – Sales Comps (optional)": {
+      "main": [
+        [
+          { "node": "Assemble Payload", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Assemble Payload": {
+      "main": [
+        [
+          { "node": "Respond to Webhook", "type": "main", "index": 0 }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetup": [
+      {
+        "node": "RentCast – Rent Estimate (optional)",
+        "credentialType": "httpBasicAuth"
+      }
+    ]
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": []
+}

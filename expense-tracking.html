@@ -1,0 +1,3053 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+<!-- ══ PERFORMANCE: resource hints + non-blocking font ══ -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap">
+<link rel="dns-prefetch" href="https://pbojacnagutipfhcxltj.supabase.co">
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<!-- ════════════════════════════════════════════════════ -->
+  
+    <title>💸 Expense Tracking – Rental Genie</title>
+
+  <style>
+:root{
+  --container: 1440px;
+  --border: rgba(226,232,240,1);
+  --panel-2: rgba(255,255,255,0.92);
+  --muted: #475569;
+  --text: #0f172a;
+  --focus: 0 0 0 3px rgba(56, 189, 248, 0.35);
+}
+
+/* -------------------------------------------------------------
+   GLOBAL (max-width updated to 1440px) - From rental-template.html
+------------------------------------------------------------- */
+body {
+  margin: 0;
+  background: #f8f9fa;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto;
+  color: #111827;
+}
+.page {
+  max-width: 1440px; /* Increased width for modern dashboards */
+  margin: 20px auto;
+  padding: 0 16px 32px;
+}
+
+h1 {
+  font-size: 1.7rem;
+  font-weight: 800;
+  color: #1e3a8a;
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+
+/* -------------------------------------------------------------
+   HEADER - From rental-template.html
+------------------------------------------------------------- */
+.header-container {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  width: 100%;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  background: linear-gradient(135deg, #0c1e3a, #1a3a6b, #1e5799);
+  border-bottom: 1px solid rgba(255,255,255,0.25);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.navbar {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 14px 22px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.brand-area {
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.brand-logo {
+  width:50px; height:50px;
+  border-radius:50%;
+  background:radial-gradient(circle at 30% 30%,#f0faff,#bae6fd 40%,#0ea5e9 75%);
+  box-shadow:0px 0px 0px 2px rgba(14,165,233,0.25),0px 8px 16px rgba(0,0,0,0.15);
+}
+.brand-title {
+  font-size:1.45rem;
+  font-weight:800;
+  color: #e2e8f0;
+  text-shadow:0 2px 4px rgba(0,0,0,0.12);
+}
+
+.nav-links {
+  display:flex;
+  gap:5px;
+  align-items:center;
+  flex-wrap:wrap;
+}
+.nav-links a {
+  text-decoration:none;
+  font-size:14px;
+  font-weight:600;
+  padding:5px 7px;
+  color: #cbd5e1;
+  border-radius:8px;
+  transition:.25s;
+}
+.nav-links a:hover {
+  background: rgba(255,255,255,0.12);
+}
+.nav-active {
+  background: rgba(255,255,255,0.18) !important;
+  box-shadow:0 3px 8px rgba(0,0,0,0.15);
+}
+
+#nav-login {
+  padding:7px 14px;
+  border-radius:999px;
+  border:1px solid #cbd5e1;
+  font-weight:700;
+  background:white;
+}
+
+body.auth-guest #nav-login{ display:inline-flex; }
+body.auth-guest #userMenu{ display:none !important; }
+body.auth-guest #navBell{ display:none !important; }
+body.auth-ready #nav-login{ display:none !important; }
+body.auth-ready #userMenu{ display:block !important; }
+body.auth-ready #navBell{ display:flex !important; }
+@media (max-width: 860px) { body.auth-ready #userMenu, body.auth-ready #navBell, #navBell { display: none !important; } }
+body.auth-guest #mobileLogin{ display:block !important; }
+body.auth-guest #mobileAccountLink,
+body.auth-guest #mobileLogoutContainer{ display:none !important; }
+body.auth-ready #mobileLogin{ display:none !important; }
+body.auth-ready #mobileAccountLink{ display:block !important; }
+body.auth-ready #mobileLogoutContainer{ display:block !important; }
+
+.user-menu { position:relative; display:none; }
+.user-menu-toggle {
+  padding:5px 10px; border-radius:999px;
+  border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1);
+  cursor:pointer; font-weight:600;
+}
+/* User Menu Dropdown Fix */
+
+
+/* Mobile */
+.hamburger {
+  display:none;
+  padding:6px 12px;
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius:8px;
+  background: rgba(255,255,255,0.1);
+  cursor:pointer;
+}
+@media(max-width:820px){
+  .nav-links{display:none;}
+  .hamburger{display:block;}
+}
+
+.drawer{
+  display:none;
+  position:fixed;
+  top:76px; left:12px; right:12px;
+  background:white; border:1px solid #e2e8f0;
+  border-radius:12px; padding:12px;
+  z-index:999;
+}
+.drawer a {
+  display:block;
+  padding:12px;
+  border-bottom:1px solid #e2e8f0;
+  font-weight:600; text-decoration:none;
+  color:#0f172a;
+}
+.drawer a:last-child { 
+  border-bottom:none; 
+}
+/* Style for the mobile signout button container and button */
+#mobileLogoutContainer {
+    border-top: 1px solid #e2e8f0; 
+    margin-top: 10px; 
+    padding-top: 10px;
+}
+#mobileLogoutContainer button {
+    padding:12px; 
+    background:none; 
+    border:none; 
+    text-align:left; 
+    font-weight:600; 
+    color:#dc2626; 
+    cursor:pointer;
+    width: 100%;
+    display: block; /* Ensure it takes full width for padding */
+}
+#mobileLogoutContainer button:hover {
+    background:#f1f5f9;
+}
+
+/* -------------------------------------------------------------
+   COMPONENTS & FOOTER STYLES (Retained/Updated) - From rental-template.html
+------------------------------------------------------------- */
+select {
+  padding:8px 14px;
+  border-radius:999px;
+  border:1px solid #cbd5e1;
+}
+
+.card {
+  background:white;
+  padding:18px;
+  border-radius:16px;
+  border:1px solid #e2e8f0;
+  margin-top:18px;
+  box-shadow:0 2px 6px rgba(0,0,0,0.06);
+}
+
+.site-footer {
+  margin-top: 40px;
+  padding: 30px 20px 20px;
+  background: white;
+  border-top: 1px solid #e5e7eb;
+  font-size: 0.9rem;
+  color: #475569;
+}
+
+.footer-content {
+  max-width: 1440px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 30px;
+  padding-bottom: 20px;
+}
+
+.footer-section h4 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1e3a8a;
+  margin-top: 0;
+  margin-bottom: 12px;
+}
+
+.footer-section a,
+.footer-section p {
+  display: block;
+  color: #475569;
+  text-decoration: none;
+  margin-bottom: 8px;
+  transition: color 0.2s;
+}
+
+.footer-section a:hover {
+  color: #0ea5e9;
+}
+
+.footer-bottom {
+  text-align: center;
+  padding-top: 15px;
+  border-top: 1px solid #e5e7eb;
+  margin-top: 15px;
+}
+
+@media (max-width: 600px) {
+  .footer-content {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+  .footer-section h4 {
+    margin-top: 20px;
+  }
+}
+
+/* -------------------------------------------------------------\
+   Expense Tracking specific styles (from expense-tracking.html)
+------------------------------------------------------------- */
+    .filter-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 15px;
+      font-size: 0.9rem;
+    }
+
+    .filter-row label {
+      font-weight: 500;
+      color: #333;
+    }
+
+    .filter-row select, .filter-row input[type="date"] {
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid #d1d5db;
+      font-size: 0.9rem;
+      background: #ffffff;
+      min-width: 150px;
+    }
+
+    .summary-card-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .summary-card {
+      flex: 1 1 200px;
+      min-width: 0;
+      background: #ffffff;
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+      padding: 14px;
+      box-shadow: 0 4px 8px rgba(15,23,42,0.06);
+    }
+
+    .summary-label {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #6b7280;
+      margin-bottom: 4px;
+    }
+
+    .summary-value {
+      font-weight: 700;
+      color: #1e3a8a;
+      font-size: 1.4rem;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      margin-top: 20px;
+    }
+
+    .card-header h2 {
+      font-size: 1.2rem;
+      margin: 0;
+      color: #1a3c5e;
+    }
+
+    .add-btn {
+      border-radius: 999px;
+      padding: 7px 14px;
+      background: #10b981;
+      border: none;
+      color: #ffffff;
+      font-size: 0.85rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      white-space: nowrap;
+      box-shadow: 0 4px 8px rgba(16, 185, 129, 0.2);
+    }
+
+    .add-btn:hover {
+      filter: brightness(0.97);
+    }
+
+    .expense-table-container {
+      overflow-x: auto;
+    }
+
+    .expense-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    .expense-table th, .expense-table td {
+      padding: 10px 12px;
+      text-align: left;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .expense-table th {
+      background: #f8fafc;
+      font-weight: 600;
+      color: #475569;
+      text-transform: uppercase;
+      font-size: 0.8rem;
+      letter-spacing: 0.05em;
+    }
+
+    .expense-table tr:hover {
+      background: #f8f9fa;
+    }
+
+    .back-link {
+      margin-top: 18px;
+      text-align: center;
+    }
+
+    .back-link a {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      border-radius: 999px;
+      background: #e9ecef;
+      color: #374151;
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+
+    .back-link a:hover {
+      background: #dde2e6;
+    }
+
+    /* Action buttons */
+    .actions-cell {
+      white-space: nowrap;
+    }
+    .action-btn {
+      border: none;
+      border-radius: 999px;
+      padding: 4px 8px;
+      margin-right: 4px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .action-btn.edit {
+      background: #e0f2fe;
+      color: #1d4ed8;
+    }
+    .action-btn.delete {
+      background: #fee2e2;
+      color: #b91c1c;
+    }
+    .action-btn:hover {
+      filter: brightness(0.96);
+    }
+
+/* -------------------------------------------------------------
+   Expense Drawer (Add/Edit) - slide-out panel like Rent Center
+------------------------------------------------------------- */
+.panel-overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(15,23,42,0.35);
+  display:none;
+  z-index:2000;
+}
+.panel-overlay.active{ display:block; }
+
+.side-panel{
+  position:fixed;
+  top:0;
+  right:0;
+  height:100vh;
+  width:560px;
+  max-width:92vw;
+  background:#ffffff;
+  border-left:1px solid #e2e8f0;
+  box-shadow:-10px 0 30px rgba(15,23,42,0.18);
+  transform:translateX(110%);
+  transition:transform .25s ease;
+  z-index:2001;
+  display:flex;
+  flex-direction:column;
+}
+.side-panel.active{ transform:translateX(0); }
+
+.side-panel-header{
+  padding:14px 14px 10px;
+  border-bottom:1px solid #e2e8f0;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+.side-panel-title{
+  font-weight:800;
+  color:#1e3a8a;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.side-panel-actions{
+  display:flex;
+  gap:8px;
+  align-items:center;
+}
+.panel-btn{
+  border-radius:999px;
+  border:1px solid #cbd5e1;
+  background:#ffffff;
+  padding:6px 10px;
+  cursor:pointer;
+  font-weight:700;
+  font-size:0.85rem;
+}
+.panel-btn:hover{ background:#f1f5f9; }
+
+.panel-iframe{
+  border:none;
+  width:100%;
+  height:100%;
+}
+
+
+/* -------------------------------------------------------------
+   Accessibility & Comfort (Rental Genie standard)
+------------------------------------------------------------- */
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(14,165,233,0.28);
+}
+@media (prefers-reduced-motion: reduce){
+  * { scroll-behavior: auto !important; transition: none !important; }
+}
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 22px;
+  transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.92);
+  color: white;
+  padding: 10px 14px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.22);
+  display: none;
+  z-index: 3000;
+  max-width: calc(100vw - 24px);
+  text-align: center;
+}
+
+
+/* -------------------------------------------------------------
+   Filters (Industrial standard)
+------------------------------------------------------------- */
+.filter-card{
+  background:#ffffff;
+  border:1px solid #e2e8f0;
+  border-radius:14px;
+  padding:16px;
+  box-shadow:0 2px 6px rgba(0,0,0,0.05);
+  margin-top:14px;
+}
+.filter-grid{
+  display:grid;
+  grid-template-columns: 1.1fr 2.2fr 1.3fr;
+  gap:12px;
+  align-items:end;
+}
+.filter-field{
+  display:flex;
+  flex-direction:column;
+  gap:5px;
+  min-width:0;
+}
+.filter-field label{
+  font-size:0.75rem;
+  font-weight:700;
+  color:#64748b;
+  text-transform:uppercase;
+  letter-spacing:0.5px;
+}
+.filter-field select,
+.filter-field input[type="date"]{
+  width:100%;
+  padding:9px 12px;
+  border-radius:10px;
+  border:1px solid #cbd5e1;
+  font-size:0.93rem;
+  background:#ffffff;
+  color:#0f172a;
+  font-family:'DM Sans',sans-serif;
+  box-sizing:border-box;
+  outline:none;
+  transition:border-color .15s;
+  min-width:0;
+}
+.filter-field select:focus,
+.filter-field input:focus{ border-color:#93c5fd; box-shadow:0 0 0 3px rgba(147,197,253,0.25); }
+.filter-field select:disabled,
+.filter-field input:disabled{
+  background:#f1f5f9;
+  color:#64748b;
+}
+.filter-dates{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:10px;
+}
+.filter-presets{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-top:12px;
+  align-items:center;
+}
+.preset-label{
+  font-size:0.75rem;
+  font-weight:700;
+  color:#64748b;
+  text-transform:uppercase;
+  letter-spacing:0.5px;
+  white-space:nowrap;
+}
+.preset-select{
+  padding:9px 12px;
+  border-radius:10px;
+  border:1px solid #cbd5e1;
+  background:#ffffff;
+  font-family:'DM Sans',sans-serif;
+  font-size:0.93rem;
+  color:#0f172a;
+  min-width:190px;
+  outline:none;
+  transition:border-color .15s;
+}
+.preset-select:focus{ border-color:#93c5fd; box-shadow:0 0 0 3px rgba(147,197,253,0.25); }
+.preset-hint{
+  font-size:0.82rem;
+  color:#64748b;
+}
+@media (max-width: 980px){
+  .filter-grid{ grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 600px){
+  .filter-grid{ grid-template-columns: 1fr; }
+}
+.filter-inline-dates{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+}
+.filter-inline-dates input[type="date"]{
+  width:170px;
+}
+.inline-label{
+  font-size:0.75rem;
+  font-weight:700;
+  color:#64748b;
+  text-transform:uppercase;
+  letter-spacing:0.5px;
+  white-space:nowrap;
+}
+@media (max-width: 980px){
+  .filter-inline-dates input[type="date"]{ width:160px; }
+}
+@media (max-width: 600px){
+  .filter-inline-dates{ width:100%; }
+  .filter-inline-dates input[type="date"]{ width:100%; }
+}
+
+
+
+/* RG Nav Badges (v3 - floating like lease-rent-center) */
+.nav-links a,
+.drawer a{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+}
+.nav-links a{
+  position:relative;
+}
+
+.drawer 
+
+
+/* filter-subrow / quick-range layout */
+.filter-subrow .filter-presets{
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.filter-subrow .filter-inline-dates{
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: nowrap;
+}
+.filter-subrow .inline-label{
+  white-space: nowrap;
+  margin: 0;
+  line-height: 1;
+}
+.filter-subrow input[type="date"]{
+  width: 190px;
+  max-width: 190px;
+}
+.filter-subrow .preset-hint{
+  flex: 1 1 260px;
+  min-width: 220px;
+}
+.filter-subrow #datePreset{
+  min-width: 200px;
+}
+@media (max-width: 980px){
+  .filter-subrow .filter-presets{ flex-direction: column; align-items: stretch; }
+  .filter-subrow .filter-inline-dates{ width:100%; display:grid; grid-template-columns: auto 1fr; gap: 8px 10px; }
+  .filter-subrow input[type="date"]{ width:100%; max-width:100%; }
+  .filter-subrow #datePreset{ width:100%; min-width:0; }
+  .filter-subrow .preset-hint{ min-width:0; }
+}
+
+/* =========================================================
+MOBILE BOTTOM NAV (GenieSphere – 4 main areas)
+Used by:
+.mobile-nav
+.mobile-nav-inner
+.mnav
+.mnav.active
+.mobile-pad
+========================================================= */
+
+/* Bottom fixed container */
+.mobile-nav{
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: none;                /* hidden on desktop */
+  z-index: 1200;
+  padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+  background: linear-gradient(135deg, #0c1e3a, #1a3a6b, #1e5799);
+  border-bottom: 1px solid rgba(255,255,255,0.25);
+  border-top: 1px solid var(--border);
+  box-shadow: 0 -10px 24px rgba(0,0,0,.18);
+}
+
+/* Inner grid (4 tabs) */
+.mobile-nav-inner{
+  max-width: var(--container);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 5px;
+}
+
+/* Each tab */
+.mnav{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 10px 8px;
+  border-radius: 7px;
+  border: 1px solid var(--border);
+  background: var(--panel-2);
+  color: var(--muted);
+  font-weight: 800;
+  font-size: 11px;
+  text-decoration: none;
+  text-align: center;
+}
+
+/* Emoji icon */
+.mnav .ico{
+  font-size: 30px;
+  line-height: 1;
+}
+
+/* Active tab */
+.mnav.active{
+  color: var(--text);
+  border-color: rgba(76,110,245,.55);
+  box-shadow: var(--focus);
+}
+
+/* Spacer so content isn't hidden behind nav */
+.mobile-pad{
+  display: none;
+  height: 86px;
+}
+
+/* Show only on mobile */
+@media (max-width: 860px){
+  .mobile-nav{ display: block; }
+  .mobile-pad{ display: block; }
+}
+
+/* Hide footer on mobile */
+@media (max-width: 600px) {
+  .site-footer {
+    display: none !important;
+  }
+ 
+}
+
+/* add space add then bottom of the page */
+@media (max-width: 860px){
+  main.page{
+    padding-bottom: calc(110px + env(safe-area-inset-bottom));
+  }
+}
+
+
+</style>
+<style id="rg-expense-enhanced">
+/* ================================================================
+   EXPENSE TRACKING — ENHANCED DESIGN v2
+   Rental Genie navy system. DM Sans + DM Mono.
+   Dark header · 4-col KPI strip · polished filter card · clean table
+================================================================ */
+:root {
+  --rg-navy:    #0c1e3a;
+  --rg-mid:     #1a3a6b;
+  --rg-lt:      #1e5799;
+  --rg-accent:  #2d8cf0;
+  --rg-bg:      #f1f4f8;
+  --rg-surface: #ffffff;
+  --rg-border:  #e2e8f0;
+  --rg-text:    #0c1e3a;
+  --rg-muted:   #64748b;
+  --rg-radius:  14px;
+  --rg-radius-sm: 8px;
+  --rg-shadow:  0 2px 12px rgba(12,30,58,0.07);
+  --rg-shadow-md: 0 6px 24px rgba(12,30,58,0.12);
+}
+
+/* ── Base ──────────────────────────────────────────────────────── */
+body {
+  font-family: 'DM Sans', -apple-system, sans-serif !important;
+  background: var(--rg-bg) !important;
+  color: var(--rg-text) !important;
+}
+
+/* ── Header ────────────────────────────────────────────────────── */
+.header-container {
+  background: linear-gradient(135deg, var(--rg-navy) 0%, var(--rg-mid) 55%, var(--rg-lt) 100%) !important;
+  box-shadow: 0 2px 20px rgba(12,30,58,0.3) !important;
+  border-bottom: 1px solid rgba(255,255,255,0.08) !important;
+}
+.brand-title  { font-weight:700 !important; color:#fff !important; text-shadow:none !important; }
+.brand-logo   { background:rgba(255,255,255,0.15) !important; box-shadow:0 0 0 1px rgba(255,255,255,0.2) !important; }
+.nav-links a  { color:rgba(255,255,255,0.8) !important; font-weight:500 !important; font-size:13.5px !important; border-radius:8px !important; }
+.nav-links a:hover { background:rgba(255,255,255,0.12) !important; color:#fff !important; }
+.nav-active   { background:rgba(255,255,255,0.18) !important; color:#fff !important; box-shadow:none !important; }
+#nav-login    { background:rgba(255,255,255,0.1) !important; border:1px solid rgba(255,255,255,0.25) !important; color:#fff !important; }
+.user-menu-toggle { background:rgba(255,255,255,0.12) !important; border-color:rgba(255,255,255,0.2) !important; color:#fff !important; }
+.hamburger    { background:rgba(255,255,255,0.1) !important; border-color:rgba(255,255,255,0.25) !important; color:#fff !important; }
+.user-menu-dropdown { border-radius:var(--rg-radius) !important; box-shadow:var(--rg-shadow-md) !important; }
+.drawer { border-radius:var(--rg-radius) !important; box-shadow:var(--rg-shadow-md) !important; }
+.drawer a { color:var(--rg-navy) !important; font-weight:600 !important; }
+
+/* ── Page ──────────────────────────────────────────────────────── */
+@keyframes rg-fadeup { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
+main.page { animation: rg-fadeup .3s ease both; }
+main.page h1 {
+  font-weight: 700 !important;
+  color: var(--rg-navy) !important;
+  letter-spacing: -0.5px !important;
+  font-size: 1.65rem !important;
+}
+
+/* ── KPI summary strip — 4-column grid ────────────────────────── */
+.summary-card-grid {
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: 12px !important;
+  margin: 16px 0 20px !important;
+}
+@media(max-width:860px) { .summary-card-grid { grid-template-columns: repeat(2,1fr) !important; } }
+@media(max-width:480px) { .summary-card-grid { grid-template-columns: 1fr !important; } }
+
+.summary-card {
+  background: var(--rg-surface) !important;
+  border: 1px solid var(--rg-border) !important;
+  border-radius: var(--rg-radius) !important;
+  padding: 16px 18px !important;
+  box-shadow: var(--rg-shadow) !important;
+  transition: box-shadow .18s, transform .18s !important;
+  flex: none !important;     /* kill old flex-wrap sizing */
+  min-width: 0 !important;
+}
+.summary-card:hover { box-shadow: var(--rg-shadow-md) !important; transform: translateY(-2px) !important; }
+.summary-card:first-child { border-left: 3px solid var(--rg-accent) !important; }
+
+.summary-label {
+  font-size: 0.72rem !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+  color: var(--rg-muted) !important;
+  margin-bottom: 8px !important;
+}
+.summary-value {
+  font-family: 'DM Mono', monospace !important;
+  font-size: 1.5rem !important;
+  font-weight: 500 !important;
+  color: var(--rg-navy) !important;
+  letter-spacing: -0.5px !important;
+}
+
+/* ── Filter card ───────────────────────────────────────────────── */
+.filter-card {
+  background: var(--rg-surface) !important;
+  border: 1px solid var(--rg-border) !important;
+  border-radius: var(--rg-radius) !important;
+  padding: 16px 18px !important;
+  box-shadow: var(--rg-shadow) !important;
+  margin-top: 16px !important;
+}
+.filter-field label {
+  font-size: 0.72rem !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.4px !important;
+  color: var(--rg-muted) !important;
+  margin-bottom: 5px !important;
+}
+.filter-field select,
+.filter-field input[type="date"],
+.preset-select,
+#datePreset,
+.filter-subrow input[type="date"] {
+  padding: 9px 12px !important;
+  border: 1px solid var(--rg-border) !important;
+  border-radius: var(--rg-radius-sm) !important;
+  font-family: 'DM Sans', sans-serif !important;
+  font-size: 0.88rem !important;
+  font-weight: 500 !important;
+  color: var(--rg-text) !important;
+  background: #f8fafc !important;
+  transition: border-color .15s, box-shadow .15s !important;
+}
+.filter-field select:focus,
+.filter-field input:focus,
+#datePreset:focus {
+  border-color: var(--rg-accent) !important;
+  box-shadow: 0 0 0 3px rgba(45,140,240,0.12) !important;
+  outline: none !important;
+}
+.preset-label, .inline-label {
+  font-size: 0.78rem !important;
+  font-weight: 600 !important;
+  color: var(--rg-muted) !important;
+}
+.preset-hint {
+  font-size: 0.75rem !important;
+  color: var(--rg-muted) !important;
+}
+
+/* ── Card header + ledger card ─────────────────────────────────── */
+.card-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  padding: 14px 18px !important;
+  background: #f8fafc !important;
+  border: 1px solid var(--rg-border) !important;
+  border-bottom: none !important;
+  border-radius: var(--rg-radius) var(--rg-radius) 0 0 !important;
+  margin-top: 20px !important;
+  margin-bottom: 0 !important;
+}
+.card-header h2 {
+  font-size: 0.95rem !important;
+  font-weight: 700 !important;
+  color: var(--rg-navy) !important;
+  margin: 0 !important;
+}
+.card {
+  background: var(--rg-surface) !important;
+  border: 1px solid var(--rg-border) !important;
+  border-radius: 0 0 var(--rg-radius) var(--rg-radius) !important;
+  box-shadow: var(--rg-shadow) !important;
+  padding: 0 !important;
+  margin-top: 0 !important;
+}
+/* Standalone cards (workspace empty) keep full rounding + padding */
+.card[style*="border-left"] {
+  border-radius: var(--rg-radius) !important;
+  padding: 18px !important;
+}
+
+/* ── Expense table ─────────────────────────────────────────────── */
+.expense-table { width:100% !important; border-collapse:collapse !important; }
+.expense-table th {
+  background: #f8fafc !important;
+  color: var(--rg-muted) !important;
+  font-size: 0.72rem !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+  font-weight: 600 !important;
+  padding: 11px 16px !important;
+  border-bottom: 2px solid var(--rg-border) !important;
+  white-space: nowrap !important;
+  text-align: left !important;
+}
+.expense-table td {
+  padding: 11px 16px !important;
+  font-size: 0.88rem !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+  color: var(--rg-text) !important;
+  vertical-align: middle !important;
+}
+.expense-table tbody tr:last-child td { border-bottom: none !important; }
+.expense-table tbody tr:hover td { background: #f8fafc !important; }
+/* Amount column — monospace */
+.expense-table td:nth-child(5) {
+  font-family: 'DM Mono', monospace !important;
+  font-size: 0.88rem !important;
+  font-weight: 500 !important;
+  color: var(--rg-navy) !important;
+}
+/* Action buttons in table */
+.action-btn {
+  border-radius: 999px !important;
+  font-size: 0.78rem !important;
+  font-weight: 600 !important;
+  padding: 5px 12px !important;
+  border: 1px solid var(--rg-border) !important;
+  transition: box-shadow .12s, background .12s !important;
+}
+.action-btn:hover { filter: none !important; box-shadow: var(--rg-shadow) !important; }
+.action-btn.edit   { background:#eff6ff !important; color:#1d4ed8 !important; border-color:#bfdbfe !important; }
+.action-btn.delete { background:#fef2f2 !important; color:#b91c1c !important; border-color:#fecaca !important; }
+
+/* ── Buttons ───────────────────────────────────────────────────── */
+.add-btn {
+  background: var(--rg-navy) !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: 999px !important;
+  padding: 9px 18px !important;
+  font-weight: 600 !important;
+  font-size: 0.85rem !important;
+  box-shadow: none !important;
+  gap: 6px !important;
+  transition: background .15s, transform .15s, box-shadow .15s !important;
+}
+.add-btn:hover {
+  background: var(--rg-mid) !important;
+  filter: none !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 14px rgba(12,30,58,0.2) !important;
+}
+.add-btn:disabled { opacity:.5 !important; transform:none !important; box-shadow:none !important; }
+#createWorkspaceBtn {
+  background: var(--rg-accent) !important;
+  box-shadow: 0 4px 12px rgba(45,140,240,0.25) !important;
+}
+#refreshWorkspaceBtn {
+  background: #f1f5f9 !important;
+  color: var(--rg-text) !important;
+  box-shadow: none !important;
+}
+
+/* ── Side panel ────────────────────────────────────────────────── */
+.side-panel {
+  border-left: 1px solid var(--rg-border) !important;
+  box-shadow: -6px 0 32px rgba(12,30,58,0.14) !important;
+}
+.side-panel-header {
+  background: #f8fafc !important;
+  border-bottom: 1px solid var(--rg-border) !important;
+}
+.side-panel-title { color: var(--rg-navy) !important; font-weight: 700 !important; }
+.panel-btn {
+  border-radius: 999px !important;
+  font-weight: 600 !important;
+  font-size: 0.82rem !important;
+  border-color: var(--rg-border) !important;
+}
+.panel-btn:hover { background: #f1f5f9 !important; }
+
+/* ── Toast ─────────────────────────────────────────────────────── */
+.toast {
+  border-radius: var(--rg-radius) !important;
+  box-shadow: var(--rg-shadow-md) !important;
+  font-family: 'DM Sans', sans-serif !important;
+  font-size: 0.88rem !important;
+}
+
+/* ── Mobile bottom nav ─────────────────────────────────────────── */
+.mobile-nav {
+  background: linear-gradient(135deg, var(--rg-navy), var(--rg-mid)) !important;
+  border-top: 1px solid rgba(255,255,255,0.08) !important;
+  box-shadow: 0 -4px 20px rgba(12,30,58,0.25) !important;
+}
+.mnav {
+  background: rgba(255,255,255,0.07) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+  color: rgba(255,255,255,0.6) !important;
+  border-radius: var(--rg-radius-sm) !important;
+}
+.mnav.active {
+  background: rgba(255,255,255,0.18) !important;
+  color: #fff !important;
+  border-color: rgba(255,255,255,0.25) !important;
+  box-shadow: none !important;
+}
+
+/* ── Footer ────────────────────────────────────────────────────── */
+.site-footer {
+  background: var(--rg-navy) !important;
+  border-top: none !important;
+}
+.footer-section h4 { color:rgba(255,255,255,0.75) !important; font-size:.75rem !important; text-transform:uppercase !important; letter-spacing:.8px !important; }
+.footer-section a, .footer-section p { color:rgba(255,255,255,0.4) !important; font-size:.82rem !important; }
+.footer-section a:hover { color:rgba(255,255,255,0.85) !important; }
+.footer-bottom { color:rgba(255,255,255,0.28) !important; border-top:1px solid rgba(255,255,255,0.08) !important; }
+
+/* ── Scrollbar ─────────────────────────────────────────────────── */
+::-webkit-scrollbar { width:5px; height:5px; }
+::-webkit-scrollbar-track { background: var(--rg-bg); }
+::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:999px; }
+</style>
+
+<style id="rg-design-system">
+
+/* ================================================================
+   RENTAL GENIE — UNIFIED DESIGN SYSTEM v2
+   Navy authority + warm slate + DM Sans — applied sitewide
+================================================================ */
+:root {
+  --navy:       #0c1e3a;
+  --navy-mid:   #1a3a6b;
+  --navy-light: #1e5799;
+  --sky:        #2d8cf0;
+  --sky-light:  #e8f0fe;
+  --slate:      #475569;
+  --slate-light:#64748b;
+  --border:     #e2e8f0;
+  --bg:         #f1f4f8;
+  --card-bg:    #ffffff;
+  --text:       #0c1e3a;
+  --muted:      #64748b;
+  --success:    #10b981;
+  --warning:    #f59e0b;
+  --danger:     #ef4444;
+  --radius-sm:  8px;
+  --radius-md:  12px;
+  --radius-lg:  16px;
+  --shadow-sm:  0 1px 4px rgba(12,30,58,.06);
+  --shadow-md:  0 4px 16px rgba(12,30,58,.09);
+  --shadow-lg:  0 8px 32px rgba(12,30,58,.14);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  margin: 0;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'DM Sans', -apple-system, sans-serif !important;
+  background: var(--bg) !important;
+  color: var(--text) !important;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Page wrapper ────────────────────────────────────────────── */
+.page, main.page {
+  max-width: 1440px !important;
+  width: 100% !important;
+  margin: 24px auto 0 !important;
+  padding: 0 16px 48px !important;
+  flex: 1 0 auto;
+}
+
+/* ── Page heading ────────────────────────────────────────────── */
+.page-heading, .page h1, main.page h1 {
+  font-size: 1.6rem !important;
+  font-weight: 700 !important;
+  color: var(--navy) !important;
+  letter-spacing: -0.4px !important;
+  margin: 0 0 4px !important;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.page-subheading, .subtitle {
+  color: var(--muted) !important;
+  font-size: 0.9rem !important;
+  margin: 0 0 20px !important;
+}
+
+/* ── Cards ───────────────────────────────────────────────────── */
+.card {
+  background: var(--card-bg) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: var(--shadow-sm) !important;
+  padding: 20px !important;
+  margin-top: 16px !important;
+  transition: box-shadow .18s !important;
+}
+.card:hover { box-shadow: var(--shadow-md) !important; }
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+  gap: 8px;
+}
+.card-title {
+  font-size: 0.95rem !important;
+  font-weight: 700 !important;
+  color: var(--navy) !important;
+  letter-spacing: -0.2px !important;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+/* ── Buttons ─────────────────────────────────────────────────── */
+.btn-primary {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  padding: 9px 18px; border-radius: 999px; border: none; cursor: pointer;
+  background: var(--navy); color: #fff; font-weight: 600; font-size: 0.88rem;
+  font-family: 'DM Sans', sans-serif; text-decoration: none; white-space: nowrap;
+  transition: all .15s; box-shadow: 0 2px 8px rgba(12,30,58,.2);
+}
+.btn-primary:hover { background: var(--navy-mid); transform: translateY(-1px); box-shadow: var(--shadow-md); }
+
+.btn-secondary {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  padding: 8px 16px; border-radius: 999px; border: 1px solid var(--border); cursor: pointer;
+  background: var(--card-bg); color: var(--navy); font-weight: 600; font-size: 0.85rem;
+  font-family: 'DM Sans', sans-serif; text-decoration: none; white-space: nowrap;
+  transition: all .15s;
+}
+.btn-secondary:hover { background: #f1f5f9; border-color: #cbd5e1; }
+
+.btn-danger {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 16px; border-radius: 999px; border: none; cursor: pointer;
+  background: #fee2e2; color: #b91c1c; font-weight: 600; font-size: 0.85rem;
+  font-family: 'DM Sans', sans-serif; transition: all .15s;
+}
+.btn-danger:hover { background: #fecaca; }
+
+/* ── Status pills ────────────────────────────────────────────── */
+.pill { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 999px; font-size: 0.75rem; font-weight: 600; border: 1px solid transparent; }
+.pill-green  { background: #ecfdf5; color: #065f46; border-color: #a7f3d0; }
+.pill-amber  { background: #fefce8; color: #854d0e; border-color: #fde68a; }
+.pill-red    { background: #fff1f2; color: #9f1239; border-color: #fecdd3; }
+.pill-blue   { background: #eff6ff; color: #1e40af; border-color: #bfdbfe; }
+.pill-slate  { background: #f8fafc; color: #475569; border-color: #e2e8f0; }
+
+/* ── Form elements ───────────────────────────────────────────── */
+input, select, textarea {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.88rem;
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  padding: 9px 12px;
+  transition: border-color .15s, box-shadow .15s;
+  outline: none;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: var(--sky);
+  box-shadow: 0 0 0 3px rgba(45,140,240,.12);
+  background: #fff;
+}
+
+/* ── Table ───────────────────────────────────────────────────── */
+table { width: 100%; border-collapse: collapse; font-size: 0.87rem; }
+thead th {
+  background: #f8fafc; color: var(--slate); font-weight: 600; font-size: 0.78rem;
+  text-transform: uppercase; letter-spacing: 0.5px; padding: 10px 14px;
+  border-bottom: 2px solid var(--border); text-align: left; white-space: nowrap;
+}
+tbody td { padding: 11px 14px; border-bottom: 1px solid #f1f5f9; color: var(--text); vertical-align: middle; }
+tbody tr:hover td { background: #fafbfc; }
+tbody tr:last-child td { border-bottom: none; }
+
+/* ── Stat cards ──────────────────────────────────────────────── */
+.stat-card {
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: var(--radius-md); padding: 16px 18px;
+  box-shadow: var(--shadow-sm); transition: box-shadow .18s;
+}
+.stat-card:hover { box-shadow: var(--shadow-md); }
+.stat-label { font-size: 0.73rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 7px; }
+.stat-value { font-family: 'DM Mono', monospace; font-size: 1.5rem; font-weight: 500; color: var(--navy); letter-spacing: -0.5px; }
+.stat-note { font-size: 0.72rem; color: var(--muted); margin-top: 4px; }
+
+/* ── Empty state ─────────────────────────────────────────────── */
+.empty-state {
+  text-align: center; padding: 40px 20px; color: var(--muted);
+  background: #fafbfc; border-radius: var(--radius-md);
+  border: 1px dashed var(--border);
+}
+.empty-state .empty-icon { font-size: 2.5rem; margin-bottom: 10px; opacity: .6; }
+.empty-state p { font-size: 0.9rem; margin: 0; }
+
+/* ── Canonical 3px top shimmer progress bar ──────────────────── */
+#authOverlay {
+  position: fixed; top: 0; left: 0; right: 0;
+  height: 3px; z-index: 9999; pointer-events: none;
+  background: rgba(255,255,255,0);
+  transition: opacity .3s ease;
+}
+.ao-bar-fill {
+  height: 100%; width: 0%;
+  background: linear-gradient(90deg, #2d8cf0, #38bdf8, #2d8cf0);
+  background-size: 200% 100%;
+  transition: width .4s cubic-bezier(.4,0,.2,1);
+  animation: aoShimmer 1.6s linear infinite;
+  box-shadow: 0 0 8px rgba(56,189,248,.5);
+}
+@keyframes aoShimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ── Page fade-in ────────────────────────────────────────────── */
+@keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+.page-fade { animation: fadeUp .35s ease both; }
+
+/* ── Scrollbar ───────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+/* ── HEADER ──────────────────────────────────────────────────── */
+.header-container {
+  position: sticky !important; top: 0 !important; z-index: 1000 !important;
+  width: 100% !important;
+  background: linear-gradient(135deg, #0c1e3a 0%, #1a3a6b 55%, #1e5799 100%) !important;
+  border-bottom: 1px solid rgba(255,255,255,.08) !important;
+  box-shadow: 0 2px 20px rgba(12,30,58,.35) !important;
+}
+.navbar {
+  max-width: 1440px; margin: 0 auto; padding: 13px 22px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.brand-area { display: flex; align-items: center; gap: 11px; text-decoration: none; }
+.brand-logo {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: rgba(255,255,255,.15);
+  box-shadow: 0 0 0 1px rgba(255,255,255,.2), 0 4px 12px rgba(0,0,0,.2);
+  object-fit: cover;
+}
+.brand-title {
+  font-size: 1.25rem !important; font-weight: 700 !important;
+  color: #ffffff !important; letter-spacing: -0.3px !important;
+  text-shadow: none !important;
+}
+.nav-links {
+  display: flex; gap: 2px; align-items: center; flex-wrap: nowrap;
+}
+.nav-links a {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 6px 10px; font-size: 13.5px; font-weight: 500;
+  color: rgba(255,255,255,.78) !important; text-decoration: none;
+  border-radius: 8px; white-space: nowrap; transition: all .18s;
+  font-family: 'DM Sans', sans-serif;
+}
+.nav-links a:hover { background: rgba(255,255,255,.12) !important; color: #fff !important; }
+.nav-active { background: rgba(255,255,255,.16) !important; color: #fff !important; }
+.nav-active:hover { background: rgba(255,255,255,.22) !important; }
+#nav-login {
+  padding: 7px 16px !important; border-radius: 999px !important;
+  border: 1px solid rgba(255,255,255,.25) !important;
+  background: rgba(255,255,255,.1) !important; color: #fff !important;
+  font-weight: 600 !important; font-size: 13.5px !important;
+}
+#nav-login:hover { background: rgba(255,255,255,.2) !important; }
+.user-menu { position: relative; }
+.user-menu-toggle {
+  display: inline-flex; align-items: center; gap: 7px; cursor: pointer;
+  padding: 7px 14px; border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.22); background: rgba(255,255,255,.1);
+  color: #fff; font-weight: 600; font-size: 13.5px; font-family: 'DM Sans', sans-serif;
+  transition: all .15s;
+}
+.user-menu-toggle:hover { background: rgba(255,255,255,.18); }
+
+.hamburger {
+  display: none; font-size: 1.4rem; padding: 7px 12px;
+  border: 1px solid rgba(255,255,255,.22); border-radius: 8px;
+  background: rgba(255,255,255,.1); cursor: pointer; color: #fff;
+  font-family: 'DM Sans', sans-serif;
+}
+@media (max-width: 860px) { .nav-links { display: none; } .hamburger { display: block; } }
+
+/* Auth display */
+body.auth-ready #nav-login { display: none !important; }
+body.auth-ready .user-menu { display: block !important; }
+body.auth-guest .user-menu { display: none !important; }
+body.auth-ready #mobileLogin { display: none !important; }
+body.auth-ready #mobileAccountLink { display: block !important; }
+body.auth-ready #mobileLogoutContainer { display: block !important; }
+body.auth-guest #mobileLogin { display: block !important; }
+body.auth-guest #mobileAccountLink { display: none !important; }
+body.auth-guest #mobileLogoutContainer { display: none !important; }
+
+/* ── Mobile drawer ───────────────────────────────────────────── */
+.drawer {
+  display: none; position: fixed; top: 70px; left: 12px; right: 12px;
+  background: #fff; border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 10px 8px; z-index: 999;
+  box-shadow: 0 16px 40px rgba(12,30,58,.18);
+}
+.drawer a {
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 14px; border-bottom: 1px solid #f1f5f9;
+  font-weight: 600; text-decoration: none; color: var(--navy);
+  font-size: 0.9rem; border-radius: 8px; transition: background .12s;
+}
+.drawer a:last-of-type { border-bottom: none; }
+.drawer a:hover { background: #f8fafc; }
+#mobileLogoutContainer { border-top: 1px solid var(--border); margin-top: 6px; padding-top: 6px; }
+#mobileLogoutContainer button {
+  width: 100%; padding: 11px 14px; background: none; border: none;
+  text-align: left; font-weight: 600; color: #b91c1c; cursor: pointer;
+  font-family: 'DM Sans', sans-serif; font-size: 0.9rem; border-radius: 8px;
+}
+#mobileLogoutContainer button:hover { background: #fff1f2; }
+
+/* ── RG Badges ───────────────────────────────────────────────── */
+
+/* ── FOOTER ──────────────────────────────────────────────────── */
+.site-footer {
+  background: var(--navy) !important;
+  border-top: none !important;
+  padding: 40px 20px 24px !important;
+  margin-top: 48px !important;
+  flex-shrink: 0;
+}
+.footer-content {
+  max-width: 1440px; margin: 0 auto;
+  display: grid; grid-template-columns: 1.6fr repeat(3, 1fr);
+  gap: 32px; padding-bottom: 28px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+@media (max-width: 860px) { .footer-content { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 520px) { .footer-content { grid-template-columns: 1fr; } }
+
+.footer-brand .footer-logo-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.footer-brand .footer-logo {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.2);
+}
+.footer-brand .footer-name { font-size: 1.1rem; font-weight: 700; color: #fff; }
+.footer-brand p { font-size: 0.83rem; color: rgba(255,255,255,.45); line-height: 1.55; max-width: 220px; margin: 0; }
+
+.footer-section h4 {
+  font-size: 0.72rem !important; font-weight: 700 !important;
+  color: rgba(255,255,255,.55) !important; text-transform: uppercase !important;
+  letter-spacing: 1px !important; margin: 0 0 14px !important;
+}
+.footer-section a {
+  display: block; color: rgba(255,255,255,.5) !important;
+  text-decoration: none; font-size: 0.85rem !important;
+  margin-bottom: 9px !important; transition: color .15s !important;
+}
+.footer-section a:hover { color: rgba(255,255,255,.9) !important; }
+.footer-section p { color: rgba(255,255,255,.45) !important; font-size: 0.83rem !important; margin-bottom: 8px !important; }
+
+.footer-bottom {
+  max-width: 1440px; margin: 20px auto 0;
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;
+  color: rgba(255,255,255,.3) !important; font-size: 0.78rem !important;
+  border-top: none !important; padding-top: 0 !important;
+}
+.footer-bottom a { color: rgba(255,255,255,.4); text-decoration: none; }
+.footer-bottom a:hover { color: rgba(255,255,255,.7); }
+
+/* ── Mobile bottom nav ───────────────────────────────────────── */
+.mobile-nav {
+  display: none; position: fixed; left: 0; right: 0; bottom: 0; z-index: 1200;
+  padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+  background: linear-gradient(135deg, #0c1e3a, #1a3a6b);
+  border-top: 1px solid rgba(255,255,255,.08);
+  box-shadow: 0 -4px 20px rgba(12,30,58,.28);
+}
+.mobile-nav-inner { max-width: 1440px; margin: 0 auto; display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; }
+.mnav {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 4px; padding: 9px 6px; border-radius: 10px;
+  border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.07);
+  color: rgba(255,255,255,.55); font-weight: 700; font-size: 10px;
+  text-decoration: none; text-align: center;
+}
+.mnav .ico { font-size: 22px; line-height: 1; }
+.mnav.active { background: rgba(255,255,255,.18); border-color: rgba(255,255,255,.25); color: #fff; }
+.mobile-pad { display: none; height: 82px; }
+@media (max-width: 860px) { .mobile-nav { display: block; } .mobile-pad { display: block; } main.page { padding-bottom: calc(82px + env(safe-area-inset-bottom)) !important; } }
+@media (max-width: 600px) { .site-footer { display: none !important; } }
+
+
+/* ═══ User menu dropdown — full UMD styles ═══════════════════════════════ */
+.user-menu-dropdown {
+  position: absolute; right: 0; top: calc(100% + 10px);
+  background: #fff; border: 1px solid rgba(12,30,58,.1);
+  border-radius: 14px; min-width: 240px; display: none;
+  box-shadow: 0 12px 40px rgba(12,30,58,.18), 0 2px 8px rgba(12,30,58,.08);
+  overflow: hidden; z-index: 1100;
+  flex-direction: column;
+}
+.user-menu-dropdown.active { display: block; animation: umdFadeIn .15s ease both; }
+@keyframes umdFadeIn { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:translateY(0)} }
+.umd-header { display:flex; align-items:center; gap:11px; padding:14px 16px 12px; border-bottom:1px solid #f1f5f9; background:#fafbfc; }
+.umd-avatar { width:38px; height:38px; border-radius:50%; background:linear-gradient(135deg,#1a3a6b,#1e5799); color:#fff; font-weight:700; font-size:.78rem; display:flex; align-items:center; justify-content:center; letter-spacing:.5px; flex-shrink:0; box-shadow:0 2px 8px rgba(12,30,58,.2); }
+.umd-identity { min-width:0; }
+.umd-name { font-weight:700; font-size:.88rem; color:#0c1e3a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.umd-role { font-size:.72rem; color:#64748b; margin-top:1px; }
+.umd-section { padding:5px 6px; display:flex; flex-direction:column; }
+.umd-section-border { border-top:1px solid #f1f5f9; }
+.user-menu-dropdown .umd-item { display:flex; align-items:center; gap:9px; width:100%; padding:9px 10px; border-radius:8px; background:none; border:none; cursor:pointer; font-size:.875rem; font-weight:500; color:#1e293b !important; font-family:'DM Sans',sans-serif; text-decoration:none !important; transition:background .12s,color .12s; text-align:left; letter-spacing:0; }
+.user-menu-dropdown .umd-item:hover { background:#f1f5f9; color:#0c1e3a !important; }
+.user-menu-dropdown .umd-item.umd-active { color:#1a3a6b !important; font-weight:600; background:#eff4ff; }
+.user-menu-dropdown .umd-icon { width:18px; text-align:center; font-size:.95rem; flex-shrink:0; }
+.user-menu-dropdown .umd-signout { color:#dc2626 !important; }
+.user-menu-dropdown .umd-signout:hover { background:#fef2f2 !important; color:#b91c1c !important; }
+/* ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── UMD (User Menu Dropdown) ── */
+.nav-right-group { display: flex; align-items: center; gap: 8px; }
+.nav-bell {
+  display: flex; align-items: center; justify-content: center;
+  width: 34px; height: 34px; border-radius: 999px; flex-shrink: 0;
+  background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.22);
+  color: #fff; font-size: 1rem; text-decoration: none;
+  transition: background .18s;
+}
+.nav-bell:hover { background: rgba(255,255,255,.18); }
+.umd-wrap { position:relative; }
+.umd-toggle {
+  display:flex; align-items:center; gap:8px;
+  background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.22);
+  border-radius:999px; padding:5px 12px 5px 5px;
+  cursor:pointer; transition:background .18s; color:#fff;
+}
+.umd-toggle:hover { background:rgba(255,255,255,.18); }
+.umd-avatar {
+  width:28px; height:28px; border-radius:50%;
+  background:linear-gradient(135deg,#38bdf8,#1a3a6b);
+  display:flex; align-items:center; justify-content:center;
+  font-size:.68rem; font-weight:700; color:#fff; flex-shrink:0;
+}
+.umd-name  { font-size:.8rem; color:#fff; font-weight:600; max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.umd-caret { font-size:.6rem; color:rgba(255,255,255,.7); }
+.umd-dropdown {
+  display:none; position:absolute; right:0; top:calc(100% + 8px);
+  background:#fff; border:1px solid #e2e8f0;
+  border-radius:12px; box-shadow:0 8px 32px rgba(12,30,58,.18);
+  min-width:220px; overflow:hidden; z-index:200;
+}
+.umd-dropdown.open, .umd-dropdown.active { display:block; }
+.umd-user-row { padding:14px 16px 10px; border-bottom:1px solid #f1f5f9; }
+.umd-user-name  { font-size:.88rem; font-weight:700; color:#0c1e3a; }
+.umd-user-email { font-size:.75rem; color:#64748b; margin-top:2px; }
+.umd-section { display:flex; flex-direction:column; padding:6px; border-bottom:1px solid #f1f5f9; }
+.umd-section:last-child { border-bottom:none; }
+.umd-link {
+  display:flex; align-items:center; gap:9px;
+  padding:9px 10px; border-radius:8px;
+  font-size:.84rem; font-weight:600; color:#0c1e3a;
+  text-decoration:none; background:none; border:none;
+  cursor:pointer; width:100%; font-family:'DM Sans',sans-serif; transition:background .15s;
+}
+.umd-link:hover { background:#f8faff; }
+.umd-link.danger { color:#dc2626; }
+.umd-link.danger:hover { background:#fef2f2; }
+</style>
+
+<style>
+/* ── Mobile: hide UMD pill ── */
+@media (max-width: 860px) {
+  .umd-wrap, #userMenu, #navBell { display: none !important; }
+  #nav-login { display: none !important; }
+}
+</style>
+<style>
+/* ── Global mobile horizontal-overflow guard ─────────────────── */
+@media (max-width: 600px) {
+  body, main.page { overflow-x: hidden; }
+  main.page > * { max-width: 100%; box-sizing: border-box; }
+  .filter-card, .toolbar, .card, .stat-card, .kpi { max-width: 100%; box-sizing: border-box; }
+  input[type="search"], input[type="text"], select { max-width: 100%; box-sizing: border-box; }
+}
+</style>
+</head>
+
+<body class="auth-guest">
+
+<!-- ═══ SUPABASE BOOTSTRAP (body-first: avoids tracking-prevention blocking safeStorage) ═══ -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/* ── rgFiles ────────────────────────────────────────────────────────────────
+   Turns a stored file reference into a short-lived signed link, so pages keep
+   working when the storage buckets are switched from public to private.
+   Accepts a storage path or a stored public URL.
+   Markup:  <a href="#" ${rgFiles.attr('bucket', pathOrUrl)}>Open</a>
+   Then:    rgFiles.hydrate(client, containerEl)  // after markup is in the DOM
+--------------------------------------------------------------------------- */
+window.rgFiles = (function () {
+  function parse(value) {
+    var m = String(value).match(/\/object\/(?:public|sign|authenticated)\/([^/]+)\/([^?]+)/);
+    return m ? { bucket: m[1], path: decodeURIComponent(m[2]) } : null;
+  }
+  function resolve(client, bucket, value, seconds) {
+    if (!value) return Promise.resolve(null);
+    var v = String(value), b = bucket, p = v, wasUrl = false;
+    if (/^(blob:|data:)/i.test(v)) return Promise.resolve(v);
+    if (/^https?:\/\//i.test(v)) {
+      wasUrl = true;
+      var hit = parse(v);
+      if (!hit) return Promise.resolve(v);          // a link someone typed in
+      b = hit.bucket; p = hit.path;
+    }
+    if (!client || !client.storage) return Promise.resolve(wasUrl ? v : null);
+    return client.storage.from(b).createSignedUrl(p, seconds || 3600)
+      .then(function (r) {
+        if (r && r.data && r.data.signedUrl) return r.data.signedUrl;
+        return wasUrl ? v : null;
+      })
+      .catch(function () { return wasUrl ? v : null; });
+  }
+  function attr(bucket, value) {
+    return value ? ' data-rg-file="' + bucket + '|' + encodeURIComponent(value) + '"' : '';
+  }
+  function hydrate(client, root) {
+    var nodes = (root || document).querySelectorAll('[data-rg-file]');
+    Array.prototype.forEach.call(nodes, function (el) {
+      var raw = el.getAttribute('data-rg-file') || '';
+      var i = raw.indexOf('|');
+      if (i < 0) return;
+      el.removeAttribute('data-rg-file');
+      resolve(client, raw.slice(0, i), decodeURIComponent(raw.slice(i + 1))).then(function (url) {
+        if (!url) { el.removeAttribute('href'); el.title = 'File unavailable'; return; }
+        if (el.tagName === 'IMG') el.src = url; else el.href = url;
+      });
+    });
+  }
+  return { resolve: resolve, hydrate: hydrate, attr: attr };
+})();
+</script>
+
+<script>
+/* ── Rental Genie Supabase Bootstrap ── */
+(function() {
+  try {
+    var _mem = new Map();
+    var _ls = null; try { _ls = window.localStorage; } catch(e) {}
+    var _store = {
+      getItem:    function(k){ try { return (_ls && _ls.getItem(k)) || _mem.get(k) || null; } catch(e) { return _mem.get(k) || null; } },
+      setItem:    function(k,v){ try { _ls && _ls.setItem(k,v); } catch(e) {} _mem.set(k,v); },
+      removeItem: function(k){ try { _ls && _ls.removeItem(k); } catch(e) {} _mem.delete(k); }
+    };
+    var _c = window._rgClient || window.supabase.createClient(
+      'https://pbojacnagutipfhcxltj.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBib2phY25hZ3V0aXBmaGN4bHRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgwMDkwODAsImV4cCI6MjA2MzU4NTA4MH0.ZLCcAzTYljoZycpBGwMtthP5VyAJ4schuIvt4HibGc0',
+      { auth: { lock: undefined, persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storage: _store } }
+    );
+    window._rgClient   = _c;
+    window.sb          = _c;
+    window.client      = _c;
+    window.getSbClient = function() { return _c; };
+    window.GSClient    = { getAsync: async function() { return _c; } };
+  } catch(e) { console.error('RG bootstrap failed:', e); }
+})();
+</script>
+<!-- ══════════════════════════════════════════════════════════════════════════════════════ -->
+<div id="authOverlay">
+  <div class="ao-bar-fill" id="aoBarFill"></div>
+</div>
+<script>
+// Safety net: remove overlay after 2.5s max regardless of boot() outcome
+(function() {
+  function killOverlay() {
+    var ov = document.getElementById('authOverlay');
+    if (ov) { ov.style.opacity = '0'; setTimeout(function(){ if(ov.parentNode) ov.parentNode.removeChild(ov); }, 350); }
+  }
+  setTimeout(killOverlay, 2500);
+  // Also remove immediately once DOM + scripts are ready
+  document.addEventListener('DOMContentLoaded', function() {
+    // Give boot() 800ms to run — if it redirects, overlay is gone anyway
+    setTimeout(killOverlay, 800);
+  });
+})();
+</script>
+
+<header class="header-container">
+  <div class="navbar">
+    <a class="brand-area" href="index.html">
+      <img src="images/rg-logo.png" class="brand-logo" alt="Rental Genie" onerror="this.style.display='none'" />
+      <span class="brand-title">Rental Genie</span>
+    </a>
+
+    <nav class="nav-links" aria-label="Main navigation">
+      <a href="dashboard.html">📊 Dashboard</a>
+      <a href="property-management.html">🏘️ Properties</a>
+      <a href="lease-rent-center.html">💰 Lease &amp; Rent</a>
+      <a href="expense-tracking.html" class="nav-active">💸 Expenses</a>
+      <a href="maintenance-requests.html">🛠 Maintenance</a>
+      <a href="reports-analytics.html">📈 Reports</a>
+    </nav>
+
+    <!-- UMD -->
+    <div class="nav-right-group">
+      <a class="nav-bell" id="navBell" href="tenant-messages.html" title="Messages" aria-label="Messages" style="display:none">🔔</a>
+      <div class="umd-wrap" id="userMenu" style="display:none">
+        <button class="umd-toggle" id="umdToggle" aria-haspopup="true" aria-expanded="false">
+          <div class="umd-avatar" id="umdAvatar">?</div>
+          <span class="umd-name" id="umdName">User</span>
+          <span class="umd-caret">▾</span>
+        </button>
+        <div class="umd-dropdown" id="umdDropdown">
+          <div class="umd-user-row">
+            <div class="umd-user-name"  id="umdFullName">—</div>
+            <div class="umd-user-email" id="umdEmail">—</div>
+          </div>
+          <div class="umd-section">
+            <a class="umd-link" href="dashboard.html">📊 Dashboard</a>
+            <a class="umd-link" href="account.html">⚙️ Account Settings</a>
+            <a class="umd-link" href="invite-tenant.html">✉️ Invite Tenant</a>
+            <a class="umd-link" href="tenant-portal-picker.html">🏠 Tenant Portal</a>
+          </div>
+          <div class="umd-section">
+            <a class="umd-link" href="reports-analytics.html">📈 Reports &amp; Analytics</a>
+            <a class="umd-link" href="contact-us.html">💬 Contact Support</a>
+          </div>
+          <div class="umd-section">
+            <button class="umd-link danger" id="logoutBtn">🚪 Sign Out</button>
+          </div>
+        </div>
+      </div>
+
+      <a id="nav-login" href="login.html">Log in</a>
+    </div>
+    <button class="hamburger" id="hamburgerBtn" aria-label="Open menu">☰</button>
+  </div>
+</header>
+
+<div class="drawer" id="mobileDrawer">
+  <!-- User row (shown when logged in) -->
+  <a href="account.html" id="mobileAccountLink" style="display:none;" class="drawer-user-row">
+    <span class="drawer-avatar" id="drawerAvatar">?</span>
+    <span class="drawer-username" id="mobileUsernameLabel">Account</span>
+  </a>
+  <!-- 2-col nav grid with row dividers -->
+  <div class="drawer-grid">
+    <a href="dashboard.html">📊 Dashboard</a>
+    <a href="property-management.html">🏘️ Properties</a>
+    <div class="drawer-grid-divider"></div>
+    <a href="lease-rent-center.html">💰 Lease &amp; Rent</a>
+    <a href="expense-tracking.html" class="nav-active">💸 Expenses</a>
+    <div class="drawer-grid-divider"></div>
+    <a href="maintenance-requests.html">🛠 Maintenance</a>
+    <a href="tenant-messages.html">💬 Messages</a>
+    <a href="reports-analytics.html">📈 Reports</a>
+  </div>
+  <!-- Guest login link -->
+  <a href="login.html" id="mobileLogin" class="drawer-login" style="display:none;">Log in</a>
+  <!-- Sign out (shown when logged in) -->
+  <div id="mobileLogoutContainer" style="display:none;">
+    <button id="mobileLogoutBtn">Sign Out</button>
+  </div>
+</div>
+
+<div class="toast" id="rgToast" role="status" aria-live="polite"></div>
+
+</div>
+
+
+<!-- Expense Drawer -->
+<div class="panel-overlay" id="expensePanelOverlay" aria-hidden="true"></div>
+<aside class="side-panel" id="expenseSidePanel" aria-hidden="true" aria-label="Expense Form Panel">
+  <div class="side-panel-header">
+    <div class="side-panel-title" id="expensePanelTitle" style="display: none;">💸 Add Expense</div>
+    <div class="side-panel-actions">
+      <button class="panel-btn" id="expensePanelOpenBtn" type="button">↗ Open</button>
+      <button class="panel-btn" id="expensePanelCloseBtn" type="button">✖ Close</button>
+    </div>
+  </div>
+  <iframe class="panel-iframe" id="expensePanelFrame" title="Expense Form"></iframe>
+</aside>
+
+
+<main class="page">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:18px;">
+        <div>
+          <h1 style="margin:0 0 4px;">💸 Expense Tracking</h1>
+          <p style="margin:0;color:var(--rg-muted,#64748b);font-size:.88rem;">Track every property expense — filter by date, category, and property.</p>
+        </div>
+        <button class="add-btn" id="addExpenseBtnTop" style="align-self:flex-start;white-space:nowrap;">➕ New Expense</button>
+      </div>
+
+      <div id="workspaceEmptyState" style="display:none; margin-top:12px;">
+        <div class="card" style="border-left:5px solid #0ea5e9;">
+          <div style="display:flex; gap:10px; align-items:flex-start;">
+            <div style="font-size:1.2rem;">🏢</div>
+            <div style="flex:1;">
+              <div style="font-weight:800; color:#0f172a;">Set up your rental workspace</div>
+              <div class="muted" style="margin-top:4px; color:#475569;">You’re signed in, but you’re not linked to a company yet. Create one now to start tracking expenses.</div>
+              <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;">
+                <button class="add-btn" id="createWorkspaceBtn" type="button" style="background:#0ea5e9; box-shadow:0 4px 8px rgba(14,165,233,0.2);">✨ Create my workspace</button>
+                <button class="add-btn" id="refreshWorkspaceBtn" type="button" style="background:#e2e8f0; color:#0f172a; box-shadow:none;">🔄 Refresh</button>
+              </div>
+              <div style="margin-top:10px; font-size:0.85rem; color:#64748b;">If someone invited you, ask them to add your email to the company.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      
+      <div class="filter-card" aria-label="Search filters">
+        <div class="filter-grid">
+          <div class="filter-field" id="companyFilterGroup" style="display:none;">
+            <label for="companySelect">Company</label>
+            <select id="companySelect">
+              <option value="">-- Select company --</option>
+            </select>
+          </div>
+
+          <div class="filter-field">
+            <label for="propertySelect">Property</label>
+            <select id="propertySelect">
+              <option value="">All Properties</option>
+            </select>
+          </div>
+
+          <div class="filter-field">
+            <label for="categorySelect">Category</label>
+            <select id="categorySelect">
+              <option value="">All Categories</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="filter-subrow" style="margin-top:14px; padding-top:12px; border-top:1px solid #f1f5f9;">
+          <div class="filter-presets" style="margin-top:0;">
+            <span class="preset-label">Quick range</span>
+            <select id="datePreset" class="preset-select" aria-label="Quick date range">
+              <option value="">Custom</option>
+              <option value="this_month">This month</option>
+              <option value="last_month">Last month</option>
+              <option value="this_year">This year</option>
+              <option value="last_30">Last 30 days</option>
+              <option value="last_90">Last 90 days</option>
+              <option value="all_time">All time</option>
+            </select>
+
+            <div class="filter-inline-dates">
+              <label for="dateFrom" class="inline-label">From</label>
+              <input type="date" id="dateFrom" />
+              <label for="dateTo" class="inline-label">To</label>
+              <input type="date" id="dateTo" />
+            </div>
+
+            <span class="preset-hint">Choose a quick range to auto-fill dates.</span>
+          </div>
+        </div>
+      </div>
+
+      <section class="summary-card-grid">
+
+        <article class="summary-card">
+          <div class="summary-label">Total Expenses (Selected)</div>
+          <div class="summary-value" id="totalExpenses">$0.00</div>
+        </article>
+
+        <article class="summary-card">
+          <div class="summary-label">Maintenance / Repairs</div>
+          <div class="summary-value" id="maintenanceTotal">$0.00</div>
+        </article>
+
+        <article class="summary-card">
+          <div class="summary-label">Management / Fees</div>
+          <div class="summary-value" id="managementTotal">$0.00</div>
+        </article>
+
+        <article class="summary-card">
+          <div class="summary-label">Utilities / Taxes</div>
+          <div class="summary-value" id="utilitiesTotal">$0.00</div>
+        </article>
+      </section>
+
+      <div class="card-header">
+        <h2>📒 Expense Ledger</h2>
+        <button class="add-btn" id="addExpenseBtn">➕ New Expense</button>
+      </div>
+
+      <div class="card">
+        <div class="expense-table-container">
+          <table class="expense-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Property</th>
+                <th>Category</th>
+                <th>Description</th>
+                <th>Amount</th>
+                <th style="text-align:center">Receipt</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="expenseTableBody">
+              </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!--div class="back-link">
+        <a href="dashboard.html">← Back to Dashboard</a>
+      </div-->
+
+  <div class="mobile-pad" aria-hidden="true"></div>
+</main>
+
+
+
+<script>
+/* -------------------------------------------------------------
+   Supabase Client (Shared)
+------------------------------------------------------------- */
+    // client is provided by Enterprise boot (window.sb)
+let activeCompanyId = null;
+
+function isUuid(v) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(v || "").trim());
+}
+
+async function getActiveCompanyId() {
+  // 1) localStorage preference
+  const stored = localStorage.getItem("rg_active_company_id");
+  if (isUuid(stored)) return stored;
+
+  // 2) pick first company where user is a member
+  const { data: userRes, error: userErr } = await client.auth.getUser();
+  if (userErr) {
+    console.warn("getActiveCompanyId: auth.getUser error", userErr);
+    return null;
+  }
+  const user = userRes?.user;
+  if (!user) return null;
+
+  const { data: memberships, error: memErr } = await client
+    .from("company_members")
+    .select("company_id")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: true })
+    .limit(1);
+
+  if (memErr) {
+    console.warn("getActiveCompanyId: company_members error", memErr);
+    return null;
+  }
+
+  const cid = memberships?.[0]?.company_id || null;
+  if (isUuid(cid)) {
+    localStorage.setItem("rg_active_company_id", cid);
+    return cid;
+  }
+
+  return null;
+}
+
+
+function showToast(message){
+  const t = document.getElementById("rgToast");
+  if(!t) return;
+  t.textContent = message || "";
+  t.style.display = "block";
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(() => { t.style.display = "none"; }, 2600);
+}
+
+function escapeHtml(str){
+  const s = String(str ?? "");
+  return s
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function setWorkspaceUiEnabled(enabled){
+  const propertySelect = document.getElementById("propertySelect");
+  const categorySelect = document.getElementById("categorySelect");
+  const dateFromInput = document.getElementById("dateFrom");
+  const dateToInput = document.getElementById("dateTo");
+  const addBtn = document.getElementById("addExpenseBtn");
+
+  [propertySelect, categorySelect, dateFromInput, dateToInput].forEach(el => {
+    if(el) el.disabled = !enabled;
+  });
+  if(addBtn) addBtn.disabled = !enabled;
+}
+
+function showWorkspaceEmptyState(show){
+  const box = document.getElementById("workspaceEmptyState");
+  if(box) box.style.display = show ? "block" : "none";
+  setWorkspaceUiEnabled(!show);
+}
+
+async function loadCompanyDropdown(){
+  const group = document.getElementById("companyFilterGroup");
+  const sel = document.getElementById("companySelect");
+  if(!group || !sel) return;
+
+  const { data: userRes, error: userErr } = await client.auth.getUser();
+  const user = userRes?.user;
+  if(userErr || !user){
+    group.style.display = "none";
+    return;
+  }
+
+  const { data: memberships, error } = await client
+    .from("company_members")
+    .select("company_id, role, companies:company_id (id, name)")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: true });
+
+  if(error){
+    console.warn("loadCompanyDropdown error:", error);
+    group.style.display = "none";
+    return;
+  }
+
+  const companies = (memberships || []).map(m => m.companies).filter(Boolean);
+
+  // 0 companies → workspace empty state
+  if(companies.length === 0){
+    group.style.display = "none";
+    activeCompanyId = null;
+    localStorage.removeItem("rg_active_company_id");
+    showWorkspaceEmptyState(true);
+
+    const refreshBtn = document.getElementById("refreshWorkspaceBtn");
+    const createBtn = document.getElementById("createWorkspaceBtn");
+
+    if(refreshBtn && !refreshBtn.dataset.wired){
+      refreshBtn.dataset.wired = "1";
+      refreshBtn.addEventListener("click", async () => {
+        refreshBtn.disabled = true;
+        refreshBtn.textContent = "Refreshing…";
+        try{
+          await loadCompanyDropdown();
+          if(activeCompanyId){
+            showWorkspaceEmptyState(false);
+            setupFilters();
+          }
+        }finally{
+          refreshBtn.disabled = false;
+          refreshBtn.textContent = "🔄 Refresh";
+        }
+      });
+    }
+
+    if(createBtn && !createBtn.dataset.wired){
+      createBtn.dataset.wired = "1";
+      createBtn.addEventListener("click", async () => {
+        createBtn.disabled = true;
+        createBtn.textContent = "Creating…";
+        try{
+          const uid = user.id;
+
+          const { data: comp, error: compErr } = await client
+            .from("companies")
+            .insert({ name: "My Rentals", owner_id: uid })
+            .select("id,name")
+            .single();
+          if(compErr) throw compErr;
+
+          const { error: memErr } = await client
+            .from("company_members")
+            .insert({ company_id: comp.id, user_id: uid, role: "owner" });
+          if(memErr) throw memErr;
+
+          showToast("Workspace created");
+          await loadCompanyDropdown();
+          if(activeCompanyId){
+            showWorkspaceEmptyState(false);
+            setupFilters();
+          }
+        }catch(err){
+          console.error("Create workspace error:", err);
+          alert("Could not create workspace. Please check your database columns/RLS.");
+        }finally{
+          createBtn.disabled = false;
+          createBtn.textContent = "✨ Create my workspace";
+        }
+      });
+    }
+
+    return;
+  }
+
+  // 1 company → keep it invisible (no extra choices)
+  if(companies.length === 1){
+    group.style.display = "none";
+    activeCompanyId = companies[0].id;
+    localStorage.setItem("rg_active_company_id", activeCompanyId);
+    showWorkspaceEmptyState(false);
+    return;
+  }
+
+  // 2+ companies → show selector (safe + consistent)
+  group.style.display = "inline-flex";
+  showWorkspaceEmptyState(false);
+
+  const stored = localStorage.getItem("rg_active_company_id");
+  const preferred = companies.some(c => c.id === stored) ? stored : (companies[0]?.id || "");
+
+  sel.innerHTML = companies.map(c => `<option value="${c.id}">${escapeHtml(c.name || "Company")}</option>`).join("");
+  sel.value = preferred;
+  activeCompanyId = preferred;
+  localStorage.setItem("rg_active_company_id", activeCompanyId);
+
+  if(!sel.dataset.wired){
+    sel.dataset.wired = "1";
+    sel.addEventListener("change", async () => {
+      activeCompanyId = sel.value || null;
+      if(activeCompanyId) localStorage.setItem("rg_active_company_id", activeCompanyId);
+      else localStorage.removeItem("rg_active_company_id");
+
+      // Reset property filter to avoid cross-company confusion
+      currentFilters.property = "";
+      const propertySelect = document.getElementById("propertySelect");
+      if(propertySelect){
+        propertySelect.value = "";
+        propertySelect.innerHTML = `<option value="">All Properties</option>`;
+      }
+      await loadPropertyOptions(propertySelect);
+
+      applyFilters();
+    });
+  }
+}
+/* -------------------------------------------------------------
+   Expense Tracking Logic (from expense-tracking.html)
+------------------------------------------------------------- */
+    const CATEGORIES = [
+      "Maintenance/Repairs",
+      "Property Management Fees",
+      "Utilities",
+      "Taxes/Insurance",
+      "Capital Expenditure",
+      "Other",
+    ];
+
+    let currentFilters = {
+      property: "",
+      category: "",
+      dateFrom: "",
+      dateTo: "",
+    };
+
+    async function ensureAuthenticated() {
+      try {
+        const { data, error } = await client.auth.getUser();
+        const user = data?.user || null;
+        if (error || !user) {
+          const redirect = encodeURIComponent(window.location.href);
+          window.location.href = "login.html?redirect=" + redirect;
+        }
+      } catch (e) {
+        console.error("Auth check error on expense-tracking:", e);
+      }
+    }
+
+    function formatMoney(amount) {
+      if (amount == null || isNaN(amount)) return "$0.00";
+      return `$${Number(amount).toLocaleString(undefined, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })}`;
+    }
+
+    function formatDate(iso) {
+      if (!iso) return "—";
+      const d = new Date(iso);
+      if (isNaN(d)) return "—";
+      return d.toLocaleDateString();
+    }
+
+    
+function toISODate(d){
+  const yr = d.getFullYear();
+  const mo = String(d.getMonth()+1).padStart(2,"0");
+  const da = String(d.getDate()).padStart(2,"0");
+  return `${yr}-${mo}-${da}`;
+}
+function startOfMonth(d){ return new Date(d.getFullYear(), d.getMonth(), 1); }
+function endOfMonth(d){ return new Date(d.getFullYear(), d.getMonth()+1, 0); }
+
+function setDateRangePreset(preset, dateFromInput, dateToInput){
+  const today = new Date();
+  let from = "";
+  let to = "";
+
+  if(preset === "this_month"){
+    from = toISODate(startOfMonth(today));
+    to = toISODate(endOfMonth(today));
+  } else if(preset === "last_month"){
+    const lm = new Date(today.getFullYear(), today.getMonth()-1, 1);
+    from = toISODate(startOfMonth(lm));
+    to = toISODate(endOfMonth(lm));
+  } else if(preset === "this_year"){
+    from = `${today.getFullYear()}-01-01`;
+    to = `${today.getFullYear()}-12-31`;
+  } else if(preset === "last_30"){
+    const d = new Date(today);
+    d.setDate(d.getDate()-30);
+    from = toISODate(d);
+    to = toISODate(today);
+  } else if(preset === "last_90"){
+    const d = new Date(today);
+    d.setDate(d.getDate()-90);
+    from = toISODate(d);
+    to = toISODate(today);
+  } else if(preset === "all_time"){
+    from = "";
+    to = "";
+  }
+
+  if(dateFromInput) dateFromInput.value = from;
+  if(dateToInput) dateToInput.value = to;
+}
+
+function setupFilters() {
+      const propertySelect = document.getElementById("propertySelect");
+      const categorySelect = document.getElementById("categorySelect");
+      const dateFromInput = document.getElementById("dateFrom");
+      const dateToInput = document.getElementById("dateTo");
+      const datePreset = document.getElementById("datePreset");
+
+      if (!propertySelect || !categorySelect || !dateFromInput || !dateToInput) return;
+
+      propertySelect.innerHTML = `<option value="">All Properties</option>`;
+      categorySelect.innerHTML = `<option value="">All Categories</option>`;
+
+      // Load Categories
+      CATEGORIES.forEach((cat) => {
+        const opt = document.createElement("option");
+        opt.value = cat;
+        opt.textContent = cat;
+        categorySelect.appendChild(opt);
+      });
+
+      // Load Properties
+      loadPropertyOptions(propertySelect).then(() => {
+        // Apply URL parameters and initial load
+        const params = new URLSearchParams(window.location.search);
+        currentFilters.property = params.get("property") || "";
+        currentFilters.category = params.get("category") || "";
+        currentFilters.dateFrom = params.get("from") || "";
+        currentFilters.dateTo = params.get("to") || "";
+
+        propertySelect.value = currentFilters.property;
+        categorySelect.value = currentFilters.category;
+        dateFromInput.value = currentFilters.dateFrom;
+        dateToInput.value = currentFilters.dateTo;
+
+        // Helpful default: if no dates provided, show this month
+        if(datePreset){
+          if(!currentFilters.dateFrom && !currentFilters.dateTo){
+            datePreset.value = "this_month";
+            setDateRangePreset("this_month", dateFromInput, dateToInput);
+            currentFilters.dateFrom = dateFromInput.value;
+            currentFilters.dateTo = dateToInput.value;
+          }else{
+            datePreset.value = "";
+          }
+
+          datePreset.addEventListener("change", () => {
+            const preset = datePreset.value || "";
+            setDateRangePreset(preset, dateFromInput, dateToInput);
+            currentFilters.dateFrom = dateFromInput.value;
+            currentFilters.dateTo = dateToInput.value;
+            applyFilters();
+          });
+        }
+
+        applyFilters();
+      });
+
+      // Add event listeners to update filters and reload data
+      [propertySelect, categorySelect, dateFromInput, dateToInput].forEach(
+        (el) => {
+          el.addEventListener("change", (e) => {
+            currentFilters[el.id.replace("Select", "").toLowerCase()] =
+              e.target.value;
+            // Handle date inputs specifically
+            if (el.id === "dateFrom") currentFilters.dateFrom = e.target.value;
+            if (el.id === "dateTo") currentFilters.dateTo = e.target.value;
+
+            applyFilters();
+          });
+        }
+      );
+    }
+    
+    async function loadPropertyOptions(selectEl) {
+      try {
+        const { data, error } = await client
+          .from("properties")
+          .select("name, address")
+          .eq("company_id", activeCompanyId)
+          .order("name", { ascending: true });
+
+        if (error) {
+          console.error("Error loading properties for selector:", error);
+          return;
+        }
+
+        (data || []).forEach((p) => {
+          const opt = document.createElement("option");
+          opt.value = p.name;
+          opt.textContent = p.address
+            ? `${p.name} — ${p.address}`
+            : p.name;
+          selectEl.appendChild(opt);
+        });
+      } catch (e) {
+        console.error("Unexpected error loading properties:", e);
+      }
+    }
+
+    function applyFilters() {
+      const url = new URL(window.location.href);
+      url.search = ""; // Clear existing params
+
+      if (currentFilters.property) url.searchParams.set("property", currentFilters.property);
+      if (currentFilters.category) url.searchParams.set("category", currentFilters.category);
+      if (currentFilters.dateFrom) url.searchParams.set("from", currentFilters.dateFrom);
+      if (currentFilters.dateTo) url.searchParams.set("to", currentFilters.dateTo);
+      
+      window.history.replaceState({}, "", url);
+      
+      loadExpenses();
+    }
+
+    async function loadExpenses() {
+  const body = document.getElementById("expenseTableBody");
+  const totalEl = document.getElementById("totalExpenses");
+  const maintEl = document.getElementById("maintenanceTotal");
+  const mgmtEl = document.getElementById("managementTotal");
+  const utilEl = document.getElementById("utilitiesTotal");
+
+  body.innerHTML = '<tr><td colspan="7">Loading expenses...</td></tr>';
+  
+  [totalEl, maintEl, mgmtEl, utilEl].forEach(el => {
+    if (el) el.textContent = formatMoney(0);
+  });
+
+  // Use the real date column: date_paid
+  let query = client.from("expenses").select("id, date_paid, property_name, category, amount, company_id, note, receipt_url, receipt_path").eq("company_id", activeCompanyId);
+
+  if (currentFilters.property) {
+    query = query.eq("property_name", currentFilters.property);
+  }
+  if (currentFilters.category) {
+    query = query.eq("category", currentFilters.category);
+  }
+  if (currentFilters.dateFrom) {
+    query = query.gte("date_paid", currentFilters.dateFrom);
+  }
+  if (currentFilters.dateTo) {
+    query = query.lte("date_paid", currentFilters.dateTo);
+  }
+  
+  query = query.order("date_paid", { ascending: false });
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error("Error loading expenses:", error);
+    body.innerHTML = `<tr><td colspan='7'>Error loading data: ${error.message || "Unknown error"}</td></tr>`;
+    return;
+  }
+
+  if (!data?.length) {
+    body.innerHTML = '<tr><td colspan="7">No expenses found for the selected filters.</td></tr>';
+    return;
+  }
+
+  let total = 0;
+  let maintenanceTotal = 0;
+  let managementTotal = 0;
+  let utilitiesTotal = 0;
+
+  body.innerHTML = data.map(r => {
+    total += r.amount || 0;
+    
+    // Update summary totals
+    switch (r.category) {
+      case "Maintenance/Repairs":
+        maintenanceTotal += r.amount || 0;
+        break;
+      case "Property Management Fees":
+        managementTotal += r.amount || 0;
+        break;
+      case "Utilities":
+        utilitiesTotal += r.amount || 0;
+        break;
+      case "Taxes/Insurance":
+        utilitiesTotal += r.amount || 0; // Grouping with utilities for this simple example
+        break;
+    }
+
+    return `
+      <tr data-id="${r.id}">
+        <td>${formatDate(r.date_paid)}</td>
+        <td>${r.property_name || "—"}</td>
+        <td>${r.category || "—"}</td>
+        <td>${r.note || ""}</td>
+        <td>${formatMoney(r.amount)}</td>
+        <td style="text-align:center">
+          ${(r.receipt_path || r.receipt_url)
+            ? `<a href="#"${rgFiles.attr('receipts', r.receipt_path || r.receipt_url)} target="_blank" rel="noopener"
+                  title="View receipt"
+                  style="font-size:1.15rem;text-decoration:none;opacity:.85">🧾</a>`
+            : '<span style="color:#cbd5e1;font-size:.75rem;">—</span>'}
+        </td>
+        <td class="actions-cell">
+          <button class="action-btn edit" title="Edit expense" onclick="handleEditExpense('${r.id}')">✏️</button>
+          <button class="action-btn delete" title="Delete expense" onclick="handleDeleteExpense('${r.id}')">🗑️</button>
+        </td>
+      </tr>
+    `;
+  }).join("");
+  rgFiles.hydrate(client || window._rgClient, body);
+
+  if (totalEl) totalEl.textContent = formatMoney(total);
+  if (maintEl) maintEl.textContent = formatMoney(maintenanceTotal);
+  if (mgmtEl) mgmtEl.textContent = formatMoney(managementTotal);
+  if (utilEl) utilEl.textContent = formatMoney(utilitiesTotal);
+}
+
+    // Setup Add Expense button
+    const addExpenseBtn = document.getElementById("addExpenseBtn");
+    if (addExpenseBtn) {
+        addExpenseBtn.onclick = () => {
+          const p = currentFilters.property ? `?property=${encodeURIComponent(currentFilters.property)}&embedded=1` : `?embedded=1`;
+          openExpenseDrawer(`add-expense.html${p}`, "➕ New Expense");
+        };
+    }
+
+    // Edit handler: open add-expense in edit mode
+    window.handleEditExpense = function (id) {
+      if (!id) return;
+      const url = `add-expense.html?embedded=1&id=${encodeURIComponent(id)}`;
+      openExpenseDrawer(url, "✏️ Edit Expense");
+    };
+
+    // Delete handler: confirm, then delete via Supabase
+    window.handleDeleteExpense = async function (id) {
+      if (!id) return;
+      const confirmed = window.confirm("Are you sure you want to delete this expense?");
+      if (!confirmed) return;
+
+      const { error } = await client
+        .from("expenses")
+        .delete()
+        .eq("id", id);
+
+      if (error) {
+        console.error("Error deleting expense:", error);
+        alert("Error deleting expense: " + (error.message || "Unknown error"));
+        return;
+      }
+
+      // Reload ledger after delete
+      await loadExpenses();
+    };
+
+
+/* -------------------------------------------------------------
+   Expense Drawer helpers
+------------------------------------------------------------- */
+let lastExpenseDrawerUrl = "";
+
+function stripEmbeddedParam(url){
+  try{
+    const u = new URL(url, window.location.origin);
+    u.searchParams.delete("embedded");
+    u.searchParams.delete("embed");
+    // clean dangling ? if no params
+    return u.pathname + (u.searchParams.toString() ? ("?" + u.searchParams.toString()) : "");
+  }catch(e){
+    // fallback simple replace
+    return (url||"").replace(/([?&])(embedded|embed)=1(&|$)/g, (m,a,k,b)=> a==="?" && b==="" ? "?" : a).replace(/\?$/,"");
+  }
+}
+
+function openExpenseDrawer(url, title) {
+  const overlay = document.getElementById("expensePanelOverlay");
+  const panel = document.getElementById("expenseSidePanel");
+  const frame = document.getElementById("expensePanelFrame");
+  const titleEl = document.getElementById("expensePanelTitle");
+  const openBtn = document.getElementById("expensePanelOpenBtn");
+
+  if (!overlay || !panel || !frame) return;
+
+  // Always use embedded mode INSIDE the slide-out (iframe),
+  // but open the full page (with header/footer) in a new tab.
+  const openUrl = stripEmbeddedParam(url);
+  const iframeUrl = (() => {
+    try{
+      const u = new URL(openUrl, window.location.origin);
+      // if caller already passed embedded=1 or embed=1, keep it
+      if (u.searchParams.get("embedded") !== "1" && u.searchParams.get("embed") !== "1") {
+        u.searchParams.set("embedded", "1");
+      }
+      return u.pathname + "?" + u.searchParams.toString();
+    }catch(e){
+      return url;
+    }
+  })();
+
+  lastExpenseDrawerUrl = openUrl;
+
+  if (titleEl) titleEl.textContent = title || "💸 Expense";
+  frame.src = iframeUrl;
+
+  overlay.classList.add("active");
+  panel.classList.add("active");
+  overlay.setAttribute("aria-hidden", "false");
+  panel.setAttribute("aria-hidden", "false");
+
+  if (openBtn) {
+    openBtn.onclick = () => window.open(lastExpenseDrawerUrl, "_self");
+  }
+
+  // Wire close button — done here so it re-wires each time the drawer opens
+  const closeBtn = document.getElementById("expensePanelCloseBtn");
+  if (closeBtn) {
+    closeBtn.onclick = closeExpenseDrawer;
+  }
+
+  // Clicking the dark overlay also closes the drawer
+  if (overlay) {
+    overlay.onclick = closeExpenseDrawer;
+  }
+}
+
+function closeExpenseDrawer() {
+  const overlay = document.getElementById("expensePanelOverlay");
+  const panel = document.getElementById("expenseSidePanel");
+  const frame = document.getElementById("expensePanelFrame");
+
+  if (!overlay || !panel || !frame) return;
+
+  overlay.classList.remove("active");
+  panel.classList.remove("active");
+  overlay.setAttribute("aria-hidden", "true");
+  panel.setAttribute("aria-hidden", "true");
+
+  // Clear iframe AFTER transition completes (320ms > 250ms animation) — prevents blank flash
+  setTimeout(() => { frame.src = "about:blank"; }, 320);
+}
+
+
+/* -------------------------------------------------------------\
+   INIT
+------------------------------------------------------------- */
+    var _fy=document.getElementById("footerYear"); if(_fy) _fy.textContent=new Date().getFullYear();
+
+    // DOMContentLoaded init removed – Enterprise boot() calls initDashboardPage() after client is ready.
+// loadExpenses is called by setupFilters after initial URL/Dropdown state is set
+</script>
+
+<script>
+function applyHeaderAuthState(user){
+  const body = document.body;
+  const signedIn = !!user;
+  body.classList.toggle("auth-ready", signedIn);
+  body.classList.toggle("auth-guest", !signedIn);
+  const label = document.getElementById("usernameLabel");
+  const mobileLabel = document.getElementById("mobileUsernameLabel");
+  const raw = (user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email || "User").toString();
+  const displayName = raw.includes("@") ? raw.split("@")[0] : raw;
+  if(label) label.textContent = displayName;
+  if(mobileLabel) mobileLabel.textContent = displayName;
+  var _da=document.getElementById("drawerAvatar"); if(_da){var _p=displayName.split(" ");_da.textContent=(_p.length>=2?_p[0][0]+_p[_p.length-1][0]:displayName.slice(0,2)).toUpperCase();}
+  // Populate dropdown header avatar + name
+  var _uN = document.getElementById('umdName');
+  var _uA = document.getElementById('umdAvatar');
+  if(_uN) _uN.textContent = displayName;
+  var _uFN=document.getElementById('umdFullName'); if(_uFN) _uFN.textContent=displayName;
+  var _uEM=document.getElementById('umdEmail'); if(_uEM) _uEM.textContent=user?.email||'';
+  if(_uA){
+    var _p = displayName.split(' ');
+    _uA.textContent = (_p.length >= 2
+      ? _p[0][0] + _p[_p.length-1][0]
+      : displayName.slice(0, 2)
+    ).toUpperCase();
+  }
+}
+
+function bindHeaderAuthUi(){
+  const menuBtn = document.getElementById("umdToggle");
+  const dropdown = document.getElementById("umdDropdown");
+  const logoutBtn = document.getElementById("logoutBtn");
+  const mobileLogoutBtn = document.getElementById("mobileLogoutBtn");
+  const drawer = document.getElementById("mobileDrawer");
+  const hamburgerBtn = document.getElementById("hamburgerBtn");
+
+  if(menuBtn && dropdown && !menuBtn.dataset.wired){
+    menuBtn.dataset.wired = "1";
+    menuBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      dropdown.classList.toggle("active");
+    });
+    document.addEventListener("click", (e) => {
+      if(!dropdown.contains(e.target) && !menuBtn.contains(e.target)){
+        dropdown.classList.remove("active");
+      }
+    });
+  }
+
+  if(hamburgerBtn && drawer && !hamburgerBtn.dataset.wired){
+    hamburgerBtn.dataset.wired = "1";
+    hamburgerBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      drawer.style.display = drawer.style.display === "block" ? "none" : "block";
+    });
+    drawer.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if(e.target.tagName === "A") drawer.style.display = "none";
+    });
+    document.addEventListener("click", (e) => {
+      if(drawer.style.display === "block" && !drawer.contains(e.target) && !hamburgerBtn.contains(e.target)){
+        drawer.style.display = "none";
+      }
+    });
+  }
+
+  async function doLogout(){
+    try{
+      const active = window.sb || window.GS?.sb || window.client;
+      if(active?.auth?.signOut) await active.auth.signOut();
+    }catch(e){
+      console.warn("Logout error:", e);
+    }
+    applyHeaderAuthState(null);
+    window.location.href = "/login.html";
+  }
+
+  if(logoutBtn && !logoutBtn.dataset.wired){
+    logoutBtn.dataset.wired = "1";
+    logoutBtn.addEventListener("click", doLogout);
+  }
+  if(mobileLogoutBtn && !mobileLogoutBtn.dataset.wired){
+    mobileLogoutBtn.dataset.wired = "1";
+    mobileLogoutBtn.addEventListener("click", doLogout);
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  bindHeaderAuthUi();
+  applyHeaderAuthState(null);
+});
+</script>
+
+<!-- RG_NAV_BADGES_V2_START -->
+
+<!-- RG_NAV_BADGES_V2_END -->
+
+<!-- =========================================================
+   EXISTING DASHBOARD LOGIC (from original index.html)
+   - patched to use Enterprise Supabase client
+========================================================= -->
+<script>
+/* -------------------------------------------------------------
+   Supabase Client (Enterprise)
+   - initialized by Enterprise boot() and exposed as window.sb
+------------------------------------------------------------- */
+let sb; // assigned inside initDashboardPage()
+let client; // alias to sb for legacy page logic
+
+/* --- client readiness helper (prevents early calls before enterprise boot finishes) --- */
+async function waitForClientReady(timeoutMs = 4000) {
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    const maybe = window.sb || window.GS?.sb;
+    if (maybe?.auth) {
+      sb = maybe;
+      client = maybe; // legacy alias
+      return client;
+    }
+    await new Promise(r => setTimeout(r, 50));
+  }
+  throw new Error("Supabase client not ready yet (waitForClientReady timeout).");
+}
+async function initDashboardPage(){
+  sb = window.sb || window.GS?.sb;
+  if(!sb){ throw new Error('Supabase client not ready. Enterprise boot() did not run.'); }
+
+  client = sb; // ✅ bridge for page business logic
+}
+
+var _fy=document.getElementById("footerYear"); if(_fy) _fy.textContent=new Date().getFullYear();
+
+</script>
+
+<!-- =========================================================
+   SELF-CONTAINED AUTH + CLIENT BOOTSTRAP
+   No /shared/ dependency — works on any host
+========================================================= -->
+<script>
+
+/* ── Loading progress bar (canonical 3px top shimmer) ────────── */
+function setProgress(pct, statusText, activeStep) {
+  var bar = document.getElementById('aoBarFill');
+  if (bar) bar.style.width = pct + '%';
+  // statusText/activeStep params retained for call-site compatibility
+}
+const boot = async () => {
+  // Always dismiss overlay when boot finishes (success or error)
+  const _dismissOnExit = function() {
+    var ov = document.getElementById('authOverlay');
+    if (ov) { ov.style.opacity = '0'; setTimeout(function(){ if(ov.parentNode) ov.parentNode.removeChild(ov); }, 320); }
+  };
+  try {
+  setProgress(5, 'Connecting…', 0);
+
+  // ── Wait for body bootstrap to initialise client ──
+  const sbClient = await waitForClientReady();
+  window.GS = window.GS || {};
+  window.GS.sb = sbClient;
+  const sb = sbClient;
+
+  setProgress(25, 'Connected — verifying session…', 0);
+
+  /* =========================================================
+     5. Require Authentication (getUser = server-validated, avoids
+        getSession null on Firefox/Edge tracking prevention)
+  ========================================================= */
+  setProgress(40, 'Authenticating…', 1);
+  var _authUser = null;
+  try {
+    var _gu = await sb.auth.getUser();
+    _authUser = (!_gu.error && _gu.data?.user) ? _gu.data.user : null;
+  } catch(e) {}
+  if (!_authUser) {
+    try {
+      var _gs = await sb.auth.getSession();
+      _authUser = _gs.data?.session?.user || null;
+    } catch(e) {}
+  }
+  applyHeaderAuthState(_authUser);
+
+  if (!_authUser) {
+    const returnTo = encodeURIComponent(
+      location.pathname + location.search + location.hash
+    );
+    location.href = 'login.html?returnTo=' + returnTo;
+    return;
+  }
+
+  /* =========================================================
+     6. User confirmed — header already applied above
+  ========================================================= */
+  const { data } = await sb.auth.getUser();
+  applyHeaderAuthState(data?.user || _authUser);
+  // Auth header wired by applyHeaderAuthState() + bindHeaderAuthUi() below
+
+  /* =========================================================
+     8. Auth State Listener
+  ========================================================= */
+  sb.auth.onAuthStateChange(async () => {
+    const { data } = await sb.auth.getUser();
+    applyHeaderAuthState(data?.user || null);
+
+  });
+
+  /* =========================================================
+     9. Now Run Existing Dashboard Logic
+     (NO CHANGE TO BUSINESS LOGIC BELOW)
+  ========================================================= */
+
+  // 👉 DO NOT re-create client
+  // 👉 Use `sb` from above
+
+  setProgress(65, 'Loading expenses…', 2);
+  await initDashboardPage(); // your existing function
+  await loadCompanyDropdown();
+
+  if (activeCompanyId) {
+    setupFilters();
+  } else {
+    showWorkspaceEmptyState(true);
+  }
+
+  } finally {
+    setProgress(100, 'Ready!', 3);
+    _dismissOnExit();
+  }
+};
+
+boot();
+</script>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const top = document.getElementById('addExpenseBtnTop');
+  const main = document.getElementById('addExpenseBtn');
+  if (top && main) top.addEventListener('click', () => main.click());
+});
+</script>
+<!-- ===== MOBILE BOTTOM NAV ===== -->
+<nav class="mobile-nav" aria-label="GenieSphere mobile navigation">
+  <div class="mobile-nav-inner">
+    <a class="mnav" href="dashboard.html"><div class="ico">📊</div></a>
+    <a class="mnav" href="property-management.html"><div class="ico">🏘️</div></a>
+    <a class="mnav" href="lease-rent-center.html"><div class="ico">💰</div></a>
+    <a class="mnav active" href="expense-tracking.html"><div class="ico">💸</div></a>
+    <a class="mnav" href="maintenance-requests.html"><div class="ico">🛠️</div></a>
+    <a class="mnav" href="reports-analytics.html"><div class="ico">📈</div>
+    </a>
+  </div>
+</nav>
+
+
+<!-- RG_BADGE_SYSTEM_V3_START -->
+<style>
+/* Rental Genie unified nav badges - desktop floats like lease-rent-center */
+.nav-links a,
+.drawer a{
+  display:inline-flex !important;
+  align-items:center !important;
+  gap:6px !important;
+  white-space:nowrap;
+}
+.nav-links a{
+  position:relative;
+}
+
+.nav-links .drawer 
+/* ── COMBINED BEST-OF-BOTH DRAWER ────────────────────────────── */
+.drawer {
+  display: none;
+  position: fixed;
+  top: 70px; left: 12px; right: 12px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  padding: 0;
+  z-index: 1300;
+  box-shadow: 0 16px 48px rgba(12,30,58,.2);
+  max-height: calc(100vh - 90px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overflow: hidden;
+}
+.drawer-user-row {
+  display: flex !important; align-items: center; gap: 12px;
+  padding: 16px 16px 14px !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+  border-radius: 0 !important; text-decoration: none; background: #fafbfc;
+}
+.drawer-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: linear-gradient(135deg, #1a3a6b, #1e5799);
+  color: #fff; font-weight: 700; font-size: 0.78rem;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; text-transform: uppercase;
+  box-shadow: 0 2px 8px rgba(12,30,58,.2);
+}
+.drawer-username { font-weight: 700; font-size: 0.95rem; color: #0c1e3a !important; }
+.drawer-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  padding: 8px 10px; gap: 2px;
+}
+.drawer-grid-divider {
+  grid-column: 1 / -1; height: 1px; background: #f1f5f9; margin: 2px 0;
+}
+.drawer-grid a {
+  display: flex; align-items: center; gap: 8px;
+  padding: 11px 10px; font-weight: 600; font-size: 0.88rem;
+  color: #0c1e3a !important; text-decoration: none;
+  border-radius: 9px; transition: background .12s, color .12s;
+  background: transparent; border: none !important; border-bottom: none !important;
+}
+.drawer-grid a:hover { background: #f1f5f9; color: #1a3a6b !important; }
+.drawer-grid a.nav-active {
+  background: #eff4ff !important; color: #1a3a6b !important; font-weight: 700 !important;
+}
+.drawer-login {
+  display: block; padding: 11px 16px; font-weight: 600;
+  color: #0c1e3a !important; font-size: 0.9rem;
+  border-top: 1px solid #f1f5f9; text-decoration: none;
+}
+#mobileLogoutContainer { border-top: 1px solid #f1f5f9; padding: 6px 10px 8px; margin: 0; }
+#mobileLogoutContainer button {
+  width: 100%; padding: 10px; background: none; border: none;
+  text-align: left; font-weight: 700; color: #dc2626; cursor: pointer;
+  font-family: 'DM Sans', sans-serif; font-size: 0.9rem; border-radius: 8px;
+}
+#mobileLogoutContainer button:hover { background: #fef2f2; }
+
+/* ── Mobile optimizations ─────────────────────────────────────── */
+.page, main.page { width: 100% !important; box-sizing: border-box !important; }
+@media (max-width: 600px) {
+  .page, main.page { padding-left: 10px !important; padding-right: 10px !important; }
+  .page h1, main.page h1 { font-size: 1.25rem !important; }
+  .card, .rg-card { padding: 12px !important; border-radius: 12px !important; }
+  table { font-size: 0.8rem !important; }
+  th, td { padding: 7px 6px !important; }
+}
+@media (min-width: 601px) and (max-width: 860px) {
+  .page, main.page { padding-left: 14px !important; padding-right: 14px !important; }
+}
+
+</style>
+
+
+<script>
+
+/* ── RG Auth Setup ── */
+async function rgSetupAuth() {
+  var loginBtn    = document.getElementById('nav-login');
+  var userMenu    = document.getElementById('userMenu');
+  var usernameEl  = document.getElementById('usernameLabel');
+  var mobileLogin = document.getElementById('mobileLogin');
+  var mobileAcct  = document.getElementById('mobileAccountLink');
+  var mobileUname = document.getElementById('mobileUsernameLabel');
+  var mobileLgout = document.getElementById('mobileLogoutContainer');
+
+  document.body.classList.remove('auth-ready', 'auth-guest');
+  var user = null;
+  try {
+    var r = await window._rgClient.auth.getUser();
+    user = (!r.error && r.data?.user) ? r.data.user : null;
+  } catch(e) {}
+  if (!user) {
+    try {
+      var s = await window._rgClient.auth.getSession();
+      user = s.data?.session?.user || null;
+    } catch(e) {}
+  }
+  var uname = user?.user_metadata?.full_name || user?.user_metadata?.name ||
+              (user?.email ? user.email.split('@')[0] : '') || 'Account';
+  if (usernameEl) usernameEl.textContent = uname;
+  if (mobileUname) mobileUname.textContent = uname;
+  var _da=document.getElementById("drawerAvatar"); if(_da){var _p=uname.split(" ");_da.textContent=(_p.length>=2?_p[0][0]+_p[_p.length-1][0]:uname.slice(0,2)).toUpperCase();}
+  document.body.classList.add(user ? 'auth-ready' : 'auth-guest');
+  window._rgClient.auth.onAuthStateChange(function(_e, sess) {
+    document.body.classList.remove('auth-ready','auth-guest');
+    document.body.classList.add(sess?.user ? 'auth-ready' : 'auth-guest');
+    var n = sess?.user?.user_metadata?.full_name || sess?.user?.email?.split('@')[0] || 'Account';
+    if (usernameEl) usernameEl.textContent = n;
+    if (mobileUname) mobileUname.textContent = n;
+  var _da=document.getElementById("drawerAvatar"); if(_da){var _p=n.split(" ");_da.textContent=(_p.length>=2?_p[0][0]+_p[_p.length-1][0]:n.slice(0,2)).toUpperCase();}
+  });
+  return user;
+}
+
+/* ── Shared header wiring ── */
+function rgWireHeader() {
+  var uMenuBtn  = document.getElementById('umdToggle');
+  var uMenuDrop = document.getElementById('umdDropdown');
+  // NOTE: dropdown toggle is wired by bindHeaderAuthUi() via DOMContentLoaded.
+  // Do NOT add a second onclick/addEventListener here — it causes double-toggle
+  // (clicks open then immediately close the dropdown). Left intentionally empty.
+  var logoutBtn  = document.getElementById('logoutBtn');
+  var mLogoutBtn = document.getElementById('mobileLogoutBtn');
+  if (logoutBtn)  logoutBtn.onclick  = async function() { await window._rgClient.auth.signOut(); location.href='login.html'; };
+  if (mLogoutBtn) mLogoutBtn.onclick = async function() { await window._rgClient.auth.signOut(); location.href='login.html'; };
+  // Hamburger handled by bindHeaderAuthUi (uses dataset.wired guard + stopPropagation)
+  // rgWireHeader intentionally does NOT re-bind it to avoid overwriting the correct handler.
+}
+
+/* ── Overlay dismiss ── */
+function rgDismissOverlay() {
+  var ov = document.getElementById('authOverlay');
+  if (ov) { ov.style.opacity = '0'; setTimeout(function() { ov.remove(); }, 320); }
+}
+
+// Wire header interactions
+rgWireHeader();
+// Footer year
+var fyEls = document.querySelectorAll('.footer-year');
+fyEls.forEach(function(el) { el.textContent = new Date().getFullYear(); });
+var fyEl2 = document.getElementById('footerYear');
+if (fyEl2) fyEl2.textContent = new Date().getFullYear();
+</script>
+<footer class="site-footer">
+  <div class="footer-content">
+    <div class="footer-brand">
+      <div class="footer-logo-row">
+        <img src="images/rg-logo.png" onerror="this.style.display='none'" class="footer-logo" alt="Rental Genie" />
+        <span class="footer-name">Rental Genie</span>
+      </div>
+      <p>Smart property management for independent landlords. Manage leases, track rent, and stay on top of maintenance — all in one place.</p>
+    </div>
+    <div class="footer-section">
+      <h4>Navigate</h4>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="property-management.html">Properties</a>
+      <a href="lease-rent-center.html">Lease & Rent</a>
+      <a href="expense-tracking.html">Expenses</a>
+      <a href="maintenance-requests.html">Maintenance</a>
+      <a href="reports-analytics.html">Reports</a>
+    </div>
+    <div class="footer-section">
+      <h4>Account</h4>
+      <a href="account.html">My Account</a>
+      <a href="tenant-portal-picker.html">Tenant Portal</a>
+      <a href="invite-tenant.html">Invite Tenant</a>
+    </div>
+    <div class="footer-section">
+      <h4>Support</h4>
+      <a href="contact-us.html">Contact Us</a>
+      <a href="contact-us.html">Help Center</a>
+
+<script>
+/* ── Expense drawer: postMessage bridge ──────────────────────────────────────
+   Listens for messages from add-expense.html (loaded inside the iframe drawer).
+   Messages:
+     { type: "rg_expense_saved", property: "..." }  → close drawer, reload ledger
+     { type: "rg_expense_deleted" }                 → close drawer, reload ledger
+     { type: "rg_expense_close" }                   → close drawer only
+──────────────────────────────────────────────────────────────────────────── */
+window.addEventListener("message", function(event) {
+  // Security: only accept messages from same origin
+  if (event.origin && event.origin !== window.location.origin) return;
+
+  var msg = event.data;
+  if (!msg || typeof msg !== "object") return;
+
+  if (msg.type === "rg_expense_saved" || msg.type === "rg_expense_deleted") {
+    // Close the slide-out drawer
+    if (typeof closeExpenseDrawer === "function") closeExpenseDrawer();
+    // Reload the expense ledger so the new/updated row appears immediately
+    if (typeof loadExpenses === "function") {
+      loadExpenses().catch(function(e){ console.warn("Reload after save failed:", e); });
+    }
+  }
+
+  if (msg.type === "rg_expense_close") {
+    if (typeof closeExpenseDrawer === "function") closeExpenseDrawer();
+  }
+});
+</script>
+</body>
+</html>

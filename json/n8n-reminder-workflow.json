@@ -1,0 +1,76 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "mode": "custom",
+        "cronExpression": "0 8 * * *"  
+      },
+      "name": "Daily Trigger",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [100, 100]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM reminders WHERE sent = false AND due_date <= CURRENT_DATE;",
+        "additionalFields": {}
+      },
+      "name": "Fetch Due Reminders",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [300, 100],
+      "credentials": {
+        "postgres": {
+          "id": "YOUR_DB_CREDENTIAL_ID",
+          "name": "Supabase Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "your@email.com",
+        "toEmail": "={{$json[\"property_name\"]}}@example.com",
+        "subject": "Reminder: {{$json[\"type\"]}} due for {{$json[\"property_name\"]}}",
+        "text": "{{$json[\"message\"]}}"
+      },
+      "name": "Send Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [500, 100],
+      "credentials": {
+        "smtp": {
+          "id": "YOUR_EMAIL_CREDENTIAL_ID",
+          "name": "SMTP Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE reminders SET sent = true WHERE id = '={{$json[\"id\"]}}';"
+      },
+      "name": "Mark as Sent",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [700, 100],
+      "credentials": {
+        "postgres": {
+          "id": "YOUR_DB_CREDENTIAL_ID",
+          "name": "Supabase Postgres"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Daily Trigger": {
+      "main": [ [ { "node": "Fetch Due Reminders", "type": "main", "index": 0 } ] ]
+    },
+    "Fetch Due Reminders": {
+      "main": [ [ { "node": "Send Email", "type": "main", "index": 0 } ] ]
+    },
+    "Send Email": {
+      "main": [ [ { "node": "Mark as Sent", "type": "main", "index": 0 } ] ]
+    }
+  }
+}
