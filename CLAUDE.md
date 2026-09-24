@@ -67,7 +67,10 @@ owed when a tenant stays); `month_to_month`; `ended` (terminated, no rent accrue
 termination date).
 
 **Access control:** `rg_company_access(company_id)` and `rg_can_access_property(property_id)` back
-the row-level security policies. Storage buckets are private; pages open files through signed links
+the row-level security policies. Tenant-side inserts into `maintenance_requests` and
+`tenant_messages` go through `rg_tenant_can_file(company_id, property_id, tenant_id)`, which requires
+a non-archived lease with that company (and property) — pages must send the lease's `company_id`.
+Tenants may only change `phone` on their own `tenants` row (`trg_tenants_limit_self_update`). Storage buckets are private; pages open files through signed links
 via the `rgFiles` helper, which accepts either a stored path or a legacy public URL.
 
 **Payment inbox:** `rg_ingest_payment_email` (service role only) queues forwarded payment alerts;
@@ -111,8 +114,6 @@ via the `rgFiles` helper, which accepts either a stored path or a legacy public 
 - Seven pages define a `safe()` helper that returns its input unchanged, so names, notes, and
   addresses are inserted as raw HTML: property-management, property-overview, hoa-info,
   property-finance, property-tax, property-insurance, property-escrow-reconciliation.
-- Tenants can edit any column of their own `tenants` row, and can create maintenance requests or
-  messages tagged with any company's ID.
 - No plan limits are enforced anywhere; the pricing on the homepage is marketing copy only.
 - Around 70 tables belonging to the other GenieSphere products still have row-level security off in
   the same Supabase project. Rental Genie's tables are protected; the others are not.
