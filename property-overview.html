@@ -1492,11 +1492,19 @@ function applyPmSection(data) {
   /* Contact buttons */
   var contactRow = document.getElementById('pmContactRow');
   if (contactRow) {
+    // Built with createElement: phone/email are user-entered and must not be parsed as HTML.
     var btns = [];
-    if (phone) btns.push('<a class="pm-contact-btn" href="tel:' + phone + '">📞 Call</a>');
-    if (email) btns.push('<a class="pm-contact-btn" href="mailto:' + email + '">✉️ Email</a>');
+    if (phone) btns.push(['tel:' + String(phone).replace(/[^\d+]/g, ''), '📞 Call']);
+    if (email) btns.push(['mailto:' + String(email).trim(), '✉️ Email']);
+    contactRow.textContent = '';
+    btns.forEach(function (b) {
+      var a = document.createElement('a');
+      a.className = 'pm-contact-btn';
+      a.href = b[0];
+      a.textContent = b[1];
+      contactRow.appendChild(a);
+    });
     if (btns.length) {
-      contactRow.innerHTML = btns.join('');
       contactRow.style.display = 'flex';
     } else {
       contactRow.style.display = 'none';
