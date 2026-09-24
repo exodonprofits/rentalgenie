@@ -794,7 +794,18 @@
     const property_name=$('property').value.trim();
     if(!subject||!message){setMsg('Please fill in Subject and Message.','err');return;}
     const btn=$('btnSend');btn.disabled=true;btn.textContent='Sending…';
-    const payload={tenant_email:user.email,tenant_id:tenant?tenant.id:null,property_name:property_name||null,subject,message,sender:'tenant',sent_at:new Date().toISOString()};
+
+    // Resolve company_id from the tenant's lease. The insert policy rejects messages whose
+    // company_id isn't one the tenant leases from, and without it the landlord never sees them.
+    let lq=sb.from('leases').select('company_id,property_name').is('archived_at',null);
+    lq=tenant?lq.eq('tenant_id',tenant.id):lq.eq('tenant_email',user.email);
+    if(property_name)lq=lq.eq('property_name',property_name);
+    const {data:leaseData,error:leaseErr}=await lq.order('lease_start',{ascending:false}).limit(1);
+    if(leaseErr||!leaseData||!leaseData.length){
+      setMsg('❌ Could not find your lease. Please refresh and try again.','err');
+      btn.disabled=false;btn.textContent='📨 Send Message';return;
+    }
+    const payload={tenant_email:user.email,tenant_id:tenant?tenant.id:null,company_id:leaseData[0].company_id,property_name:property_name||leaseData[0].property_name,subject,message,sender:'tenant'};
     const {error}=await sb.from('tenant_messages').insert([payload]);
     if(error){setMsg('Error: '+safe(error.message),'err');btn.disabled=false;btn.textContent='📨 Send Message';return;}
     setMsg('✅ Message sent! Your landlord will respond within 1–2 business days.','ok');
