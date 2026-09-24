@@ -1141,8 +1141,8 @@ window.rgFiles = (function () {
 
     // Resolve company_id and property_id from the tenant's lease
     const {data:leaseData,error:leaseErr} = tenant
-      ? await sb.from('leases').select('company_id,property_id').eq('tenant_id',tenant.id).eq('property_name',property_name).order('lease_start',{ascending:false}).limit(1)
-      : await sb.from('leases').select('company_id,property_id').eq('tenant_email',user.email).eq('property_name',property_name).order('lease_start',{ascending:false}).limit(1);
+      ? await sb.from('leases').select('company_id,property_id').eq('tenant_id',tenant.id).eq('property_name',property_name).is('archived_at',null).order('lease_start',{ascending:false}).limit(1)
+      : await sb.from('leases').select('company_id,property_id').eq('tenant_email',user.email).eq('property_name',property_name).is('archived_at',null).order('lease_start',{ascending:false}).limit(1);
     if(leaseErr || !leaseData || leaseData.length === 0){
       setMsg('❌ Could not resolve your property. Please refresh and try again.','err');
       btn.disabled=false; btn.textContent='📨 Submit Request'; return;
