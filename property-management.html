@@ -1902,6 +1902,13 @@ function money(v){
 function safe(v){
   return (v === null || v === undefined || v === "") ? "—" : String(v);
 }
+// safe() is for textContent. Anything interpolated into an HTML string goes through safeHtml()/escHtml().
+function escHtml(v){
+  return String(v == null ? "" : v).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+}
+function safeHtml(v){
+  return escHtml(safe(v));
+}
 function todayISO(){
   return new Date().toISOString().slice(0,10);
 }
@@ -1994,10 +2001,10 @@ function genieList(items){
   return `<div class="genie-list">${items.map((it)=>`
     <div class="genie-item">
       <div class="genie-item-main">
-        <div class="genie-item-title">${it.title || "Property"}</div>
-        <div class="genie-item-meta">${it.meta || "Needs review"}</div>
+        <div class="genie-item-title">${escHtml(it.title || "Property")}</div>
+        <div class="genie-item-meta">${escHtml(it.meta || "Needs review")}</div>
       </div>
-      <a class="genie-open" href="${it.href || '#'}">Open</a>
+      <a class="genie-open" href="${escHtml(it.href || '#')}">Open</a>
     </div>
   `).join("")}</div>`;
 }
@@ -2118,7 +2125,7 @@ function pillForStatus(status){
   if(s === "renovation") return `<span class="pill pill-warn">🛠 Renovation</span>`;
   if(s === "off_market") return `<span class="pill pill-neutral">📌 Off Market</span>`;
   if(!status) return `<span class="pill pill-neutral">ℹ️ Unknown</span>`;
-  return `<span class="pill pill-neutral">ℹ️ ${safe(status)}</span>`;
+  return `<span class="pill pill-neutral">ℹ️ ${safeHtml(status)}</span>`;
 }
 
 function pillForType(useType){
@@ -2128,7 +2135,7 @@ function pillForType(useType){
   if(t === "vacation") return `<span class="pill pill-neutral">🌴 Vacation</span>`;
   if(t === "mixed") return `<span class="pill pill-neutral">🏢 Mixed</span>`;
   if(!useType) return ``;
-  return `<span class="pill pill-neutral">🏷️ ${safe(useType)}</span>`;
+  return `<span class="pill pill-neutral">🏷️ ${safeHtml(useType)}</span>`;
 }
 
 
@@ -2187,11 +2194,11 @@ function renderCards(list){
     const moreId = `more-${p.id}`;
 
     return `
-      <article class="card" data-property-id="${p.id}">
+      <article class="card" data-property-id="${escHtml(p.id)}">
         <div class="card-top">
           <div>
-            <h3>🏠 ${safe(p.name)}</h3>
-            <p class="addr">${safe(p.address)}</p>
+            <h3>🏠 ${safeHtml(p.name)}</h3>
+            <p class="addr">${safeHtml(p.address)}</p>
           </div>
           <div style="display:flex; flex-direction:column; gap:8px; align-items:flex-end;">
             ${pillForStatus(p.occupancy_status)}${pillForType(p.use_type)}
@@ -2201,19 +2208,19 @@ function renderCards(list){
         <div class="meta" aria-label="Property details">
           <div class="metaItem">
             <span>Tenant</span>
-            <strong>${safe(tenant)}</strong>
+            <strong>${safeHtml(tenant)}</strong>
           </div>
           <div class="metaItem">
             <span>Rent</span>
-            <strong>${safe(rent)}</strong>
+            <strong>${safeHtml(rent)}</strong>
           </div>
           <div class="metaItem">
             <span>Units</span>
-            <strong>${safe(p.units)}</strong>
+            <strong>${safeHtml(p.units)}</strong>
           </div>
           <div class="metaItem">
             <span>Last payment</span>
-            <strong>${safe(lastRent)}</strong>
+            <strong>${safeHtml(lastRent)}</strong>
           </div>
         </div>
 
