@@ -1,10 +1,12 @@
 // Rental Genie — Snap it
 //
-// Reads a receipt (photo or PDF) the landlord already uploaded to Storage and returns a DRAFT
-// expense for the page to prefill. Nothing is written to the database here: the landlord reviews
-// the draft in the normal form and saves it, the same confirm-first rule as the payment inbox.
+// Reads a document the landlord already uploaded to Storage and returns a DRAFT for the page to
+// prefill: a receipt becomes an expense, a lease PDF becomes a lease. Nothing is written to the
+// database here: the landlord reviews the draft in the normal form and saves it, the same
+// confirm-first rule as the payment inbox.
 //
-// POST { kind: "receipt", bucket: "receipts", path: "expenses/<company_id>/<file>", company_id }
+// POST { kind: "receipt", bucket: "receipts",         path: "expenses/<company_id>/<file>", company_id }
+// POST { kind: "lease",   bucket: "tenant-documents", path: "<company_id>/<slug>/<file>",  company_id }
 // Authorization: Bearer <user JWT>
 //
 // The file is downloaded and the property list read with the CALLER's JWT, so Storage and table
@@ -17,7 +19,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 const MODEL = "claude-opus-5";
 const MAX_BYTES = 20 * 1024 * 1024;
 const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
-const ALLOWED_BUCKETS = ["receipts"];
+const BUCKET_FOR_KIND: Record<string, string> = { receipt: "receipts", lease: "tenant-documents" };
 
 // Must match the <option> values in add-expense.html.
 const EXPENSE_CATEGORIES = [
@@ -99,6 +101,73 @@ ${list}
 - If this is not a receipt, invoice or bill, set is_receipt false, explain in not_receipt_reason, and leave the other fields null (category "Other").`;
 }
 
+function leaseSchema(propertyNames: string[]) {
+  const num = nullable({ type: "number" });
+  const int = nullable({ type: "integer" });
+  const str = nullable({ type: "string" });
+  return {
+    type: "object",
+    additionalProperties: false,
+    properties: {
+      is_lease: { type: "boolean" },
+      not_lease_reason: str,
+      tenant_name: str,
+      tenant_email: str,
+      tenant_phone: str,
+      lease_start: nullable({ type: "string", format: "date" }),
+      lease_end: nullable({ type: "string", format: "date" }),
+      lease_type: { type: "string", enum: ["fixed_term", "month_to_month"] },
+      rent_amount: num,
+      due_day: int,
+      late_fee: num,
+      grace_period: int,
+      security_deposit: num,
+      pet_deposit: num,
+      property_address: str,
+      property_name: propertyNames.length ? nullable({ type: "string", enum: propertyNames }) : { type: "null" },
+      key_terms: str,
+      unsure: {
+        type: "array",
+        items: {
+          type: "string",
+          enum: [
+            "tenant_name", "tenant_email", "tenant_phone", "lease_start", "lease_end", "lease_type",
+            "rent_amount", "due_day", "late_fee", "grace_period", "security_deposit", "pet_deposit",
+            "property",
+          ],
+        },
+      },
+    },
+    required: [
+      "is_lease", "not_lease_reason", "tenant_name", "tenant_email", "tenant_phone", "lease_start",
+      "lease_end", "lease_type", "rent_amount", "due_day", "late_fee", "grace_period",
+      "security_deposit", "pet_deposit", "property_address", "property_name", "key_terms", "unsure",
+    ],
+  };
+}
+
+function leasePrompt(properties: { name: string; address: string | null }[], today: string) {
+  const list = properties.length
+    ? properties.map((p) => `- ${p.name}${p.address ? ` (${p.address})` : ""}`).join("\n")
+    : "(none on file)";
+  return `This is a residential lease a landlord uploaded. Read it and fill in the lease record.
+
+Today is ${today}.
+
+The landlord's properties:
+${list}
+
+- tenant_name: every tenant named on the lease, joined with " & ". tenant_email / tenant_phone: the first tenant's, if the lease lists them.
+- lease_start / lease_end: the term dates. A month-to-month lease has no end date: set lease_type "month_to_month" and lease_end null.
+- rent_amount: the monthly rent. due_day: the day of the month rent is due (1 if it says "the first").
+- late_fee: the flat late fee in dollars; if it is a percentage or daily amount, give the first-month dollar figure and list late_fee in unsure. grace_period: days after the due date before the late fee applies.
+- security_deposit / pet_deposit: dollar amounts, or null if none.
+- property_address: the rented premises as written. property_name: the matching property above, or null if none matches.
+- key_terms: two or three short lines a landlord would want at a glance (pets, utilities paid by whom, parking, renewal/notice terms). Null if nothing notable.
+- unsure: every field you could not find, read clearly, or had to infer.
+- If this is not a lease, set is_lease false, explain in not_lease_reason, and leave the other fields null (lease_type "fixed_term").`;
+}
+
 function base64(bytes: Uint8Array) {
   let binary = "";
   const chunk = 0x8000;
@@ -120,7 +189,8 @@ function mediaTypeFor(blobType: string, path: string) {
   return null;
 }
 
-async function extractReceipt(
+async function extract(
+  kind: string,
   bytes: Uint8Array,
   mediaType: string,
   properties: { name: string; address: string | null }[],
@@ -140,12 +210,19 @@ async function extractReceipt(
     betas: ["server-side-fallback-2026-07-01"],
     fallbacks: "default",
     output_config: {
-      effort: "low",
-      format: { type: "json_schema", schema: receiptSchema(names) },
+      // A lease is long and dense; a receipt is a few lines.
+      effort: kind === "lease" ? "medium" : "low",
+      format: {
+        type: "json_schema",
+        schema: kind === "lease" ? leaseSchema(names) : receiptSchema(names),
+      },
     },
     messages: [{
       role: "user",
-      content: [fileBlock, { type: "text", text: receiptPrompt(properties, today) }],
+      content: [fileBlock, {
+        type: "text",
+        text: kind === "lease" ? leasePrompt(properties, today) : receiptPrompt(properties, today),
+      }],
     }],
   } as any);
 
@@ -184,12 +261,12 @@ Deno.serve(async (req) => {
   }
 
   const kind = String(body.kind || "");
-  if (kind !== "receipt") return json({ error: "Unsupported kind" }, 400);
+  if (!BUCKET_FOR_KIND[kind]) return json({ error: "Unsupported kind" }, 400);
 
   const bucket = String(body.bucket || "");
   const path = String(body.path || "");
   const companyId = String(body.company_id || "");
-  if (!ALLOWED_BUCKETS.includes(bucket) || !path) return json({ error: "Missing file" }, 400);
+  if (bucket !== BUCKET_FOR_KIND[kind] || !path) return json({ error: "Missing file" }, 400);
 
   const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, {
     global: { headers: { Authorization: auth } },
@@ -215,7 +292,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const result = await extractReceipt(new Uint8Array(await blob.arrayBuffer()), mediaType, properties);
+    const result = await extract(kind, new Uint8Array(await blob.arrayBuffer()), mediaType, properties);
     if ("error" in result) return json({ error: result.error }, result.status);
     return json({ ok: true, kind, draft: result.draft, model: result.model });
   } catch (err) {
