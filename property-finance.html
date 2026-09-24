@@ -784,6 +784,13 @@ body.auth-guest #mobileLogin{display:block!important;}body.auth-guest #mobileAcc
   function safeText(v) {
     return (v === null || v === undefined || v === '') ? '—' : String(v);
   }
+  // safeText() is for textContent. Anything interpolated into an HTML string goes through safeHtml()/escHtml().
+  function escHtml(v) {
+    return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+  function safeHtml(v) {
+    return escHtml(safeText(v));
+  }
 
 
   async function rgSetupAuth() {
@@ -956,13 +963,13 @@ body.auth-guest #mobileLogin{display:block!important;}body.auth-guest #mobileAcc
   }
 
   function rowHtml(rec) {
-    const eff = safeText(rec.effective_date);
-    const typ = safeText(rec.event_type).replaceAll('_', ' ');
-    const lender = safeText(rec.lender_name);
-    const rate = safeText(rec.interest_rate);
-    const term = safeText(rec.loan_term_years);
-    const pay = rec.monthly_payment != null ? fmtMoney(rec.monthly_payment) : '—';
-    const bal = rec.starting_balance != null ? fmtMoney(rec.starting_balance) : '—';
+    const eff = safeHtml(rec.effective_date);
+    const typ = safeHtml(safeText(rec.event_type).replaceAll('_', ' '));
+    const lender = safeHtml(rec.lender_name);
+    const rate = safeHtml(rec.interest_rate);
+    const term = safeHtml(rec.loan_term_years);
+    const pay = rec.monthly_payment != null ? escHtml(fmtMoney(rec.monthly_payment)) : '—';
+    const bal = rec.starting_balance != null ? escHtml(fmtMoney(rec.starting_balance)) : '—';
 
     return `
       <tr>
@@ -975,8 +982,8 @@ body.auth-guest #mobileLogin{display:block!important;}body.auth-guest #mobileAcc
         <td>${bal}</td>
         <td>
           <div class="row-actions">
-            <button class="ghost-btn small" type="button" data-action="edit" data-id="${rec.id}">Edit</button>
-            <button class="ghost-btn small" type="button" data-action="setcurrent" data-id="${rec.id}">Set as Current</button>
+            <button class="ghost-btn small" type="button" data-action="edit" data-id="${escHtml(rec.id)}">Edit</button>
+            <button class="ghost-btn small" type="button" data-action="setcurrent" data-id="${escHtml(rec.id)}">Set as Current</button>
           </div>
         </td>
       </tr>

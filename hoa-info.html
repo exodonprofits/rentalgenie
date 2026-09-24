@@ -373,6 +373,24 @@ function getParams(){return new URLSearchParams(location.search);}
 function getCompanyId(){return getParams().get('company_id')||'';}
 function getPropertyId(){return getParams().get('property_id')||getParams().get('id')||'';}
 function safe(v){return(v==null||v==='')?'—':String(v);}
+// safe() is for textContent. Anything interpolated into an HTML string goes through escHtml().
+function escHtml(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+// http(s) only; bare domains get https:// so "www.myhoa.com" still links. Returns '' for anything else (e.g. javascript:).
+function safeUrl(v){
+  v=String(v==null?'':v).trim();if(!v)return'';
+  if(!/^[a-z][a-z0-9+.-]*:/i.test(v))v='https://'+v;
+  try{var u=new URL(v);return(u.protocol==='http:'||u.protocol==='https:')?u.href:'';}catch(e){return'';}
+}
+function setLink(id,href,text,external){
+  var el=document.getElementById(id);if(!el)return;
+  el.textContent='';
+  if(!href){el.textContent=text||'—';return;}
+  var a=document.createElement('a');
+  a.href=href;a.textContent=text;
+  a.style.color='var(--sky)';a.style.textDecoration='none';a.style.fontWeight='600';
+  if(external){a.target='_blank';a.rel='noopener';}
+  el.appendChild(a);
+}
 function money(v){var n=Number(v||0);if(!Number.isFinite(n))return'—';return n.toLocaleString(undefined,{style:'currency',currency:'USD'});}
 function setText(id,val){var e=document.getElementById(id);if(e)e.textContent=safe(val);}
 function hideOverlay(){var o=document.getElementById('authOverlay');if(o){o.classList.add('hidden');setTimeout(function(){o.style.display='none';},380);}}
@@ -451,7 +469,8 @@ function wireContextLinks(){
 }
 
 function setPortalLinks(url){
-  var show=url&&String(url).trim()!=='';
+  url=safeUrl(url);
+  var show=!!url;
   var pb=document.getElementById('portalBtn');if(pb){pb.style.display=show?'inline-flex':'none';if(show)pb.href=url;}
   var ap=document.getElementById('actionPortal');if(ap){ap.style.display=show?'flex':'none';if(show)ap.href=url;}
 }
@@ -496,15 +515,12 @@ async function loadHOA(){
   setText('dueDayDisplay',dueDay?'Day '+dueDay+' of each month':'—');setText('notesDisplay',info.notes||'—');
   var url=(info.website||info.portal_url||info.hoa_portal_url||'').trim();
   if(url){
-    var we=document.getElementById('websiteDisplay');
-    if(we)we.innerHTML='<a href="'+url+'" target="_blank" rel="noopener" style="color:var(--sky);text-decoration:none;font-weight:600;">'+url+'</a>';
+    setLink('websiteDisplay',safeUrl(url),url,true);
     setPortalLinks(url);
   }else{setText('websiteDisplay','—');setPortalLinks(null);}
   var phone=(info.contact_phone||'').trim(),email=(info.contact_email||'').trim();
-  var pe=document.getElementById('contactPhoneDisplay');
-  if(pe)pe.innerHTML=phone?'<a href="tel:'+phone.replace(/[^\d+]/g,'')+'" style="color:var(--sky);text-decoration:none;font-weight:600;">'+phone+'</a>':'—';
-  var ee=document.getElementById('contactEmailDisplay');
-  if(ee)ee.innerHTML=email?'<a href="mailto:'+email+'" style="color:var(--sky);text-decoration:none;font-weight:600;">'+email+'</a>':'—';
+  setLink('contactPhoneDisplay',phone?'tel:'+phone.replace(/[^\d+]/g,''):'',phone,false);
+  setLink('contactEmailDisplay',email?'mailto:'+email:'',email,false);
   setText('contactNameDisplay',info.contact_name||'—');
   setText('contactAddressDisplay',info.contact_address||info.hoa_address||'—');
   setText('officeHoursDisplay',info.office_hours||'—');
@@ -528,7 +544,7 @@ async function loadHOAHistory(){
     var ds=h.created_at?new Date(h.created_at).toLocaleString():'Unknown date';
     var fs=(h.fee_amount!=null&&!Number.isNaN(Number(h.fee_amount)))?money(Number(h.fee_amount)):'—';
     var act=(h.action||'update').toString(),by=(h.updated_by||'').toString(),note=(h.notes||'').toString();
-    return '<li class="history-item"><div class="history-item-head">📅 '+ds+' — '+act+'</div><div class="history-item-meta"><span>💵 Fee: '+fs+'</span>'+(by?'<span>👤 '+by+'</span>':'')+(note?'<span>📝 '+note+'</span>':'')+'</div></li>';
+    return '<li class="history-item"><div class="history-item-head">📅 '+escHtml(ds)+' — '+escHtml(act)+'</div><div class="history-item-meta"><span>💵 Fee: '+escHtml(fs)+'</span>'+(by?'<span>👤 '+escHtml(by)+'</span>':'')+(note?'<span>📝 '+escHtml(note)+'</span>':'')+'</div></li>';
   }).join('');
 }
 

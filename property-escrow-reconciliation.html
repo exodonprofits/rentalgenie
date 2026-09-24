@@ -521,6 +521,9 @@ function fmtMoney(v) {
   return '$' + n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 function safeText(v) { return (v == null || v === '') ? '—' : String(v); }
+// safeText() is for textContent. Anything interpolated into an HTML string goes through safeHtml()/escHtml().
+function escHtml(v) { return String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+function safeHtml(v) { return escHtml(safeText(v)); }
 function toISO(d) { return d ? String(d).slice(0,10) : ''; }
 
 /* ── Alert ── */
@@ -724,16 +727,16 @@ function rowHtml(e) {
   var dirColor= dir === 'in' ? '#059669' : (dir === 'out' ? 'var(--danger)' : 'var(--muted)');
   var statCls = {completed:'match',pending:'pending',disputed:'shortage'}[e.status||'pending'] || 'pending';
   return '<tr>' +
-    '<td>' + safeText(toISO(e.entry_date)) + '</td>' +
-    '<td>' + safeText(TYPE_LABELS[e.entry_type] || e.entry_type) + '</td>' +
-    '<td>' + safeText(e.payee) + '</td>' +
-    '<td style="font-family:\'DM Mono\',monospace;font-weight:700;">' + fmtMoney(e.amount) + '</td>' +
+    '<td>' + safeHtml(toISO(e.entry_date)) + '</td>' +
+    '<td>' + safeHtml(TYPE_LABELS[e.entry_type] || e.entry_type) + '</td>' +
+    '<td>' + safeHtml(e.payee) + '</td>' +
+    '<td style="font-family:\'DM Mono\',monospace;font-weight:700;">' + escHtml(fmtMoney(e.amount)) + '</td>' +
     '<td><span style="font-weight:700;color:' + dirColor + ';">' + dirLabel + '</span></td>' +
-    '<td><span class="status-badge ' + statCls + '">' + safeText(e.status || 'pending') + '</span></td>' +
-    '<td><span style="font-size:.78rem;color:var(--muted);">' + safeText(e.reference_number) + '</span></td>' +
+    '<td><span class="status-badge ' + statCls + '">' + safeHtml(e.status || 'pending') + '</span></td>' +
+    '<td><span style="font-size:.78rem;color:var(--muted);">' + safeHtml(e.reference_number) + '</span></td>' +
     '<td><div class="row-actions">' +
-      '<button class="small-btn" type="button" data-action="edit" data-id="' + e.id + '">Edit</button>' +
-      '<button class="small-btn danger" type="button" data-action="delete" data-id="' + e.id + '">Delete</button>' +
+      '<button class="small-btn" type="button" data-action="edit" data-id="' + escHtml(e.id) + '">Edit</button>' +
+      '<button class="small-btn danger" type="button" data-action="delete" data-id="' + escHtml(e.id) + '">Delete</button>' +
     '</div></td>' +
     '</tr>';
 }
