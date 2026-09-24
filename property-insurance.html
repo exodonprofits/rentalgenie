@@ -546,9 +546,20 @@ body.auth-guest #mobileLogin{display:block!important;}body.auth-guest #mobileAcc
     return n.toLocaleString(undefined, { style:'currency', currency:'USD' });
   }
   function safeText(v) { return (v === null || v === undefined || v === '') ? '—' : String(v); }
+  // http(s) only: new URL() happily accepts javascript: and data: URLs.
   function safeUrl(v) {
     if (!v) return '';
-    try { return new URL(v).toString(); } catch { return ''; }
+    try {
+      const u = new URL(v);
+      return (u.protocol === 'http:' || u.protocol === 'https:') ? u.toString() : '';
+    } catch { return ''; }
+  }
+  // safeText() is for textContent. Anything interpolated into an HTML string goes through safeHtml()/escHtml().
+  function escHtml(v) {
+    return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+  function safeHtml(v) {
+    return escHtml(safeText(v));
   }
 
   // safeStorage bootstrap — prevents tracking-prevention warnings
@@ -719,16 +730,16 @@ async function requireAuth() {
 
     historyBody.innerHTML = data.map(r => {
       const portal = safeUrl(r.portal_url);
-      const portalCell = portal ? `<a href="${portal}" target="_blank" rel="noopener">Open</a>` : '—';
+      const portalCell = portal ? `<a href="${escHtml(portal)}" target="_blank" rel="noopener">Open</a>` : '—';
       return `
         <tr>
-          <td>${safeText(r.policy_year)}</td>
-          <td>${safeText(r.effective_date)}</td>
-          <td>${safeText(r.provider)}<span class="sub">${safeText(r.policy_number)}</span></td>
-          <td>${money(r.premium_annual)}<span class="sub">${money(r.premium_monthly)}</span></td>
-          <td>${safeText(r.renewal_date)}</td>
+          <td>${safeHtml(r.policy_year)}</td>
+          <td>${safeHtml(r.effective_date)}</td>
+          <td>${safeHtml(r.provider)}<span class="sub">${safeHtml(r.policy_number)}</span></td>
+          <td>${escHtml(money(r.premium_annual))}<span class="sub">${escHtml(money(r.premium_monthly))}</span></td>
+          <td>${safeHtml(r.renewal_date)}</td>
           <td>${portalCell}</td>
-          <td>${safeText(r.notes)}</td>
+          <td>${safeHtml(r.notes)}</td>
           <td>
             <button class="btn btn-ghost" style="padding:7px 10px;" onclick="fillFromRow('${r.id}')">✏️ Edit</button>
             <button class="btn btn-ghost" style="padding:7px 10px;" onclick="setCurrentFromRow('${r.id}')">⭐ Current</button>

@@ -20,6 +20,12 @@ quote-collision bugs in this codebase. Existing pages break this rule in places;
 **Never use `target="_blank"` on an internal link.** It breaks the iOS home-screen app by forcing an
 in-app browser sheet with the address bar back. External links are fine.
 
+**Escape anything interpolated into an HTML string.** On pages that build `innerHTML`, `safe()` /
+`safeText()` only format for `textContent` (em-dash for empty, no escaping); HTML strings go through
+`escHtml()` / `safeHtml()`. URLs placed in an `href` go through a `safeUrl()` that allows only
+`http:`/`https:` — `new URL()` alone accepts `javascript:`. Better still, use `createElement` and
+`textContent`.
+
 **Never put the Supabase service-role key in a page.** It belongs in n8n and Edge Functions only.
 The anon key in pages is expected; row-level security is what protects the data.
 
@@ -111,9 +117,6 @@ via the `rgFiles` helper, which accepts either a stored path or a legacy public 
 - Legacy pages still present: `rent-log.html`, `rent-payments.html`, `manage-properties.html`,
   `lease-center.html`, `rental-tracker.html`, `landing.html`, `dashboard_v920.html`. Some are still
   linked from current pages. Retire them and repoint the links.
-- Seven pages define a `safe()` helper that returns its input unchanged, so names, notes, and
-  addresses are inserted as raw HTML: property-management, property-overview, hoa-info,
-  property-finance, property-tax, property-insurance, property-escrow-reconciliation.
 - No plan limits are enforced anywhere; the pricing on the homepage is marketing copy only.
 - Around 70 tables belonging to the other GenieSphere products still have row-level security off in
   the same Supabase project. Rental Genie's tables are protected; the others are not.
