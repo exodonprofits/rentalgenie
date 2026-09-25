@@ -556,7 +556,7 @@ body.embedded main.page { padding-top: 16px !important; }
         const { data: owned, error: ownedErr } = await client
           .from("companies")
           .select("id")
-          .or(`created_by.eq.${user.id},owner_id.eq.${user.id}`)
+          .eq("owner_user_id", user.id)
           .order("created_at", { ascending: true })
           .limit(1)
           .maybeSingle();
