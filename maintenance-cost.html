@@ -1171,7 +1171,7 @@ function loadProperties() {
 ============================================================ */
 function loadMaintenanceExpenses() {
   return sb.from('expenses')
-    .select('id, property_name, date_paid, category, vendor, amount, note')
+    .select('id, property_name, date_paid, category, vendor, amount, note').is('archived_at', null)
     .ilike('category', '%maintenance%')
     .order('date_paid', { ascending: false })
     .then(function (res) {
