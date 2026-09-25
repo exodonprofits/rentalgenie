@@ -1014,7 +1014,7 @@ function loadPortfolio(user) {
       var propPromises = properties.map(function (prop) {
         var rentQ = sb.from('rent_log').select('amount, date_paid')
           .eq('property_name', prop.name).gte('date_paid', firstDayYear);
-        var expQ  = sb.from('expenses').select('amount, date_paid, category')
+        var expQ  = sb.from('expenses').select('amount, date_paid, category').is('archived_at', null)
           .eq('property_name', prop.name).gte('date_paid', firstDayYear);
         if (activeCompanyId) {
           rentQ = rentQ.eq('company_id', activeCompanyId);
