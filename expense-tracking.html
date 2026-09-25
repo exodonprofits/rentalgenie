@@ -1882,7 +1882,7 @@ window.rgFiles = (function () {
         </article>
 
         <article class="summary-card">
-          <div class="summary-label">Utilities / Taxes</div>
+          <div class="summary-label">Utilities, Tax, Insurance &amp; HOA</div>
           <div class="summary-value" id="utilitiesTotal">$0.00</div>
         </article>
       </section>
@@ -2070,7 +2070,7 @@ async function loadCompanyDropdown(){
 
           const { data: comp, error: compErr } = await client
             .from("companies")
-            .insert({ name: "My Rentals", owner_id: uid })
+            .insert({ name: "My Rentals", owner_user_id: uid })
             .select("id,name")
             .single();
           if(compErr) throw compErr;
@@ -2143,14 +2143,31 @@ async function loadCompanyDropdown(){
 /* -------------------------------------------------------------
    Expense Tracking Logic (from expense-tracking.html)
 ------------------------------------------------------------- */
+    // Must match the <option> values add-expense.html saves (and rg-snap's EXPENSE_CATEGORIES).
     const CATEGORIES = [
-      "Maintenance/Repairs",
-      "Property Management Fees",
+      "Repairs & Maintenance",
+      "Property Management",
       "Utilities",
-      "Taxes/Insurance",
-      "Capital Expenditure",
+      "HOA",
+      "Insurance",
+      "Property Tax",
+      "Mortgage Payment",
+      "Mortgage Principal",
+      "Mortgage Interest",
+      "Supplies",
+      "Legal & Professional",
+      "Advertising",
       "Other",
     ];
+
+    // Summary tiles group by pattern so older rows ("Maintenance", "Taxes") still count.
+    function summaryTileFor(category) {
+      const c = String(category || "").toLowerCase();
+      if (/repair|maint/.test(c)) return "maintenance";
+      if (/management/.test(c)) return "management";
+      if (/utilit|tax|insurance|hoa/.test(c)) return "utilities";
+      return "";
+    }
 
     let currentFilters = {
       property: "",
@@ -2379,7 +2396,7 @@ function setupFilters() {
 
   if (error) {
     console.error("Error loading expenses:", error);
-    body.innerHTML = `<tr><td colspan='7'>Error loading data: ${error.message || "Unknown error"}</td></tr>`;
+    body.innerHTML = `<tr><td colspan='7'>Error loading data: ${escapeHtml(error.message || "Unknown error")}</td></tr>`;
     return;
   }
 
@@ -2397,27 +2414,18 @@ function setupFilters() {
     total += r.amount || 0;
     
     // Update summary totals
-    switch (r.category) {
-      case "Maintenance/Repairs":
-        maintenanceTotal += r.amount || 0;
-        break;
-      case "Property Management Fees":
-        managementTotal += r.amount || 0;
-        break;
-      case "Utilities":
-        utilitiesTotal += r.amount || 0;
-        break;
-      case "Taxes/Insurance":
-        utilitiesTotal += r.amount || 0; // Grouping with utilities for this simple example
-        break;
+    switch (summaryTileFor(r.category)) {
+      case "maintenance": maintenanceTotal += r.amount || 0; break;
+      case "management":  managementTotal  += r.amount || 0; break;
+      case "utilities":   utilitiesTotal   += r.amount || 0; break;
     }
 
     return `
-      <tr data-id="${r.id}">
+      <tr data-id="${escapeHtml(r.id)}">
         <td>${formatDate(r.date_paid)}</td>
-        <td>${r.property_name || "—"}</td>
-        <td>${r.category || "—"}</td>
-        <td>${r.note || ""}</td>
+        <td>${escapeHtml(r.property_name || "—")}</td>
+        <td>${escapeHtml(r.category || "—")}</td>
+        <td>${escapeHtml(r.note || "")}</td>
         <td>${formatMoney(r.amount)}</td>
         <td style="text-align:center">
           ${(r.receipt_path || r.receipt_url)
