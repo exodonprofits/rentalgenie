@@ -15,7 +15,7 @@ Status: **early access**. Online rent payments are not built yet; rent is record
 | Frontend | Static HTML/CSS/JS, one self-contained file per page, CDN dependencies only |
 | Database / auth / storage | Supabase (PostgreSQL, row-level security, Storage) |
 | Automation | n8n Cloud (payment inbox, reminders) |
-| AI | Anthropic API — Ask Genie, and payment-email extraction |
+| AI | Anthropic API: Snap it (`rg-snap`: receipts and leases), listing descriptions (`rental-genie-ai-proxy`), payment-email extraction (n8n). Ask Genie is not built. |
 | Hosting | Cloudflare |
 
 No build step. Every page runs as-is.
@@ -112,11 +112,6 @@ After deploying, purge the Cloudflare cache, or new versions of a page can keep 
 ## Known gaps
 
 - Online rent payments are not built. Stripe Connect is scoped but not started.
-- `property-escrow-reconciliation.html` queries two tables that don't exist yet.
-- Legacy pages still in the tree: `rent-log.html`, `rent-payments.html`, `manage-properties.html`,
-  `lease-center.html`, `rental-tracker.html`, `landing.html`, `dashboard_v920.html`. Retire them
-  rather than extending them.
-- Seven pages use a `safe()` helper that does not escape HTML.
 - No plan limits are enforced; pricing copy is marketing only.
 
 ---

@@ -205,42 +205,21 @@ main{flex:1;max-width:860px;margin:0 auto;padding:40px 22px 60px;width:100%;}
       <a href="mailto:support@rentalgenie.app">support@rentalgenie.app</a>
     </div>
     <div class="contact-card">
-      <div class="contact-icon">📖</div>
-      <h3>Documentation</h3>
-      <p>Browse our guides and FAQs to find answers quickly.</p>
-      <a href="#">View Docs →</a>
+      <div class="contact-icon">📝</div>
+      <h3>What to include</h3>
+      <p>The property (if it's about one), what you were doing, and what you saw. A screenshot helps with anything that looks wrong.</p>
     </div>
   </div>
 
   <div class="form-card">
-    <h2>Send us a message</h2>
-    <div class="form-row">
-      <div class="form-group">
-        <label>Your Name</label>
-        <input type="text" id="contactName" placeholder="Jimmy Tran" />
-      </div>
-      <div class="form-group">
-        <label>Email Address</label>
-        <input type="email" id="contactEmail" placeholder="you@email.com" />
-      </div>
+    <h2>Email us directly</h2>
+    <p style="margin-bottom:14px;font-size:.88rem;color:var(--muted);line-height:1.6">There's no contact form. Email goes straight to the founder, and you'll get a reply within one business day.</p>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+      <code id="supportEmail" style="font-size:1rem;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius-md);user-select:all">support@rentalgenie.app</code>
+      <button type="button" class="btn-submit" id="copyEmailBtn" style="width:auto">📋 Copy address</button>
+      <a class="btn-submit" href="mailto:support@rentalgenie.app" style="width:auto;text-decoration:none;text-align:center">📨 Open email app</a>
     </div>
-    <div class="form-group">
-      <label>Subject</label>
-      <select id="contactSubject">
-        <option value="">— Select a topic —</option>
-        <option>Account &amp; Billing</option>
-        <option>Bug Report</option>
-        <option>Feature Request</option>
-        <option>Data &amp; Privacy</option>
-        <option>General Question</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label>Message</label>
-      <textarea id="contactMessage" placeholder="Describe your question or issue in detail…"></textarea>
-    </div>
-    <button class="btn-submit" id="contactSubmit">📨 Send Message</button>
-    <div class="success-msg" id="contactSuccess">✅ Message sent! We'll get back to you within one business day.</div>
+    <div class="success-msg" id="copySuccess">✅ Copied. Paste it into your email app.</div>
   </div>
 </main>
 
@@ -289,21 +268,19 @@ main{flex:1;max-width:860px;margin:0 auto;padding:40px 22px 60px;width:100%;}
     document.addEventListener('click', function(e){ if(drw && !drw.contains(e.target) && !ham.contains(e.target)) drw.style.display = 'none'; });
   }
 
-  // Contact form (client-side only — logs to console, extend with email service)
-  var submitBtn = document.getElementById('contactSubmit');
-  if(submitBtn){
-    submitBtn.addEventListener('click', function(){
-      var name    = (document.getElementById('contactName').value    || '').trim();
-      var email   = (document.getElementById('contactEmail').value   || '').trim();
-      var subject = (document.getElementById('contactSubject').value || '').trim();
-      var message = (document.getElementById('contactMessage').value || '').trim();
-      if(!name || !email || !subject || !message){ alert('Please fill in all fields before sending.'); return; }
-      submitBtn.disabled = true;
-      submitBtn.textContent = 'Sending…';
-      setTimeout(function(){
-        document.getElementById('contactSuccess').classList.add('show');
-        submitBtn.textContent = '✅ Sent!';
-      }, 800);
+  // Copy the support address (no form: nothing is sent from this page)
+  var copyBtn = document.getElementById('copyEmailBtn');
+  if(copyBtn){
+    copyBtn.addEventListener('click', function(){
+      var addr = 'support@rentalgenie.app';
+      function done(){ document.getElementById('copySuccess').classList.add('show'); }
+      function fallback(){
+        var r = document.createRange(); r.selectNodeContents(document.getElementById('supportEmail'));
+        var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
+      }
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(addr).then(done, fallback);
+      } else { fallback(); }
     });
   }
 
@@ -326,11 +303,6 @@ main{flex:1;max-width:860px;margin:0 auto;padding:40px 22px 60px;width:100%;}
       var ma = document.getElementById('mobileAccountLink'); if(ma) ma.style.display='block';
       var mlo = document.getElementById('mobileLogoutContainer'); if(mlo) mlo.style.display='block';
       var mli = document.getElementById('mobileLogin'); if(mli) mli.style.display='none';
-      // Pre-fill form if logged in
-      var nameEl = document.getElementById('contactName');
-      var emailEl = document.getElementById('contactEmail');
-      if(nameEl && !nameEl.value) nameEl.value = uname;
-      if(emailEl && !emailEl.value) emailEl.value = user.email || '';
       var lb = document.getElementById('logoutBtn');
       var mlb = document.getElementById('mobileLogoutBtn');
       async function doSignOut(){ try{ await sb.auth.signOut(); }catch(e){} location.href='login.html'; }

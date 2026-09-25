@@ -808,7 +808,7 @@ function resolveActiveCompanyId() {
         return r.data.company_id;
       }
       return client.from('companies').select('id')
-        .or('created_by.eq.' + currentUser.id + ',owner_user_id.eq.' + currentUser.id)
+        .eq('owner_user_id', currentUser.id)
         .order('created_at', { ascending: true }).limit(1).maybeSingle()
         .then(function (c) {
           if (!c.error && c.data && c.data.id) {

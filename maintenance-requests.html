@@ -2164,6 +2164,18 @@ if (hamburgerBtn && mobileDrawer) {
       });
     }
 
+    // Tenant photos: private bucket, opened through signed links (rgFiles). Older rows only have
+    // photo_urls (public-style URLs), which rgFiles also accepts.
+    function renderPhotoLinks(r){
+      const list = (Array.isArray(r.photo_paths) && r.photo_paths.length) ? r.photo_paths
+                 : (Array.isArray(r.photo_urls) ? r.photo_urls : []);
+      if (!list.length) return "";
+      const links = list.slice(0, 6).map((p, i) =>
+        `<a href="#"${rgFiles.attr('maintenance-photos', p)} target="_blank" rel="noopener noreferrer" class="btn-mini" title="Open photo ${i + 1}">📷 ${i + 1}</a>`
+      ).join(" ");
+      return `<div class="mr-photos" style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px">${links}</div>`;
+    }
+
     function renderActions(r){
       const status = normalizeStatus(r.status);
       const id = r.id;
@@ -2301,7 +2313,7 @@ if (hamburgerBtn && mobileDrawer) {
         // Prefer scoping by active company (multi-landlord)
         let query = client
           .from("properties")
-          .select("id, name, name, address, company_id")
+          .select("id, name, address, company_id")
           .order("name", { ascending: true });
 
         if (activeCompanyId) {
@@ -2316,7 +2328,8 @@ if (hamburgerBtn && mobileDrawer) {
 
         (data || []).forEach((p) => {
           const opt = document.createElement("option");
-      const displayName = p.name || p.name || "Unnamed Property";
+      const displayName = p.name || "Unnamed Property";
+      propertyNameById.set(String(p.id), p.name || "");
       opt.value = p.id; // use property_id for stable filtering
       opt.textContent = p.address ? `${displayName} — ${p.address}` : displayName;
           selectEl.appendChild(opt);
@@ -2405,7 +2418,7 @@ if (hamburgerBtn && mobileDrawer) {
       const q2 = (document.getElementById("searchInput")?.value || "").trim().toLowerCase();
       if (q2) {
         rows = rows.filter((r) => {
-          const hay = [r.name, r.tenant_email, r.issue_description, r.notes, r.urgency_level, r.status]
+          const hay = [r.property_name, r.tenant_email, r.issue_description, r.notes, r.urgency_level, r.status]
             .filter(Boolean)
             .join(" ")
             .toLowerCase();
@@ -2453,9 +2466,9 @@ if (hamburgerBtn && mobileDrawer) {
           return `
           <tr>
             <td data-label="Date">${formatDate(r.created_at)}</td>
-            <td data-label="Property">${escapeHtml(r.name || "—")}</td>
+            <td data-label="Property">${escapeHtml(r.property_name || "—")}</td>
             <td data-label="Tenant">${escapeHtml(tenant)}</td>
-            <td data-label="Issue">${escapeHtml(issue)}</td>
+            <td data-label="Issue">${escapeHtml(issue)}${renderPhotoLinks(r)}</td>
             <td data-label="Priority">${escapeHtml(priority)}</td>
             <td data-label="Status">${getStatusPill(r.status)}</td>
             <td class="actions-cell" data-label="Actions">${renderActions(r)}</td>
@@ -2464,6 +2477,7 @@ if (hamburgerBtn && mobileDrawer) {
         })
         .join("");
 
+      rgFiles.hydrate(client, body);
       if (openEl) openEl.textContent = openCount.toString();
       if (inProgressEl) inProgressEl.textContent = inProgressCount.toString();
       if (highPriorityEl) highPriorityEl.textContent = highPriorityCount.toString();
@@ -2493,15 +2507,18 @@ if (hamburgerBtn && mobileDrawer) {
     }
 
 
-    async function insertMaintenanceExpenseSafe({ name, amount, note, vendor }) {
+    async function insertMaintenanceExpenseSafe({ req, amount, note, vendor }) {
       const datePaid = new Date();
       const yyyyMmDd = new Date(datePaid.getTime() - datePaid.getTimezoneOffset()*60000).toISOString().slice(0,10);
 
       // Try insert with vendor first (if your expenses table has it). If it fails, retry without vendor.
+      // Same category name add-expense and rg-snap use, filed against the request's property.
       const baseRow = {
-        name,
+        property_name: req.property_name || null,
+        property_id: req.property_id || null,
+        company_id: req.company_id || activeCompanyId || null,
         date_paid: yyyyMmDd,
-        category: "Maintenance",
+        category: "Repairs & Maintenance",
         amount,
         note,
       };
@@ -2578,7 +2595,7 @@ if (hamburgerBtn && mobileDrawer) {
         const vendor = (req.assigned_vendor || req.vendor || "").trim();
         const expNote = note || ("Maintenance #" + req.id + ": " + String(req.issue_description||"Maintenance work").slice(0,120));
         await insertMaintenanceExpenseSafe({
-          name:   req.name,
+          req:    req,
           amount: cost,
           note:   expNote.slice(0, 500),
           vendor: vendor || null,
@@ -2624,6 +2641,14 @@ if (hamburgerBtn && mobileDrawer) {
       }
     }
 
+    // maintenance_requests stores property_name + property_id (there is no "name" column).
+    const propertyNameById = new Map();
+    function propertyIdForRequest(r){
+      if (r.property_id) return String(r.property_id);
+      for (const [id, nm] of propertyNameById) if (nm && nm === r.property_name) return id;
+      return "";
+    }
+
     function fillPropertySelectForModal(selectEl){
       const main = document.getElementById("propertySelect");
       selectEl.innerHTML = "";
@@ -2647,7 +2672,7 @@ if (hamburgerBtn && mobileDrawer) {
 
       const propSel = document.getElementById("edit_name");
       fillPropertySelectForModal(propSel);
-      propSel.value = r.name || "";
+      propSel.value = propertyIdForRequest(r);
 
       document.getElementById("edit_tenant_email").value = r.tenant_email || "";
       document.getElementById("edit_issue_description").value = r.issue_description || "";
@@ -2683,7 +2708,8 @@ if (hamburgerBtn && mobileDrawer) {
       if(!editingRequestId) return;
 
       const payload = {
-        name: document.getElementById("edit_name").value || null,
+        property_id: document.getElementById("edit_name").value || null,
+        property_name: propertyNameById.get(document.getElementById("edit_name").value) || null,
         tenant_email: document.getElementById("edit_tenant_email").value || null,
         issue_description: document.getElementById("edit_issue_description").value || null,
         urgency_level: document.getElementById("edit_urgency_level").value || null,

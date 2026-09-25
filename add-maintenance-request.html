@@ -551,9 +551,9 @@ async function probeColumns(){
       _cols=new Set(Object.keys(data[0]));
     } else {
       // If no rows yet, insert a test probe... actually just set common defaults
-      _cols=new Set(['name','tenant_email','issue_description','urgency_level','status',
+      _cols=new Set(['property_name','property_id','tenant_email','issue_description','urgency_level','status',
         'notes','assigned_vendor','estimated_cost','scheduled_at','completed_at',
-        'company_id','user_id','created_at','updated_at']);
+        'company_id','user_id','created_at']);
     }
   } catch(e){ console.warn('probeColumns error:',e); }
 }
@@ -574,15 +574,16 @@ async function saveRequest(e){
   saveBtn.disabled=true; saveBtn.textContent='Saving…';
 
   try {
-    var now=new Date().toISOString();
+    // maintenance_requests has property_name + property_id (no "name" or "updated_at" columns;
+    // created_at defaults in the database).
+    var propOpt=$('propSelect').selectedOptions[0];
     var payload={
-      name:              property,
+      property_name:     property,
       issue_description: description,
       urgency_level:     priority,
-      status:            $('statusSelect').value||'Open',
-      created_at:        now,
-      updated_at:        now
+      status:            $('statusSelect').value||'Open'
     };
+    if(propOpt && propOpt.dataset.propertyId) payload.property_id=propOpt.dataset.propertyId;
 
     // Optional fields — only include if field has a value
     var email=$('tenantEmail').value.trim();

@@ -776,8 +776,11 @@ var propertyName = decodeURIComponent(_p.get('property') || '');
 var propertyId   = _p.get('property_id') || '';
 var leaseId      = _p.get('lease_id') || _p.get('id') || '';
 var companyId    = _p.get('company_id') || _p.get('company') || _p.get('workspace_id') || '';
-var isEdit       = !!leaseId && (_p.get('mode') !== 'renew');
-var isRenew      = _p.get('renew') === 'true' || _p.get('mode') === 'renew';
+// Renew always inserts a new lease; lease_id only says which lease to copy from. Lease & Rent's
+// banner sends renew=1, the More menu renew=true. Checking renew first stops a renewal with a
+// lease_id being saved over the current lease.
+var isRenew      = ['true', '1'].indexOf(_p.get('renew')) !== -1 || _p.get('mode') === 'renew';
+var isEdit       = !!leaseId && !isRenew;
 
 /* ============================================================
    HELPERS

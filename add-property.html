@@ -767,7 +767,6 @@ textarea { resize: vertical; min-height: 80px; }
               <div class="finance-inline-tools" style="display:flex;gap:8px;">
                 <button type="button" class="btn sm" id="manageFinanceBtn"          disabled title="Save property first">⚙️ Manage</button>
                 <button type="button" class="btn sm" id="manageMortgageActivityBtn" disabled title="Save property first">📒 Activity</button>
-                <button type="button" class="btn sm" id="manageEscrowBtn"           disabled title="Save property first">💼 Escrow</button>
                 <button type="button" class="btn sm" id="manageInsuranceBtn"        disabled title="Save property first">🛡 Insurance</button>
               </div>
             </div>
@@ -1067,7 +1066,6 @@ textarea { resize: vertical; min-height: 80px; }
     <div class="finance-drawer-hint" id="financeDrawerHint">Save this property first to access financing tools.</div>
     <button type="button" class="finance-drawer-btn" id="financeManageBtnMobile"   disabled>⚙️ Manage Financing</button>
     <button type="button" class="finance-drawer-btn" id="financeMortgageBtnMobile" disabled>📒 Mortgage Activity</button>
-    <button type="button" class="finance-drawer-btn" id="financeEscrowBtnMobile"   disabled>💼 Escrow Reconciliation</button>
     <button type="button" class="finance-drawer-btn" id="financeInsuranceBtnMobile" disabled>🛡 Insurance</button>
   </div>
 </aside>
@@ -1254,7 +1252,6 @@ function makeNavBtn(desktopId, mobileId, targetPage) {
 }
 makeNavBtn('manageFinanceBtn',         'financeManageBtnMobile',   'property-finance.html');
 makeNavBtn('manageMortgageActivityBtn','financeMortgageBtnMobile', 'property-mortgage-activity.html');
-makeNavBtn('manageEscrowBtn',          'financeEscrowBtnMobile',   'property-escrow-reconciliation.html');
 makeNavBtn('manageInsuranceBtn',       'financeInsuranceBtnMobile','property-insurance.html');
 
 var manageTaxBtnEl = $('manageTaxBtn');
@@ -1268,8 +1265,8 @@ if (manageTaxBtnEl) manageTaxBtnEl.addEventListener('click', function () {
 });
 
 function setFinanceButtonsEnabled(enabled) {
-  ['manageFinanceBtn','manageMortgageActivityBtn','manageEscrowBtn','manageInsuranceBtn',
-   'manageTaxBtn','financeManageBtnMobile','financeMortgageBtnMobile','financeEscrowBtnMobile','financeInsuranceBtnMobile'
+  ['manageFinanceBtn','manageMortgageActivityBtn','manageInsuranceBtn',
+   'manageTaxBtn','financeManageBtnMobile','financeMortgageBtnMobile','financeInsuranceBtnMobile'
   ].forEach(function (id) { var el = $(id); if (el) el.disabled = !enabled; });
   var hint = $('financeDrawerHint');
   if (hint) hint.style.display = enabled ? 'none' : 'block';

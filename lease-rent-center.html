@@ -2510,7 +2510,7 @@ async function resolveActiveCompanyId() {
     const { data: owned, error: ownedErr } = await client
       .from("companies")
       .select("id")
-      .or(`created_by.eq.${user.id},owner_id.eq.${user.id}`)
+      .eq("owner_user_id", user.id)
       .order("created_at", { ascending: true })
       .limit(1)
       .maybeSingle();
@@ -2805,7 +2805,8 @@ function addDays(dateObj, days) {
 function isAfter(a, b) { return a.getTime() > b.getTime(); }
 
 function getLeaseLateFee(lease) {
-  const v = lease?.late_fee_amount ?? lease?.late_fee ?? 0;
+  // late_fee / grace_period are what lease-form saves; the *_amount / *_days columns are legacy.
+  const v = lease?.late_fee ?? lease?.late_fee_amount ?? 0;
   const n = Number(v);
   return Number.isFinite(n) ? n : 0;
 }
@@ -2915,7 +2916,7 @@ function updateLedgerLeaseContext() {
 }
 
 function getLeaseGraceDays(lease) {
-  const v = lease?.late_fee_grace_days ?? lease?.grace_period ?? 0;
+  const v = lease?.grace_period ?? lease?.late_fee_grace_days ?? 0;
   const n = Number(v);
   return Number.isFinite(n) ? n : 0;
 }
@@ -3367,7 +3368,7 @@ async function loadLatestLease() {
 
   const { data: leases, error } = await client
     .from("leases")
-    .select("id, property_name, tenant_name, lease_start, lease_end, rent_amount, rent_due_day, due_day, status, lease_type, terminated_date")
+    .select("id, property_name, tenant_name, lease_start, lease_end, rent_amount, rent_due_day, due_day, status, lease_type, terminated_date, late_fee, late_fee_amount, grace_period, late_fee_grace_days")
     .eq("company_id", getSelectedPropertyCompanyId())
     .eq("property_name", currentProperty)
     .order("lease_start", { ascending: false })
@@ -3386,7 +3387,7 @@ async function loadLeaseHistory() {
   if (!currentProperty) return [];
   const { data, error } = await client
     .from("leases")
-    .select("id, property_name, tenant_name, lease_start, lease_end, rent_amount, rent_due_day, due_day, status, lease_type, terminated_date")
+    .select("id, property_name, tenant_name, lease_start, lease_end, rent_amount, rent_due_day, due_day, status, lease_type, terminated_date, late_fee, late_fee_amount, grace_period, late_fee_grace_days")
     .eq("company_id", getSelectedPropertyCompanyId())
     .eq("property_name", currentProperty)
     .order("lease_start", { ascending: false });
@@ -4751,7 +4752,7 @@ async function initWorkspaceEmptyState() {
           const defaultName = "My Rentals";
           const { data: comp, error: compErr } = await c
             .from("companies")
-            .insert({ name: defaultName, owner_id: user.id })
+            .insert({ name: defaultName, owner_user_id: user.id })
             .select("id")
             .single();
           if (compErr) throw compErr;
