@@ -101,6 +101,9 @@ match the page's `<option>` values.
 - Migrations are transactional. Split risky statements so one failure doesn't roll back everything.
 - Use `net.http_post()` (pg_net) to call Edge Functions from triggers. `verify_jwt` must be false
   for webhook receivers and true for user-facing functions.
+- Webhook secrets live in Vault, never in a function body. The maintenance trigger and the
+  `maintenance-acknowledgment` Edge Function both read `rg_maintenance_webhook_secret` (service role
+  only); rotate it with `vault.update_secret`.
 
 ---
 
