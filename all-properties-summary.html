@@ -789,7 +789,7 @@ async function loadPortfolio(sb, user) {
 
   /* Rent YTD + Expenses YTD (parallel) */
   var rentQ = sb.from('rent_log').select('property_name,amount').in('property_name',names).gte('date_paid',yearStart);
-  var expQ  = sb.from('expenses').select('property_name,amount').in('property_name',names).gte('date_paid',yearStart);
+  var expQ  = sb.from('expenses').select('property_name,amount').is('archived_at', null).in('property_name',names).gte('date_paid',yearStart);
   if (cid) { rentQ=rentQ.eq('company_id',cid); expQ=expQ.eq('company_id',cid); }
 
   var pResults = await Promise.all([rentQ, expQ]);

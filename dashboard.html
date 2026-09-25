@@ -3755,10 +3755,10 @@ async function fetchDashboardData(user) {
     // ── Build all 8 queries upfront ─────────────────────────────────────────────
   let propQuery      = sb.from("properties").select("id, name, occupancy_status", { count: "exact" }).order("created_at", { ascending: false });
   let rentYTDQuery   = sb.from("rent_log").select("amount, date_paid").gte("date_paid", yearStart);
-  let expYTDQuery    = sb.from("expenses").select("amount, date_paid").gte("date_paid", yearStart);
+  let expYTDQuery    = sb.from("expenses").select("amount, date_paid").is("archived_at", null).gte("date_paid", yearStart);
   let maintQuery     = sb.from("maintenance_requests").select("status, urgency_level");
   let rent30Query    = sb.from("rent_log").select("amount, date_paid").gte("date_paid", days30Ago);
-  let maintExp30Query = sb.from("expenses").select("amount, date_paid, category")
+  let maintExp30Query = sb.from("expenses").select("amount, date_paid, category").is("archived_at", null)
     .in("category", ["Maintenance", "Repairs & Maintenance"]).gte("date_paid", days30Ago);
   let leasesQuery    = sb.from("leases")
     .select("property_name,tenant_name,rent_amount,rent_due_day,due_day,grace_period,late_fee_grace_days,lease_end")
