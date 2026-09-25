@@ -1402,7 +1402,7 @@ async function loadReportsQuickPeek() {
   var rentQ = sb.from('rent_log').select('amount, date_paid')
     .eq('property_name', currentProperty).gte('date_paid', firstOfMonth);
   if (activeCompanyId) rentQ = rentQ.eq('company_id', activeCompanyId);
-  var expQ = sb.from('expenses').select('amount, date_paid')
+  var expQ = sb.from('expenses').select('amount, date_paid').is('archived_at', null)
     .eq('property_name', currentProperty).gte('date_paid', firstOfMonth);
   if (activeCompanyId) expQ = expQ.eq('company_id', activeCompanyId);
 
@@ -1552,7 +1552,7 @@ async function loadTrend12Months(propertyName) {
   if (activeCompanyId)   rentQ = rentQ.eq('company_id', activeCompanyId);
   if (!isPortfolio && propertyName) rentQ = rentQ.eq('property_name', propertyName);
 
-  var expQ = sb.from('expenses').select('amount, date_paid').gte('date_paid', startStr).lt('date_paid', endStr);
+  var expQ = sb.from('expenses').select('amount, date_paid').is('archived_at', null).gte('date_paid', startStr).lt('date_paid', endStr);
   if (activeCompanyId)  expQ = expQ.eq('company_id', activeCompanyId);
   if (!isPortfolio && propertyName) expQ = expQ.eq('property_name', propertyName);
 
@@ -1885,7 +1885,7 @@ async function loadExpReport(months) {
   var meta = document.getElementById('expReportMeta');
   if (meta) meta.textContent = 'Loading…';
 
-  var eQ = sb.from('expenses').select('*').gte('date_paid', start).order('date_paid', {ascending: false});
+  var eQ = sb.from('expenses').select('*').is('archived_at', null).gte('date_paid', start).order('date_paid', {ascending: false});
   if (activeCompanyId) eQ = eQ.eq('company_id', activeCompanyId);
   if (!isPortfolio) eQ = eQ.eq('property_name', currentProperty);
 
