@@ -228,6 +228,20 @@ main {
 .status-msg.info { background: var(--info-bg);    border-color: var(--info-bdr);    color: var(--info-text);   display: block; }
 
 /* ── Section cards ──────────────────────────────────────────── */
+/* Snap it — read a lease PDF into the form */
+.snap-card{display:flex;align-items:center;gap:16px;flex-wrap:wrap;background:linear-gradient(135deg,var(--navy),var(--navy-light));color:#fff;border-radius:16px;padding:20px 22px;margin-bottom:18px;}
+.snap-card .snap-text{flex:1 1 240px;min-width:0;}
+.snap-card .snap-title{font-weight:800;font-size:1.05rem;margin-bottom:4px;}
+.snap-card .snap-sub{font-size:.86rem;opacity:.85;line-height:1.4;}
+.snap-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:#fff;color:var(--navy);font-weight:800;border-radius:12px;padding:12px 18px;cursor:pointer;white-space:nowrap;box-shadow:0 2px 10px rgba(0,0,0,.18);}
+.snap-btn input{display:none;}
+.snap-btn.busy{opacity:.7;pointer-events:none;}
+.snap-status{flex-basis:100%;font-size:.86rem;display:none;background:rgba(255,255,255,.12);border-radius:10px;padding:10px 12px;white-space:pre-line;}
+.snap-status.show{display:block;}
+.snap-filled{background:#ecfdf5 !important;border-color:#86efac !important;}
+.snap-unsure{background:#fffbeb !important;border-color:#f59e0b !important;box-shadow:0 0 0 2px rgba(245,158,11,.18);}
+@media(max-width:600px){.snap-btn{width:100%;}}
+
 .section-card {
   background: var(--card); border: 1px solid var(--border);
   border-radius: var(--radius-xl); box-shadow: var(--shadow-sm);
@@ -490,6 +504,19 @@ textarea { resize: vertical; min-height: 88px; }
         <div class="mode-banner-title">Editing Existing Lease</div>
         <div class="mode-banner-sub">Changes will update this lease record. Review carefully before saving.</div>
       </div>
+    </div>
+
+    <!-- Snap it -->
+    <div class="snap-card" id="snapCard">
+      <div class="snap-text">
+        <div class="snap-title">📄 Upload the signed lease</div>
+        <div class="snap-sub">Pick the lease PDF (or a photo of it). Genie reads it and fills in this form — you check it and save. The lease is kept in the tenant's documents.</div>
+      </div>
+      <label class="snap-btn" id="snapBtn">
+        📄 Upload lease
+        <input type="file" id="snapFile" accept="application/pdf,.pdf,image/*" />
+      </label>
+      <div class="snap-status" id="snapStatus"></div>
     </div>
 
     <!-- Status message -->
@@ -756,6 +783,163 @@ var isRenew      = _p.get('renew') === 'true' || _p.get('mode') === 'renew';
    HELPERS
 ============================================================ */
 function $(id) { return document.getElementById(id); }
+
+/* ============================================================
+   SNAP IT — lease PDF → rg-snap Edge Function → draft in the form.
+   Nothing is saved until Save. Filled fields turn green, fields Genie
+   wasn't sure about turn amber. After a successful save the PDF is
+   linked to the tenant's documents as "Signed lease".
+============================================================ */
+var snapLeasePath = null;
+
+function snapStatus(text, isError) {
+  var el = $('snapStatus');
+  if (!el) return;
+  el.textContent = text || '';
+  el.style.background = isError ? 'rgba(220,38,38,.35)' : '';
+  el.classList.toggle('show', !!text);
+}
+
+function snapMark(id, unsure) {
+  var el = $(id);
+  if (!el) return;
+  el.classList.remove('snap-filled', 'snap-unsure');
+  el.classList.add(unsure ? 'snap-unsure' : 'snap-filled');
+  var clear = function () { el.classList.remove('snap-filled', 'snap-unsure'); };
+  el.addEventListener('input', clear, { once: true });
+  el.addEventListener('change', clear, { once: true });
+}
+
+function snapSlug(v) {
+  return String(v || 'lease').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60) || 'lease';
+}
+
+async function snapResolveCompany() {
+  if (companyId) return companyId;
+  try { var cached = localStorage.getItem('rg_active_company_id'); if (cached) return (companyId = cached); } catch (e) {}
+  var u = await db.auth.getUser();
+  var uid = u && u.data && u.data.user && u.data.user.id;
+  if (!uid) return '';
+  var m = await db.from('company_members').select('company_id').eq('user_id', uid).limit(1).maybeSingle();
+  if (m.data && m.data.company_id) return (companyId = m.data.company_id);
+  var c = await db.from('companies').select('id').eq('owner_user_id', uid).limit(1).maybeSingle();
+  return (companyId = (c.data && c.data.id) || '');
+}
+
+async function snapApplyLease(d) {
+  var unsure = d.unsure || [];
+  var n = 0;
+  function set(field, id, value) {
+    if (value === null || value === undefined || value === '') return;
+    $(id).value = value;
+    $(id).dispatchEvent(new Event('input'));   // let the page react (e.g. deposit total) before marking
+    snapMark(id, unsure.indexOf(field) >= 0);
+    n++;
+  }
+  if (d.lease_type && $('leaseType')) {
+    $('leaseType').value = d.lease_type;
+    $('leaseType').dispatchEvent(new Event('change'));
+    snapMark('leaseType', unsure.indexOf('lease_type') >= 0);
+    n++;
+  }
+  // The card asks for the signed lease; on a new lease assume signed, but flag it so the landlord confirms.
+  if (!isEdit && $('status') && $('status').value === 'draft') {
+    $('status').value = 'signed';
+    $('status').dispatchEvent(new Event('change'));
+    snapMark('status', true);
+  }
+  set('tenant_name', 'tenantName', d.tenant_name);
+  set('tenant_email', 'tenantEmail', d.tenant_email);
+  set('tenant_phone', 'tenantPhone', d.tenant_phone);
+  set('lease_start', 'leaseStart', d.lease_start);
+  set('lease_end', 'leaseEnd', d.lease_end);
+  set('rent_amount', 'rentAmount', d.rent_amount != null ? Number(d.rent_amount).toFixed(2) : null);
+  set('due_day', 'dueDay', d.due_day);
+  set('late_fee', 'lateFee', d.late_fee != null ? Number(d.late_fee).toFixed(2) : null);
+  set('grace_period', 'gracePeriod', d.grace_period);
+  set('security_deposit', 'securityDeposit', d.security_deposit != null ? Number(d.security_deposit).toFixed(2) : null);
+  set('pet_deposit', 'petDeposit', d.pet_deposit != null ? Number(d.pet_deposit).toFixed(2) : null);
+  if (d.key_terms && !$('leaseNotes').value) { $('leaseNotes').value = d.key_terms; snapMark('leaseNotes', false); }
+  // Attach the property when the page was opened without one.
+  if (!propertyId && d.property_name) {
+    var p = await db.from('properties').select('id,name').eq('company_id', companyId).eq('name', d.property_name).limit(1).maybeSingle();
+    if (p.data) { propertyId = p.data.id; propertyName = p.data.name; }
+  }
+  return n;
+}
+
+async function snapLease(file) {
+  var btn = $('snapBtn');
+  btn.classList.add('busy');
+  try {
+    snapStatus('⏳ Uploading…');
+    if (!(await snapResolveCompany())) { snapStatus('No company found for this login. Refresh and try again.', true); return; }
+    var safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+    var path = companyId + '/' + snapSlug(propertyName) + '/' + Date.now() + '_' + safeName;
+    var up = await db.storage.from('tenant-documents').upload(path, file, { upsert: false, contentType: file.type });
+    if (up.error) { snapStatus('Upload failed — ' + up.error.message, true); return; }
+    snapLeasePath = path;
+
+    snapStatus('🧞 Genie is reading the lease… (about 10 seconds)');
+    var res = await db.functions.invoke('rg-snap', { body: { kind: 'lease', bucket: 'tenant-documents', path: path, company_id: companyId } });
+    if (res.error) {
+      var code = '';
+      try { code = (await res.error.context.json()).error || ''; } catch (e) {}
+      snapStatus(code === 'busy' ? 'Genie is busy right now — wait a minute and try again.'
+        : /Unsupported file/.test(code) ? 'Please use a PDF, JPG or PNG.'
+        : /too large/.test(code) ? 'That file is over 20 MB.'
+        : "Couldn't read the lease. It's saved — please fill in the form.", true);
+      return;
+    }
+    var d = res.data && res.data.draft;
+    if (!d) { snapStatus("Couldn't read the lease. Please fill in the form.", true); return; }
+    if (d.is_lease === false) {
+      snapStatus("That doesn't look like a lease" + (d.not_lease_reason ? ' (' + d.not_lease_reason + ')' : '') + '.', true);
+      snapLeasePath = null;
+      return;
+    }
+    var n = await snapApplyLease(d);
+    var unsureCount = (d.unsure || []).length;
+    snapStatus('✅ Genie filled in ' + n + ' field' + (n === 1 ? '' : 's') + '. ' +
+      (unsureCount ? 'Check the amber ones, then ' : 'Check them, then ') + 'press Save.' +
+      (d.key_terms ? '\n📌 ' + d.key_terms : ''));
+  } catch (err) {
+    console.error('snap error', err);
+    snapStatus('Something went wrong reading the lease. You can still fill in the form.', true);
+  } finally {
+    btn.classList.remove('busy');
+  }
+}
+
+// Called after a successful save: file the snapped PDF under the tenant's documents.
+function snapLinkLeaseDoc(user) {
+  if (!snapLeasePath) return Promise.resolve();
+  var email = ($('tenantEmail').value || '').trim();
+  if (!email) return Promise.resolve();
+  return db.from('tenant_documents').insert([{
+    company_id: companyId || null,
+    property_name: propertyName || 'Lease',
+    tenant_email: email,
+    title: 'Signed lease',
+    doc_type: 'lease',
+    file_path: snapLeasePath,
+    file_url: snapLeasePath,
+    uploaded_by: user && user.id ? user.id : null
+  }]).then(function (r) {
+    if (r.error) console.warn('Lease saved; linking the PDF failed:', r.error.message);
+    snapLeasePath = null;
+  });
+}
+
+(function wireSnap() {
+  var input = document.getElementById('snapFile');
+  if (!input) return;
+  input.addEventListener('change', function () {
+    var f = this.files && this.files[0];
+    this.value = '';
+    if (f) snapLease(f);
+  });
+})();
 
 function setStatus(msg, kind) {
   var el = $('statusMsg');
@@ -1068,7 +1252,8 @@ function saveLease() {
     }
     var user = res.data.user;
 
-    function doRedirect() {
+    function doRedirect() { snapLinkLeaseDoc(user).then(doRedirectNow, doRedirectNow); }
+    function doRedirectNow() {
       setStatus('✅ Lease saved successfully! Redirecting…', 'ok');
       btn.innerHTML = '✅ Saved';
       setTimeout(function () {

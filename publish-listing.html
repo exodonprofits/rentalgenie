@@ -282,9 +282,9 @@ $("aiSuggestBtn").addEventListener("click", async () => {
   const prompt = `Write a warm, honest, 3-4 sentence rental listing description for a prospective tenant, based only on these facts (do not invent amenities, finishes, or neighborhood details that aren't listed):\n\n${facts}\n\nTone: friendly and straightforward, like a good independent landlord writing it themselves — not a real-estate agency template. No bullet points, no headers, no emojis. Return only the description text, nothing else.`;
 
   try {
-    // Calls the Supabase Edge Function named "ai-proxy" — see
-    // supabase-ai-proxy/index.ts for the function code and deploy steps.
-    const { data, error: fnError } = await sb.functions.invoke("ai-proxy", {
+    // Edge Function source: supabase/functions/rental-genie-ai-proxy/. ("ai-proxy" is Salon
+    // Genie's proxy and expects a different request shape.)
+    const { data, error: fnError } = await sb.functions.invoke("rental-genie-ai-proxy", {
       body: { prompt }
     });
 

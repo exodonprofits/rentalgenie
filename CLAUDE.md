@@ -79,6 +79,13 @@ a non-archived lease with that company (and property) — pages must send the le
 Tenants may only change `phone` on their own `tenants` row (`trg_tenants_limit_self_update`). Storage buckets are private; pages open files through signed links
 via the `rgFiles` helper, which accepts either a stored path or a legacy public URL.
 
+**Snap it:** the `rg-snap` Edge Function (source in `supabase/functions/rg-snap/`) reads an uploaded
+receipt (`kind: "receipt"`, bucket `receipts`, path `expenses/<company_id>/…`) or lease (`kind:
+"lease"`, bucket `tenant-documents`, path `<company_id>/…`) with the caller's JWT and returns a
+draft for the page to prefill. It never writes; the landlord saves. Used by `add-expense.html` and
+`lease-form.html`. Needs the `ANTHROPIC_API_KEY` secret. Expense categories in the function must
+match the page's `<option>` values.
+
 **Payment inbox:** `rg_ingest_payment_email` (service role only) queues forwarded payment alerts;
 `rg_confirm_incoming_payment` writes them to `rent_log`, splitting across unpaid months oldest-first;
 `rg_dismiss_incoming_payment` handles "not rent". Version 1 never logs a payment automatically.
