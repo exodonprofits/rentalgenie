@@ -119,11 +119,9 @@ match the page's `<option>` values.
 ## Known gaps — don't extend these, fix or retire them
 
 - Online rent payments aren't built. Stripe Connect is scoped, not started.
-- `property-escrow-reconciliation.html` queries `property_escrow_entries` and
-  `property_escrow_requirements`, neither of which exists.
-- Legacy pages still present: `rent-log.html`, `rent-payments.html`, `manage-properties.html`,
-  `lease-center.html`, `rental-tracker.html`, `landing.html`, `dashboard_v920.html`. Some are still
-  linked from current pages. Retire them and repoint the links.
+- Escrow reconciliation doesn't exist. The old page read tables that were never created and was
+  removed along with the legacy duplicate pages (rent-log, rent-payments, manage-properties,
+  lease-center, rental-tracker, tenant-history, submit-request, landing, rent-analyzer).
 - No plan limits are enforced anywhere; the pricing on the homepage is marketing copy only.
 - Around 70 tables belonging to the other GenieSphere products still have row-level security off in
   the same Supabase project. Rental Genie's tables are protected; the others are not.

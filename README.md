@@ -112,11 +112,6 @@ After deploying, purge the Cloudflare cache, or new versions of a page can keep 
 ## Known gaps
 
 - Online rent payments are not built. Stripe Connect is scoped but not started.
-- `property-escrow-reconciliation.html` queries two tables that don't exist yet.
-- Legacy pages still in the tree: `rent-log.html`, `rent-payments.html`, `manage-properties.html`,
-  `lease-center.html`, `rental-tracker.html`, `landing.html`, `dashboard_v920.html`. Retire them
-  rather than extending them.
-- Seven pages use a `safe()` helper that does not escape HTML.
 - No plan limits are enforced; pricing copy is marketing only.
 
 ---
