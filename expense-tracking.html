@@ -3071,6 +3071,15 @@ window.addEventListener("message", function(event) {
     if (typeof loadExpenses === "function") {
       loadExpenses().catch(function(e){ console.warn("Reload after save failed:", e); });
     }
+    if (msg.type === "rg_expense_deleted" && msg.id) {
+      var delId = msg.id;
+      showUndoToast("Expense deleted.", async function () {
+        var r = await client.rpc("unarchive_expense", { p_expense_id: Number(delId) });
+        if (r.error) { alert("Couldn't restore it: " + (r.error.message || "Unknown error")); return; }
+        await loadExpenses();
+        showToast("Expense restored.");
+      });
+    }
   }
 
   if (msg.type === "rg_expense_close") {
