@@ -490,7 +490,6 @@ body.auth-guest #mobileLogin{display:block!important;}body.auth-guest #mobileAcc
         <div class="row" style="margin-top:12px;">
           <button class="btn btn-ghost" id="backBtn" type="button">⬅️ Back</button>
           <button class="btn btn-ghost" id="openPortalBtn" type="button">🌐 Open Portal</button>
-          <button class="btn btn-ghost" id="escrowBtn" type="button">💼 Escrow</button>
         </div>
       </div>
     </div>
@@ -916,13 +915,6 @@ async function requireAuth() {
   document.getElementById('openPortalBtn').addEventListener('click', () => {
     const url = safeUrl(propertyRow?.insurance_portal_url_current ?? propertyRow?.insurance_portal_url ?? '');
     if (url) window.open(url, '_blank', 'noopener');
-  });
-  document.getElementById('escrowBtn').addEventListener('click', () => {
-    const qs = new URLSearchParams();
-    qs.set('property_id', propertyId);
-    if (companyId) qs.set('company_id', companyId);
-    qs.set('return_to', window.location.pathname + window.location.search);
-    window.location.href = `property-escrow-reconciliation.html?${qs.toString()}`;
   });
   document.getElementById('backBtn').addEventListener('click', () => {
     if (returnTo) return location.href = returnTo;
