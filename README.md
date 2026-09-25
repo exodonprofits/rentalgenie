@@ -15,7 +15,7 @@ Status: **early access**. Online rent payments are not built yet; rent is record
 | Frontend | Static HTML/CSS/JS, one self-contained file per page, CDN dependencies only |
 | Database / auth / storage | Supabase (PostgreSQL, row-level security, Storage) |
 | Automation | n8n Cloud (payment inbox, reminders) |
-| AI | Anthropic API — Ask Genie, and payment-email extraction |
+| AI | Anthropic API: Snap it (`rg-snap`: receipts and leases), listing descriptions (`rental-genie-ai-proxy`), payment-email extraction (n8n). Ask Genie is not built. |
 | Hosting | Cloudflare |
 
 No build step. Every page runs as-is.
