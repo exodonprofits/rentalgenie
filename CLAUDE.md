@@ -79,6 +79,12 @@ a non-archived lease with that company (and property) — pages must send the le
 Tenants may only change `phone` on their own `tenants` row (`trg_tenants_limit_self_update`). Storage buckets are private; pages open files through signed links
 via the `rgFiles` helper, which accepts either a stored path or a legacy public URL.
 
+**Property identity is `property_id`.** Every table that references a property has a `property_id`
+with a foreign key; `property_name` is a display copy. Renaming a property updates every copy
+(`trg_rg_cascade_property_rename`), and fill triggers set `property_id` from `(company_id,
+property_name)` when a page sends only the name. New queries and joins should use `property_id`;
+many existing pages still filter by name, which is safe only because the names are kept in sync.
+
 **Snap it:** the `rg-snap` Edge Function (source in `supabase/functions/rg-snap/`) reads an uploaded
 receipt (`kind: "receipt"`, bucket `receipts`, path `expenses/<company_id>/…`) or lease (`kind:
 "lease"`, bucket `tenant-documents`, path `<company_id>/…`) with the caller's JWT and returns a
