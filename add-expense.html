@@ -786,6 +786,7 @@ async function loadRecent() {
   const { data, error } = await client.from("expenses")
     .select("id,property_name,date_paid,category,amount,vendor,note,receipt_url,receipt_path")
     .eq("property_name", property)
+    .is("archived_at", null)
     .order("date_paid", { ascending: false })
     .limit(10);
 
@@ -1252,7 +1253,8 @@ async function deleteExpense() {
   const ok = confirm("Delete this expense?");
   if (!ok) return;
 
-  const { error } = await client.from("expenses").delete().eq("id", editId);
+  // Archived, not erased (the database blocks hard deletes); it can be restored.
+  const { error } = await client.rpc("archive_expense", { p_expense_id: Number(editId) });
   if (error) {
     console.error(error);
     showMsg("error","❌ Delete failed: " + error.message);
@@ -1260,8 +1262,8 @@ async function deleteExpense() {
   }
   showMsg("success","✅ Deleted.");
   if (isEmbedded) {
-    // In drawer: notify parent to close + refresh, don't navigate
-    try { window.parent.postMessage({ type: "rg_expense_deleted" }, "*"); } catch(_) {}
+    // In drawer: the parent closes, refreshes and offers Undo for this id
+    try { window.parent.postMessage({ type: "rg_expense_deleted", id: editId }, window.location.origin); } catch(_) {}
     return;
   }
   setTimeout(()=>{
