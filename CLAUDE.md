@@ -132,8 +132,11 @@ match the page's `<option>` values.
   removed along with the legacy duplicate pages (rent-log, rent-payments, manage-properties,
   lease-center, rental-tracker, tenant-history, submit-request, landing, rent-analyzer).
 - No plan limits are enforced anywhere; the pricing on the homepage is marketing copy only.
-- Around 70 tables belonging to the other GenieSphere products still have row-level security off in
-  the same Supabase project. Rental Genie's tables are protected; the others are not.
+- The Supabase project is shared with the other GenieSphere products. Row-level security is on
+  for every exposed table and views run as the caller (Sept 2026 audit). Remaining watch items:
+  `business_profiles` is readable by anon (Salon Genie pages use it), and `follow_up_requests` has
+  no salon column to scope by. When adding a policy, never add a `using (true)` catch-all: RLS
+  grants access if any policy matches, so one catch-all cancels every scoped policy beside it.
 
 ---
 
