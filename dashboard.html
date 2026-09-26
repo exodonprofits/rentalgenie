@@ -4323,11 +4323,10 @@ function buildPayInboxRow(row) {
   var hint = _el("div", "pi-hint");
   function setHint() {
     if (!sel.value) { hint.textContent = "Pick where this payment belongs."; return; }
-    if (sel.value === row.property_id && row.suggested_due_date) {
-      hint.textContent = "Applies to the oldest unpaid month first (" + _shortDate(row.suggested_due_date) + ").";
-    } else {
-      hint.textContent = "Applies to that property's oldest unpaid month first.";
-    }
+    // rg_confirm_incoming_payment pays unpaid months oldest-first; anything extra is a prepayment
+    // on the following months. suggested_due_date can be a month that's already paid, so it isn't
+    // shown here.
+    hint.textContent = "Pays any unpaid months first, oldest first. Anything extra counts toward the next month.";
   }
   sel.addEventListener("change", setHint);
   setHint();

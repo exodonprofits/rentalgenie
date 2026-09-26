@@ -80,7 +80,9 @@ unrelated payments (a salon or personal Venmo on the same bank account) out of t
 rows keep no payer name and no email body.
 
 On confirmation the amount is applied to unpaid months oldest-first, so a payment covering arrears
-splits across them. Anything left over is recorded as a prepayment.
+splits across them. Anything left over is a prepayment, applied in rent-sized pieces to the following
+due dates (a tenant who is paid up and sends next month's rent is recorded against next month; two
+months' rent covers the next two).
 
 ---
 
