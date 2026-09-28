@@ -28,5 +28,12 @@ property_escrow_ledger, owners, pmc_staff, rental_tasks, lease_status_log, tenan
 tenant_portal_users, property_financing_history, lease_rent_adjustments, property_inbox_map,
 property_insurance.
 
-Remaining steps: data and the 8 user accounts, Vault secret, Edge Functions and secrets, auth
-settings and SMTP, page URL/key swap, n8n credentials, cutover.
+Data copied 2026-09-28 (not kept in this repo): the 7 accounts that Rental Genie rows reference, with
+their original IDs, password hashes and identities (pending confirmation/recovery tokens blanked);
+the one Rental Genie company and its member; every Rental Genie row. Triggers were off during the
+load, so nothing fired and stored statuses are unchanged; sequences match the source. Every table's
+checksum and `rg_rent_status` match the source exactly.
+
+Remaining steps: Vault secret, Edge Functions and secrets, auth settings (site URL, redirects, Google
+provider) and SMTP, page URL/key swap, n8n credentials, cutover. Anything entered in the old project
+after 2026-09-28 must be re-copied before cutover.
