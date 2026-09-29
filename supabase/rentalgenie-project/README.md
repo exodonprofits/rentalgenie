@@ -34,6 +34,12 @@ the one Rental Genie company and its member; every Rental Genie row. Triggers we
 load, so nothing fired and stored statuses are unchanged; sequences match the source. Every table's
 checksum and `rg_rent_status` match the source exactly.
 
-Remaining steps: Vault secret, Edge Functions and secrets, auth settings (site URL, redirects, Google
-provider) and SMTP, page URL/key swap, n8n credentials, cutover. Anything entered in the old project
+Edge Functions deployed 2026-09-29 from `supabase/functions/` (unchanged source):
+`maintenance-acknowledgment` (verify_jwt off, checks the Vault secret `rg_maintenance_webhook_secret`,
+created by `rg_06`), `rental-genie-ai-proxy` and `rg-snap` (verify_jwt on). Tested: wrong webhook secret
+401, right secret 200, both AI functions 401 without a login. Secrets to set in the dashboard:
+`ANTHROPIC_API_KEY`, `RESEND_API_KEY`, `FROM_EMAIL`.
+
+Remaining steps: those secrets, auth settings (site URL, redirects, Google provider) and SMTP, page
+URL/key swap, n8n credentials, cutover. Anything entered in the old project
 after 2026-09-28 must be re-copied before cutover.
