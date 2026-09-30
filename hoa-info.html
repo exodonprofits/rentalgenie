@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap">
-<link rel="dns-prefetch" href="https://pbojacnagutipfhcxltj.supabase.co">
+<link rel="dns-prefetch" href="https://xqmnaeujwumlcoyhgzuk.supabase.co">
 <link rel="preconnect" href="https://cdn.jsdelivr.net">
 <style>
 :root{--navy:#0c1e3a;--navy-mid:#1a3a6b;--navy-light:#1e5799;--sky:#2d8cf0;--sky-soft:#e8f0fe;--border:#e2e8f0;--bg:#f1f4f8;--card:#ffffff;--text:#0c1e3a;--muted:#64748b;--success:#10b981;--success-bg:#ecfdf5;--success-bdr:#a7f3d0;--warn-bg:#fffbeb;--warn-bdr:#fde68a;--warn-text:#92400e;--danger-bg:#fef2f2;--danger-bdr:#fecaca;--danger-text:#7f1d1d;--info-bg:#eff6ff;--info-bdr:#bfdbfe;--info-text:#1e40af;--radius-sm:8px;--radius-md:12px;--radius-lg:16px;--radius-xl:20px;--shadow-sm:0 1px 4px rgba(12,30,58,.06);--shadow-md:0 4px 16px rgba(12,30,58,.09);--shadow-lg:0 8px 32px rgba(12,30,58,.14);--header-grad:linear-gradient(135deg,#0c1e3a 0%,#1a3a6b 55%,#1e5799 100%);}
@@ -365,7 +365,7 @@ main{flex:1;max-width:1440px;width:100%;margin:0 auto;padding:28px 22px 64px;ani
 (function(){
   var mem=new Map(),ls=null;try{ls=window.localStorage;}catch(e){}
   var wrap=function(s){return{getItem:function(k){try{return(s&&s.getItem(k))||mem.get(k)||null;}catch(e){return mem.get(k)||null;}},setItem:function(k,v){try{s&&s.setItem(k,v);}catch(e){}mem.set(k,v);},removeItem:function(k){try{s&&s.removeItem(k);}catch(e){}mem.delete(k);}};};
-  window._rgClient=window.supabase.createClient('https://pbojacnagutipfhcxltj.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBib2phY25hZ3V0aXBmaGN4bHRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgwMDkwODAsImV4cCI6MjA2MzU4NTA4MH0.ZLCcAzTYljoZycpBGwMtthP5VyAJ4schuIvt4HibGc0',{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,lock:undefined,storage:wrap(ls)}});
+  window._rgClient=window.supabase.createClient('https://xqmnaeujwumlcoyhgzuk.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhxbW5hZXVqd3VtbGNveWhnenVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA1NTU0NzIsImV4cCI6MjEwNjEzMTQ3Mn0.GbOKbMKaFO79esF2hx9dCNe8oSIZuMrx6W5p7kfPgXQ',{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,lock:undefined,storage:wrap(ls)}});
 }());
 var client=window._rgClient;
 

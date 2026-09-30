@@ -49,7 +49,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://pbojacnagutipfhcxltj.supabase.co/rest/v1/rpc/rg_ingest_payment_email",
+        "url": "https://xqmnaeujwumlcoyhgzuk.supabase.co/rest/v1/rpc/rg_ingest_payment_email",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "supabaseApi",
         "sendBody": true,
@@ -123,7 +123,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://pbojacnagutipfhcxltj.supabase.co/rest/v1/rpc/rg_store_inbox_verification",
+        "url": "https://xqmnaeujwumlcoyhgzuk.supabase.co/rest/v1/rpc/rg_store_inbox_verification",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "supabaseApi",
         "sendBody": true,

@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap">
-<link rel="dns-prefetch" href="https://pbojacnagutipfhcxltj.supabase.co">
+<link rel="dns-prefetch" href="https://xqmnaeujwumlcoyhgzuk.supabase.co">
 <link rel="preconnect" href="https://cdn.jsdelivr.net">
 
 <style>
@@ -745,8 +745,8 @@ textarea { resize: vertical; min-height: 88px; }
       removeItem: function (k) { try { ls && ls.removeItem(k); } catch (e) {} mem.delete(k); }
     };
     var _c = window.supabase.createClient(
-      'https://pbojacnagutipfhcxltj.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBib2phY25hZ3V0aXBmaGN4bHRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgwMDkwODAsImV4cCI6MjA2MzU4NTA4MH0.ZLCcAzTYljoZycpBGwMtthP5VyAJ4schuIvt4HibGc0',
+      'https://xqmnaeujwumlcoyhgzuk.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhxbW5hZXVqd3VtbGNveWhnenVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA1NTU0NzIsImV4cCI6MjEwNjEzMTQ3Mn0.GbOKbMKaFO79esF2hx9dCNe8oSIZuMrx6W5p7kfPgXQ',
       { auth: { lock: undefined, persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storage: _store } }
     );
     window._rgClient = _c; window.sb = _c; window.client = _c;
@@ -760,8 +760,8 @@ var db = window._rgClient;
 async function waitForClientReady() {
   if (window.db && window.db.auth) return window.db;
   var c = window._rgClient || window.supabase.createClient(
-    'https://pbojacnagutipfhcxltj.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBib2phY25hZ3V0aXBmaGN4bHRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgwMDkwODAsImV4cCI6MjA2MzU4NTA4MH0.ZLCcAzTYljoZycpBGwMtthP5VyAJ4schuIvt4HibGc0',
+    'https://xqmnaeujwumlcoyhgzuk.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhxbW5hZXVqd3VtbGNveWhnenVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA1NTU0NzIsImV4cCI6MjEwNjEzMTQ3Mn0.GbOKbMKaFO79esF2hx9dCNe8oSIZuMrx6W5p7kfPgXQ',
     { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, lock: undefined } }
   );
   window._rgClient = c; window.db = c; window.sb = c;
