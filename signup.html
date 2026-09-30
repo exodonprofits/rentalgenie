@@ -130,8 +130,8 @@ input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(45
   var wrap=function(s){return{getItem:function(k){try{return(s&&s.getItem(k))||mem.get(k)||null}catch(e){return mem.get(k)||null}},setItem:function(k,v){try{s&&s.setItem(k,v)}catch(e){}mem.set(k,v)},removeItem:function(k){try{s&&s.removeItem(k)}catch(e){}mem.delete(k)}}};
   var ls=null;try{ls=window.localStorage}catch(e){}
   window._rgClient=window.supabase.createClient(
-    'https://pbojacnagutipfhcxltj.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBib2phY25hZ3V0aXBmaGN4bHRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgwMDkwODAsImV4cCI6MjA2MzU4NTA4MH0.ZLCcAzTYljoZycpBGwMtthP5VyAJ4schuIvt4HibGc0',
+    'https://xqmnaeujwumlcoyhgzuk.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhxbW5hZXVqd3VtbGNveWhnenVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA1NTU0NzIsImV4cCI6MjEwNjEzMTQ3Mn0.GbOKbMKaFO79esF2hx9dCNe8oSIZuMrx6W5p7kfPgXQ',
     {auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,lock:undefined,storage:wrap(ls)}}
   );
 }());

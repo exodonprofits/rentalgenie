@@ -117,7 +117,7 @@ mark.fill{background:#fff3c4;color:#7a5400;padding:0 4px;border-radius:4px;font-
   try{
     var _m=new Map(),_l=null;try{_l=window.localStorage;}catch(e){}
     var _s={getItem:function(k){try{return(_l&&_l.getItem(k))||_m.get(k)||null;}catch(e){return _m.get(k)||null;}},setItem:function(k,v){try{_l&&_l.setItem(k,v);}catch(e){}_m.set(k,v);},removeItem:function(k){try{_l&&_l.removeItem(k);}catch(e){}_m.delete(k);}};
-    window._rgClient=window._rgClient||window.supabase.createClient('https://pbojacnagutipfhcxltj.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBib2phY25hZ3V0aXBmaGN4bHRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgwMDkwODAsImV4cCI6MjA2MzU4NTA4MH0.ZLCcAzTYljoZycpBGwMtthP5VyAJ4schuIvt4HibGc0',{auth:{lock:undefined,persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storage:_s}});
+    window._rgClient=window._rgClient||window.supabase.createClient('https://xqmnaeujwumlcoyhgzuk.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhxbW5hZXVqd3VtbGNveWhnenVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA1NTU0NzIsImV4cCI6MjEwNjEzMTQ3Mn0.GbOKbMKaFO79esF2hx9dCNe8oSIZuMrx6W5p7kfPgXQ',{auth:{lock:undefined,persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storage:_s}});
     window.sb=window.client=window._rgClient;
   }catch(e){console.error('RG bootstrap failed:',e);}
 })();
