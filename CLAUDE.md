@@ -59,6 +59,12 @@ rounded gradient modal/detail buttons at 12px).
 
 ## Database
 
+**Rental Genie has its own Supabase project:** `xqmnaeujwumlcoyhgzuk` ("RentalGenie", Postgres 17),
+since the Sept 30 2026 cutover. Its migrations live in `supabase/rentalgenie-project/migrations/`;
+`supabase/migrations/` is the history of the shared GenieSphere project (`pbojacnagutipfhcxltj`,
+"Exodon Profits"), which Rental Genie used before. Salon Genie, Arowana and the other products stay
+there. Don't point a Rental Genie page, function or workflow at the shared project again.
+
 **Rent is calculated in the database, not in pages.** Two functions are the single source of truth:
 
 - `rg_rent_schedule(company_id, as_of)` — one row per due date with rent, paid, and balance.
@@ -132,13 +138,12 @@ match the page's `<option>` values.
   removed along with the legacy duplicate pages (rent-log, rent-payments, manage-properties,
   lease-center, rental-tracker, tenant-history, submit-request, landing, rent-analyzer).
 - No plan limits are enforced anywhere; the pricing on the homepage is marketing copy only.
-- The Supabase project is shared with the other GenieSphere products. Row-level security is on
-  for every exposed table and views run as the caller (Sept 2026 audit). Anon may read only public
-  columns of `business_profiles` (column grants; Salon Genie's public pages need name, location,
-  phone, hours, logo), so an anon `select *` there fails. `follow_up_requests` is locked to the
-  service role until it's rebuilt with a salon column. When adding a policy, never add a
-  `using (true)` catch-all: RLS grants access if any policy matches, so one catch-all cancels every
-  scoped policy beside it.
+- The old Rental Genie tables are still in the shared project, locked read-only, until they're
+  dropped after a few clean weeks on the new project. The shared project's RLS state (Sept 2026
+  audit): RLS on for every exposed table, views run as the caller, anon reads only public columns of
+  `business_profiles`, `follow_up_requests` is service-role only.
+- When adding a policy, never add a `using (true)` catch-all: RLS grants access if any policy
+  matches, so one catch-all cancels every scoped policy beside it.
 
 ---
 
