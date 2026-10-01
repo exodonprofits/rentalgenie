@@ -1,7 +1,12 @@
 # Rental Genie — working notes for Claude Code
 
 Property management app for independent landlords. Static HTML/CSS/JS pages on Supabase, automated
-with n8n, hosted on Cloudflare. No build step: every page is a self-contained file that runs as-is.
+with n8n, hosted on Bluehost (Apache) at rentalgenieai.com. No build step: every page is a
+self-contained file that runs as-is.
+
+**Merging is not deploying.** The site changes only when the "Deploy to Bluehost" GitHub Action runs
+(`.github/workflows/deploy-bluehost.yml`): deploy to `staging` first, check it, then `production`.
+Until it existed, pages were uploaded by hand and the live site fell a month behind main.
 
 Read this before changing anything. The rules below come from bugs that already cost real debugging
 time.
