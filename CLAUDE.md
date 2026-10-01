@@ -155,3 +155,19 @@ match the page's `<option>` values.
 - Never commit mortgage statements, rent exports, tenant lists, or `.env` files. `.gitignore`
   covers the known cases, including `import export/` and all CSVs.
 - Ask before deleting a page. Several "unused" files turned out to be linked from live pages.
+
+---
+
+## Agent skills
+
+### Issue tracker
+
+Issues live in GitHub Issues for `exodonprofits/rentalgenie`, managed with the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Uses the five default labels: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: one root `CONTEXT.md` plus `docs/adr/`, created only when a term or decision is actually settled. See `docs/agents/domain.md`.
