@@ -9,7 +9,13 @@
 #   BLUEHOST_FTP_SERVER    e.g. ftp.rentalgenieai.com
 #   BLUEHOST_FTP_USERNAME  an FTP account limited to the site's folder (cPanel → FTP Accounts)
 #   BLUEHOST_FTP_PASSWORD
-#   BLUEHOST_REMOTE_DIR    the site's folder as that FTP account sees it, ending in "/", e.g. "public_html/" or "/"
+#   BLUEHOST_REMOTE_DIR    rentalgenieai.com's document root as that FTP account sees it, ending in "/".
+#                          rentalgenieai.com is an add-on domain, so this is NOT the account's public_html
+#                          root (that serves hhf.cbz.mybluehost.me); see Domains → rentalgenieai.com.
+#
+# Every deploy writes rg-version.txt (the commit SHA) and then fetches it back from
+# https://rentalgenieai.com[/staging]/rg-version.txt. If the site doesn't serve that SHA, the files went to
+# the wrong folder and the run fails. A first run caught exactly that.
 #
 # Only the site goes up: every top-level .html page, images/ and shared/. Never supabase/, json/,
 # .github/ or the markdown notes. The action keeps a sync-state file on the server and uploads only
@@ -41,7 +47,7 @@ jobs:
     if: github.event_name == 'workflow_dispatch' || vars.DEPLOY_ON_PUSH == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Assemble the site
         run: |
@@ -51,6 +57,7 @@ jobs:
           cp -r images shared site/
           # Never publish these, even if they end up next to the pages.
           find site -name '*.md' -delete
+          echo "$GITHUB_SHA" > site/rg-version.txt
           echo "Files to deploy: $(find site -type f | wc -l)"
           # Fail if anything secret-looking slipped in.
           if grep -rlE 'service_role|SUPABASE_SERVICE_ROLE|sk-ant-' site; then
@@ -67,9 +74,10 @@ jobs:
           set -euo pipefail
           if [ -z "$BASE" ]; then echo "BLUEHOST_REMOTE_DIR is not set" >&2; exit 1; fi
           case "$BASE" in */) ;; *) BASE="$BASE/";; esac
-          if [ "$TARGET" = "staging" ]; then DIR="${BASE}staging/"; else DIR="$BASE"; fi
+          if [ "$TARGET" = "staging" ]; then DIR="${BASE}staging/"; URL="https://rentalgenieai.com/staging/"; else DIR="$BASE"; URL="https://rentalgenieai.com/"; fi
           echo "dir=$DIR" >> "$GITHUB_OUTPUT"
-          echo "Deploying to: $DIR ($TARGET)"
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+          echo "Deploying to: $DIR ($TARGET) → $URL"
 
       - name: Upload over FTPS
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
@@ -81,3 +89,16 @@ jobs:
           local-dir: ./site/
           server-dir: ${{ steps.dir.outputs.dir }}
           state-name: .rg-deploy-state.json
+
+      - name: Check the site serves this commit
+        env:
+          URL: ${{ steps.dir.outputs.url }}
+        run: |
+          set -euo pipefail
+          for i in 1 2 3 4 5 6; do
+            got=$(curl -fsS -H 'Cache-Control: no-cache' "${URL}rg-version.txt?t=$(date +%s)" | tr -d '[:space:]' || true)
+            if [ "$got" = "$GITHUB_SHA" ]; then echo "OK: ${URL} serves $GITHUB_SHA"; exit 0; fi
+            echo "Attempt $i: ${URL}rg-version.txt returned '${got:-nothing}'"; sleep 10
+          done
+          echo "The upload finished but ${URL} doesn't serve it. BLUEHOST_REMOTE_DIR probably points at the wrong folder." >&2
+          exit 1
