@@ -1,0 +1,83 @@
+# Deploy the site to Bluehost over FTPS.
+#
+# Run it from the Actions tab ("Deploy to Bluehost" → Run workflow) and pick a target:
+#   staging     → <remote dir>/staging/   (test before going live)
+#   production  → <remote dir>/
+# Pushes to main also deploy to production once the repository variable DEPLOY_ON_PUSH is "true".
+#
+# Repository secrets (Settings → Secrets and variables → Actions):
+#   BLUEHOST_FTP_SERVER    e.g. ftp.rentalgenieai.com
+#   BLUEHOST_FTP_USERNAME  an FTP account limited to the site's folder (cPanel → FTP Accounts)
+#   BLUEHOST_FTP_PASSWORD
+#   BLUEHOST_REMOTE_DIR    the site's folder as that FTP account sees it, ending in "/", e.g. "public_html/" or "/"
+#
+# Only the site goes up: every top-level .html page, images/ and shared/. Never supabase/, json/,
+# .github/ or the markdown notes. The action keeps a sync-state file on the server and uploads only
+# what changed; it removes files it uploaded earlier and that are gone from the repo, but never
+# touches files it didn't put there (the legacy pages from manual uploads stay until removed by hand).
+
+name: Deploy to Bluehost
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Where to deploy"
+        type: choice
+        options: [staging, production]
+        default: staging
+  push:
+    branches: [main]
+
+concurrency:
+  group: deploy-bluehost-${{ github.event.inputs.target || 'production' }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    if: github.event_name == 'workflow_dispatch' || vars.DEPLOY_ON_PUSH == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Assemble the site
+        run: |
+          set -euo pipefail
+          mkdir -p site
+          cp ./*.html site/
+          cp -r images shared site/
+          # Never publish these, even if they end up next to the pages.
+          find site -name '*.md' -delete
+          echo "Files to deploy: $(find site -type f | wc -l)"
+          # Fail if anything secret-looking slipped in.
+          if grep -rlE 'service_role|SUPABASE_SERVICE_ROLE|sk-ant-' site; then
+            echo "Refusing to deploy: a file above contains a secret-looking string." >&2
+            exit 1
+          fi
+
+      - name: Pick the remote folder
+        id: dir
+        env:
+          BASE: ${{ secrets.BLUEHOST_REMOTE_DIR }}
+          TARGET: ${{ github.event.inputs.target || 'production' }}
+        run: |
+          set -euo pipefail
+          if [ -z "$BASE" ]; then echo "BLUEHOST_REMOTE_DIR is not set" >&2; exit 1; fi
+          case "$BASE" in */) ;; *) BASE="$BASE/";; esac
+          if [ "$TARGET" = "staging" ]; then DIR="${BASE}staging/"; else DIR="$BASE"; fi
+          echo "dir=$DIR" >> "$GITHUB_OUTPUT"
+          echo "Deploying to: $DIR ($TARGET)"
+
+      - name: Upload over FTPS
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.BLUEHOST_FTP_SERVER }}
+          username: ${{ secrets.BLUEHOST_FTP_USERNAME }}
+          password: ${{ secrets.BLUEHOST_FTP_PASSWORD }}
+          protocol: ftps
+          local-dir: ./site/
+          server-dir: ${{ steps.dir.outputs.dir }}
+          state-name: .rg-deploy-state.json
