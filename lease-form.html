@@ -319,6 +319,23 @@ textarea { resize: vertical; min-height: 88px; }
 /* Field hint text */
 .field-hint { font-size: .72rem; color: var(--muted); margin-top: 4px; }
 
+/* ── Payment methods ────────────────────────────────────────── */
+.pay-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.pay-chip {
+  display: inline-flex; align-items: center; gap: 7px; cursor: pointer;
+  padding: 7px 12px; border: 1.5px solid var(--border); border-radius: 999px;
+  background: #f8fafc; color: var(--text);
+  font-size: .85rem; font-weight: 600; text-transform: none; letter-spacing: 0;
+}
+.pay-chip input[type="checkbox"] {
+  appearance: auto; -webkit-appearance: checkbox;
+  width: 16px; height: 16px; margin: 0; padding: 0; accent-color: var(--sky);
+}
+.pay-chip:has(input:checked) { border-color: var(--sky); background: #fff; }
+.pay-detail { margin-top: 14px; }
+.field-hint.full { grid-column: 1 / -1; margin-top: 0; }
+.pay-pref { display: block; margin-top: 6px; font-size: .8rem; color: var(--text); font-weight: 600; }
+
 /* ── Deposit summary chip ───────────────────────────────────── */
 .deposit-summary {
   grid-column: 1 / -1;
@@ -649,6 +666,82 @@ textarea { resize: vertical; min-height: 88px; }
           </div>
           <!-- Deposit total summary -->
           <div class="deposit-summary" id="depositSummary"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 4b. How the tenant pays ───────────────────────── -->
+    <div class="section-card">
+      <div class="section-head">
+        <div class="section-title">💳 How the Tenant Pays You</div>
+      </div>
+      <div class="section-body">
+        <div class="form-group">
+          <label>Accepted methods</label>
+          <div class="pay-chips" id="payChips">
+            <label class="pay-chip"><input type="checkbox" id="payZelle" data-col="pay_accepts_zelle" /> Zelle</label>
+            <label class="pay-chip"><input type="checkbox" id="payVenmo" data-col="pay_accepts_venmo" /> Venmo</label>
+            <label class="pay-chip"><input type="checkbox" id="payAch" data-col="pay_accepts_ach" /> ACH</label>
+            <label class="pay-chip"><input type="checkbox" id="payBank" data-col="pay_accepts_bank_transfer" /> Bank Transfer</label>
+            <label class="pay-chip"><input type="checkbox" id="payCheck" data-col="pay_accepts_check" /> Check</label>
+            <label class="pay-chip"><input type="checkbox" id="payCash" data-col="pay_accepts_cash" /> Cash</label>
+          </div>
+          <span class="field-hint">The tenant sees these instructions on their Payments page.</span>
+          <span class="pay-pref" id="payTenantPref" style="display:none"></span>
+        </div>
+
+        <div class="form-grid pay-detail" id="payZelleBox" style="display:none">
+          <div class="form-group full">
+            <label for="payZelleRecipient">Zelle to (email or phone)</label>
+            <input id="payZelleRecipient" type="text" placeholder="rent@example.com" />
+          </div>
+        </div>
+        <div class="form-grid pay-detail" id="payVenmoBox" style="display:none">
+          <div class="form-group full">
+            <label for="payVenmoHandle">Venmo handle</label>
+            <input id="payVenmoHandle" type="text" placeholder="@your-handle" />
+          </div>
+        </div>
+        <div class="form-grid pay-detail" id="payAchBox" style="display:none">
+          <div class="form-group">
+            <label for="payAchBank">Bank name</label>
+            <input id="payAchBank" type="text" />
+          </div>
+          <div class="form-group">
+            <label for="payAchHolder">Account holder</label>
+            <input id="payAchHolder" type="text" />
+          </div>
+          <div class="form-group">
+            <label for="payAchRouting">Routing number</label>
+            <input id="payAchRouting" type="text" inputmode="numeric" autocomplete="off" />
+          </div>
+          <div class="form-group">
+            <label for="payAchAccount">Account number</label>
+            <input id="payAchAccount" type="text" inputmode="numeric" autocomplete="off" />
+          </div>
+          <div class="form-group">
+            <label for="payAchType">Account type</label>
+            <select id="payAchType">
+              <option value="">—</option>
+              <option value="checking">Checking</option>
+              <option value="savings">Savings</option>
+            </select>
+          </div>
+          <span class="field-hint full">Only you and this tenant can see these. Leave the numbers blank if you'd rather share them another way.</span>
+        </div>
+        <div class="form-grid pay-detail" id="payCheckBox" style="display:none">
+          <div class="form-group">
+            <label for="payCheckPayable">Make checks payable to</label>
+            <input id="payCheckPayable" type="text" />
+          </div>
+          <div class="form-group">
+            <label for="payCheckAddress">Mail checks to</label>
+            <input id="payCheckAddress" type="text" />
+          </div>
+        </div>
+        <div class="form-group pay-detail">
+          <label for="payOtherNotes">Payment notes for the tenant</label>
+          <textarea id="payOtherNotes" rows="2" placeholder="Put the unit number in the memo. Cash only by appointment."></textarea>
         </div>
       </div>
     </div>
@@ -1136,6 +1229,95 @@ function loadLatestLeaseForProperty() {
     });
 }
 
+/* ============================================================
+   HOW THE TENANT PAYS (leases.pay_* columns)
+============================================================ */
+var PAY_TEXT_FIELDS = {
+  pay_zelle_recipient:       'payZelleRecipient',
+  pay_venmo_handle:          'payVenmoHandle',
+  pay_ach_bank_name:         'payAchBank',
+  pay_ach_account_holder:    'payAchHolder',
+  pay_ach_routing_number:    'payAchRouting',
+  pay_ach_account_number:    'payAchAccount',
+  pay_ach_account_type:      'payAchType',
+  pay_check_payable_to:      'payCheckPayable',
+  pay_check_mailing_address: 'payCheckAddress',
+  pay_other_notes:           'payOtherNotes'
+};
+var payLoadedSnapshot = '';
+var payCarriedPreference = null; // renewals keep the tenant's stated preference
+
+function payCheckboxes() {
+  return Array.prototype.slice.call(document.querySelectorAll('#payChips input[type="checkbox"]'));
+}
+
+function updatePayDetails() {
+  function on(id) { var el = $(id); return !!(el && el.checked); }
+  var show = {
+    payZelleBox: on('payZelle'),
+    payVenmoBox: on('payVenmo'),
+    payAchBox:   on('payAch') || on('payBank'),
+    payCheckBox: on('payCheck')
+  };
+  Object.keys(show).forEach(function (id) { var el = $(id); if (el) el.style.display = show[id] ? '' : 'none'; });
+}
+
+function readPayFields() {
+  var out = {};
+  payCheckboxes().forEach(function (cb) { out[cb.getAttribute('data-col')] = cb.checked; });
+  Object.keys(PAY_TEXT_FIELDS).forEach(function (col) {
+    var el = $(PAY_TEXT_FIELDS[col]);
+    out[col] = el ? ((el.value || '').trim() || null) : null;
+  });
+  return out;
+}
+
+function applyPayFields(data) {
+  payCheckboxes().forEach(function (cb) { cb.checked = data[cb.getAttribute('data-col')] === true; });
+  Object.keys(PAY_TEXT_FIELDS).forEach(function (col) {
+    var el = $(PAY_TEXT_FIELDS[col]);
+    if (!el) return;
+    var v = data[col] != null ? String(data[col]) : '';
+    // Keep a stored value the dropdown doesn't list instead of blanking it on save.
+    if (el.tagName === 'SELECT' && v && !Array.prototype.some.call(el.options, function (o) { return o.value === v; })) {
+      var opt = document.createElement('option');
+      opt.value = v; opt.textContent = v;
+      el.appendChild(opt);
+    }
+    el.value = v;
+  });
+  updatePayDetails();
+}
+
+function showTenantPreference(method) {
+  var el = $('payTenantPref');
+  if (!el) return;
+  el.textContent = method ? '⭐ Tenant prefers ' + method + ' (chosen in their portal)' : '';
+  el.style.display = method ? 'block' : 'none';
+}
+
+// New lease: start from the company-wide Zelle/Venmo settings, if any.
+function prefillPayFromCompany() {
+  return snapResolveCompany().then(function (cid) {
+    if (!cid) return;
+    return db.from('payment_settings')
+      .select('venmo_handle, zelle_email, zelle_phone')
+      .eq('company_id', cid)
+      .maybeSingle()
+      .then(function (res) {
+        var d = res && res.data;
+        if (!d) return;
+        var current = readPayFields();
+        if (payCheckboxes().some(function (cb) { return cb.checked; })) return; // user already chose
+        var zelle = d.zelle_email || d.zelle_phone || '';
+        if (zelle) { $('payZelle').checked = true; if (!current.pay_zelle_recipient) $('payZelleRecipient').value = zelle; }
+        if (d.venmo_handle) { $('payVenmo').checked = true; if (!current.pay_venmo_handle) $('payVenmoHandle').value = d.venmo_handle; }
+        updatePayDetails();
+        payLoadedSnapshot = JSON.stringify(readPayFields());
+      });
+  }).catch(function (e) { console.warn('Payment settings prefill skipped:', e); });
+}
+
 function applyLeaseToForm(data, renewMode) {
   if (!data) return;
   $('tenantName').value    = data.tenant_name  || '';
@@ -1149,6 +1331,10 @@ function applyLeaseToForm(data, renewMode) {
   $('petDeposit').value    = data.pet_deposit  != null ? data.pet_deposit  : '';
   $('leaseNotes').value    = data.notes  || '';
   $('terms').value         = data.terms  || '';
+  applyPayFields(data);
+  showTenantPreference(data.tenant_preferred_payment_method || '');
+  payCarriedPreference = renewMode ? (data.tenant_preferred_payment_method || null) : null;
+  payLoadedSnapshot = renewMode ? '' : JSON.stringify(readPayFields());
 
   // Lease type
   var lt = $('leaseType');
@@ -1244,6 +1430,11 @@ function saveLease() {
     status:           $('status').value,
     lease_type:       ($('leaseType') && $('leaseType').value) || 'fixed_term',
   };
+
+  var payFields = readPayFields();
+  Object.keys(payFields).forEach(function (col) { fullPayload[col] = payFields[col]; });
+  if (JSON.stringify(payFields) !== payLoadedSnapshot) fullPayload.pay_instructions_updated_at = new Date().toISOString();
+  if (!isEdit && payCarriedPreference) fullPayload.tenant_preferred_payment_method = payCarriedPreference;
 
   // For edit: probe existing row to discover real columns, then filter
   // For insert: try full payload first; on PGRST204 retry with probed columns
@@ -1380,6 +1571,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
   $('cancelBtn').addEventListener('click', function () { history.back(); });
   $('saveLeaseBtn').addEventListener('click', saveLease);
+  payCheckboxes().forEach(function (cb) { cb.addEventListener('change', updatePayDetails); });
 
   if (isRenew) {
     $('formTitle').textContent = '🔄 Renew Lease';
@@ -1412,6 +1604,8 @@ document.addEventListener('DOMContentLoaded', async function () {
       console.error('Load lease error:', e);
       setStatus('Could not load lease data: ' + (e.message || 'Unknown error'), 'err');
     }
+  } else {
+    prefillPayFromCompany();
   }
 });
 </script>
