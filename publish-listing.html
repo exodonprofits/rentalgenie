@@ -236,12 +236,35 @@ function escapeHtml(s){
   return String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 }
 
+// Build DOM without HTML strings: applicant fields come from the public application form.
+function h(tag, attrs, ...children){
+  const el = document.createElement(tag);
+  Object.entries(attrs || {}).forEach(([k, v]) => {
+    if (v === null || v === undefined || v === false) return;
+    if (k === "class") el.className = v;
+    else if (k === "text") el.textContent = v;
+    else if (k === "style") el.style.cssText = v;
+    else el.setAttribute(k, v === true ? "" : String(v));
+  });
+  children.flat().forEach(c => {
+    if (c === null || c === undefined || c === false || c === "") return;
+    el.appendChild(c instanceof Node ? c : document.createTextNode(String(c)));
+  });
+  return el;
+}
+function setMessage(el, cls, text){
+  el.textContent = "";
+  el.appendChild(h("div", { class: cls, text }));
+}
+
 function addPhotoRow(value){
   const row = document.createElement("div");
   row.className = "photo-row";
-  row.innerHTML = `<input type="text" class="photo-url" placeholder="https://…" value="${value ? value.replace(/"/g,'&quot;') : ''}" />
-    <button type="button" class="remove-photo">✕</button>`;
-  row.querySelector(".remove-photo").addEventListener("click", () => row.remove());
+  const input = h("input", { type: "text", class: "photo-url", placeholder: "https://…" });
+  input.value = value || "";
+  const remove = h("button", { type: "button", class: "remove-photo", text: "✕" });
+  remove.addEventListener("click", () => row.remove());
+  row.append(input, " ", remove);
   $("photoRows").appendChild(row);
 }
 $("addPhotoBtn").addEventListener("click", () => addPhotoRow(""));
@@ -303,6 +326,14 @@ $("aiSuggestBtn").addEventListener("click", async () => {
   btn.textContent = "✨ Suggest with AI";
 });
 
+// Only web links; new URL() alone also accepts javascript: and data:.
+function safeUrl(u){
+  try {
+    const url = new URL(String(u || "").trim());
+    return (url.protocol === "https:" || url.protocol === "http:") ? url.href : null;
+  } catch (e) { return null; }
+}
+
 function getPhotoUrls(){
   return Array.from(document.querySelectorAll(".photo-url"))
     .map(i => i.value.trim())
@@ -331,7 +362,12 @@ async function loadProperty(){
 
   const vacant = String(p.occupancy_status||"").toLowerCase() === "vacant";
   if (!vacant){
-    $("notVacantNotice").innerHTML = `<div class="notice info">ℹ️ This property is currently marked <b>${(p.occupancy_status||"").replace("_"," ")}</b>. That's fine for pre-leasing — just set an <b>Available Date</b> below so renters know when the unit is actually ready, rather than implying it's available now.</div>`;
+    const notice = $("notVacantNotice");
+    notice.textContent = "";
+    notice.appendChild(h("div", { class: "notice info" },
+      "ℹ️ This property is currently marked ", h("b", { text: (p.occupancy_status || "").replace("_", " ") }),
+      ". That's fine for pre-leasing — just set an ", h("b", { text: "Available Date" }),
+      " below so renters know when the unit is actually ready, rather than implying it's available now."));
   }
 
   $("publicToggle").checked = !!p.is_public_listing;
@@ -370,6 +406,13 @@ $("saveBtn").addEventListener("click", async () => {
       "Publish anyway without a date?"
     );
     if (!proceed) return;
+  }
+
+  const badPhoto = getPhotoUrls().find(u => !safeUrl(u));
+  if (badPhoto){
+    statusMsg.textContent = "❌ Photo links must start with https:// (or http://). Check: " + badPhoto;
+    statusMsg.className = "status-msg err";
+    return;
   }
 
   btn.disabled = true;
@@ -411,9 +454,91 @@ const SCREENING_LABELS = {
   failed: "Failed",
 };
 
+const APP_STATUSES = ["submitted", "reviewed", "approved", "denied"];
+
+function detail(label, value){
+  return h("div", null,
+    h("div", { class: "app-detail-label", text: label }),
+    h("div", { class: "app-detail-value", text: value || "—" }));
+}
+
+function renderApplication(a){
+  const id = String(a.id);
+  const status = String(a.status || "");
+  const sub = [
+    a.applicant_email || "",
+    a.applicant_phone || "",
+    a.desired_move_in ? "Move-in: " + new Date(a.desired_move_in).toLocaleDateString() : ""
+  ].filter(Boolean).join(" · ");
+
+  const actions = h("div", { class: "app-actions" },
+    status !== "approved" ? h("button", { "data-action": "approved", text: "Approve" }) : null,
+    status !== "denied" ? h("button", { "data-action": "denied", text: "Deny" }) : null,
+    status === "submitted" ? h("button", { "data-action": "reviewed", text: "Mark Reviewed" }) : null);
+
+  const header = h("div", { class: "app-row-header", "data-toggle": id },
+    h("div", { class: "app-info" },
+      h("strong", { text: a.applicant_name || "—" }),
+      h("div", { class: "app-sub", text: sub })),
+    h("div", { style: "display:flex; align-items:center; gap:10px;" },
+      // Only known statuses become a class name.
+      h("span", { class: "app-status" + (APP_STATUSES.includes(status) ? " " + status : ""), text: status }),
+      actions));
+
+  const employment = (a.employment_status || "—").replace("_", " ") + (a.employer_name ? " · " + a.employer_name : "");
+  const emergency = a.emergency_contact_name
+    ? a.emergency_contact_name + (a.emergency_contact_phone ? " · " + a.emergency_contact_phone : "")
+    : "";
+  const grid = h("div", { class: "app-detail-grid" },
+    detail("Current Address", a.current_address),
+    detail("Employment", employment),
+    detail("Monthly Income", fmtMoney(a.monthly_income)),
+    detail("Occupants", a.occupants_count ? String(a.occupants_count) : ""),
+    detail("Pets", a.has_pets ? (a.pet_details || "Yes") : "None"),
+    detail("Emergency Contact", emergency));
+
+  const reportInput = h("input", {
+    type: "text", class: "screening-report-input", id: "reportUrl-" + id,
+    placeholder: "Paste report URL from SmartMove (optional)"
+  });
+  reportInput.value = a.screening_report_url || "";
+
+  const screening = h("div", { class: "screening-box" },
+    h("div", { style: "display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;" },
+      h("div", null,
+        "🔍 ", h("strong", { text: "Screening:" }), " ", SCREENING_LABELS[a.screening_status] || "Not Requested",
+        a.screening_consent
+          ? h("span", { style: "color:var(--success); font-size:.78rem; margin-left:6px;", text: "✓ Applicant consented" })
+          : h("span", { style: "color:#b45309; font-size:.78rem; margin-left:6px;", text: "⚠ No consent on file" })),
+      h("div", { style: "display:flex; gap:6px; flex-wrap:wrap;" },
+        h("button", { type: "button", class: "screening-btn", "data-screening-open": id, text: "Open SmartMove ↗" }),
+        a.screening_status !== "requested"
+          ? h("button", { type: "button", class: "screening-btn", "data-screening-status": id, "data-value": "requested", text: "Mark Requested" }) : null,
+        a.screening_status !== "completed"
+          ? h("button", { type: "button", class: "screening-btn", "data-screening-status": id, "data-value": "completed", text: "Mark Complete" }) : null)),
+    h("div", { class: "screening-report-row" },
+      reportInput,
+      h("button", { type: "button", class: "screening-btn", "data-save-report": id, text: "Save" })));
+
+  const thread = h("div", { class: "thread-box" },
+    h("h4", { text: "💬 Messages" }),
+    h("div", { class: "msg-list", id: "landlordMsgs-" + id }, h("div", { class: "msg-empty", text: "Loading…" })),
+    h("div", { class: "msg-form" },
+      h("input", { type: "text", id: "landlordMsgInput-" + id, placeholder: "Write a message to the applicant…" }),
+      h("button", { type: "button", "data-send-msg": id, text: "Send" })));
+
+  const body = h("div", { class: "app-row-body", id: "appBody-" + id },
+    grid,
+    a.message ? h("div", { class: "app-message-note", text: "\u201c" + a.message + "\u201d" }) : null,
+    screening,
+    thread);
+
+  return h("div", { class: "app-row", "data-id": id }, header, body);
+}
+
 async function loadApplications(){
   const list = $("appsList");
-  if (!propertyId){ list.innerHTML = `<div class="empty-apps">No property selected.</div>`; return; }
+  if (!propertyId){ setMessage(list, "empty-apps", "No property selected."); return; }
 
   const { data, error } = await sb
     .from("applications")
@@ -422,74 +547,16 @@ async function loadApplications(){
     .order("created_at", { ascending: false });
 
   if (error){
-    list.innerHTML = `<div class="empty-apps">Couldn't load applications: ${error.message}</div>`;
+    setMessage(list, "empty-apps", "Couldn't load applications: " + error.message);
     return;
   }
   if (!data || !data.length){
-    list.innerHTML = `<div class="empty-apps">No applications yet. Once your listing is public, applications will show up here.</div>`;
+    setMessage(list, "empty-apps", "No applications yet. Once your listing is public, applications will show up here.");
     return;
   }
 
-  list.innerHTML = data.map(a => {
-    const income = fmtMoney(a.monthly_income);
-    return `
-    <div class="app-row" data-id="${a.id}">
-      <div class="app-row-header" data-toggle="${a.id}">
-        <div class="app-info">
-          <strong>${a.applicant_name || "—"}</strong>
-          <div class="app-sub">${a.applicant_email || ""}${a.applicant_phone ? " · " + a.applicant_phone : ""}${a.desired_move_in ? " · Move-in: " + new Date(a.desired_move_in).toLocaleDateString() : ""}</div>
-        </div>
-        <div style="display:flex; align-items:center; gap:10px;">
-          <span class="app-status ${a.status}">${a.status}</span>
-          <div class="app-actions">
-            ${a.status !== "approved" ? `<button data-action="approved">Approve</button>` : ""}
-            ${a.status !== "denied" ? `<button data-action="denied">Deny</button>` : ""}
-            ${a.status === "submitted" ? `<button data-action="reviewed">Mark Reviewed</button>` : ""}
-          </div>
-        </div>
-      </div>
-
-      <div class="app-row-body" id="appBody-${a.id}">
-        <div class="app-detail-grid">
-          <div><div class="app-detail-label">Current Address</div><div class="app-detail-value">${a.current_address || "—"}</div></div>
-          <div><div class="app-detail-label">Employment</div><div class="app-detail-value">${(a.employment_status || "—").replace("_"," ")}${a.employer_name ? " · " + a.employer_name : ""}</div></div>
-          <div><div class="app-detail-label">Monthly Income</div><div class="app-detail-value">${income || "—"}</div></div>
-          <div><div class="app-detail-label">Occupants</div><div class="app-detail-value">${a.occupants_count || "—"}</div></div>
-          <div><div class="app-detail-label">Pets</div><div class="app-detail-value">${a.has_pets ? (a.pet_details || "Yes") : "None"}</div></div>
-          <div><div class="app-detail-label">Emergency Contact</div><div class="app-detail-value">${a.emergency_contact_name ? `${a.emergency_contact_name}${a.emergency_contact_phone ? " · " + a.emergency_contact_phone : ""}` : "—"}</div></div>
-        </div>
-        ${a.message ? `<div class="app-message-note">"${a.message}"</div>` : ""}
-
-        <div class="screening-box">
-          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
-            <div>
-              🔍 <strong>Screening:</strong> ${SCREENING_LABELS[a.screening_status] || "Not Requested"}
-              ${a.screening_consent ? `<span style="color:var(--success); font-size:.78rem; margin-left:6px;">✓ Applicant consented</span>` : `<span style="color:#b45309; font-size:.78rem; margin-left:6px;">⚠ No consent on file</span>`}
-            </div>
-            <div style="display:flex; gap:6px; flex-wrap:wrap;">
-              <button type="button" class="screening-btn" data-screening-open="${a.id}">Open SmartMove ↗</button>
-              ${a.screening_status !== "requested" ? `<button type="button" class="screening-btn" data-screening-status="${a.id}" data-value="requested">Mark Requested</button>` : ""}
-              ${a.screening_status !== "completed" ? `<button type="button" class="screening-btn" data-screening-status="${a.id}" data-value="completed">Mark Complete</button>` : ""}
-            </div>
-          </div>
-          <div class="screening-report-row">
-            <input type="text" class="screening-report-input" id="reportUrl-${a.id}" placeholder="Paste report URL from SmartMove (optional)" value="${a.screening_report_url || ""}" />
-            <button type="button" class="screening-btn" data-save-report="${a.id}">Save</button>
-          </div>
-        </div>
-
-        <div class="thread-box">
-          <h4>💬 Messages</h4>
-          <div class="msg-list" id="landlordMsgs-${a.id}"><div class="msg-empty">Loading…</div></div>
-          <div class="msg-form">
-            <input type="text" id="landlordMsgInput-${a.id}" placeholder="Write a message to the applicant…" />
-            <button type="button" data-send-msg="${a.id}">Send</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  `;
-  }).join("");
+  list.textContent = "";
+  data.forEach(a => list.appendChild(renderApplication(a)));
 
   list.querySelectorAll("[data-toggle]").forEach(el => {
     el.addEventListener("click", () => {
@@ -557,19 +624,19 @@ async function loadApplicationMessages(applicationId){
     .order("created_at", { ascending: true });
 
   if (error){
-    el.innerHTML = `<div class="msg-empty">Couldn't load messages: ${error.message}</div>`;
+    setMessage(el, "msg-empty", "Couldn't load messages: " + error.message);
     return;
   }
   if (!data || !data.length){
-    el.innerHTML = `<div class="msg-empty">No messages yet.</div>`;
+    setMessage(el, "msg-empty", "No messages yet.");
     return;
   }
-  el.innerHTML = data.map(m => `
-    <div class="msg ${m.sender_role === "landlord" ? "mine" : "theirs"}">
-      ${m.message}
-      <div class="msg-time">${new Date(m.created_at).toLocaleString()}</div>
-    </div>
-  `).join("");
+  el.textContent = "";
+  data.forEach(m => {
+    el.appendChild(h("div", { class: "msg " + (m.sender_role === "landlord" ? "mine" : "theirs") },
+      m.message || "",
+      h("div", { class: "msg-time", text: new Date(m.created_at).toLocaleString() })));
+  });
   el.scrollTop = el.scrollHeight;
 }
 
