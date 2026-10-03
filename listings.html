@@ -403,11 +403,23 @@ function money(n){
   return "$" + Number(n).toLocaleString();
 }
 
+// First photo that is a real web link (http/https), or null. Photo URLs are typed by landlords.
 function firstPhoto(photos){
   try {
     const arr = Array.isArray(photos) ? photos : JSON.parse(photos || "[]");
-    return arr && arr.length ? arr[0] : null;
+    for (const u of (arr || [])) {
+      try {
+        const url = new URL(String(u || "").trim());
+        if (url.protocol === "https:" || url.protocol === "http:") return url.href;
+      } catch (e) {}
+    }
+    return null;
   } catch(e){ return null; }
+}
+
+// Set through the CSSOM, never inside a style="" attribute string.
+function setPhotoBackground(el, photo){
+  el.style.backgroundImage = photo ? "url(" + JSON.stringify(photo) + ")" : "none";
 }
 
 function placeholderIcon(propertyType){
@@ -483,7 +495,7 @@ function renderGrid(list){
     const avail = availabilityLabel(l.listing_available_date);
     return `
       <article class="listing-card" data-id="${l.id}">
-        <div class="listing-photo" style="${photo ? `background-image:url('${photo}')` : ""}">
+        <div class="listing-photo">
           ${photo ? "" : `<span class="no-photo-icon">${placeholderIcon(l.property_type)}</span><span class="no-photo-label">Photos coming soon</span>`}
         </div>
         <div class="listing-body">
@@ -502,6 +514,9 @@ function renderGrid(list){
   }).join("");
 
   grid.querySelectorAll(".listing-card").forEach(card => {
+    const l = list.find(x => String(x.id) === card.getAttribute("data-id"));
+    const photoEl = card.querySelector(".listing-photo");
+    if (l && photoEl) setPhotoBackground(photoEl, firstPhoto(l.listing_photos));
     card.addEventListener("click", () => {
       const id = card.getAttribute("data-id");
       const listing = ALL_LISTINGS.find(l => String(l.id) === String(id));
@@ -518,7 +533,7 @@ function openModal(listing){
   ACTIVE_LISTING = listing;
   const photo = firstPhoto(listing.listing_photos);
   const modalPhotoEl = document.getElementById("modalPhoto");
-  modalPhotoEl.style.backgroundImage = photo ? `url('${photo}')` : "none";
+  setPhotoBackground(modalPhotoEl, photo);
   modalPhotoEl.innerHTML = photo ? "" : `<span class="no-photo-icon" style="font-size:2.8rem;">${placeholderIcon(listing.property_type)}</span><span class="no-photo-label">Photos coming soon</span>`;
   document.getElementById("modalName").textContent = listing.name || "";
   document.getElementById("modalAddr").textContent = listing.address || "";
