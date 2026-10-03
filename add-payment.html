@@ -900,6 +900,10 @@ async function initPropertyContext() {
     async function loadExistingPaymentIfEditing() {
       if (!editId) {
         setPageMode(false);
+        // lease-rent-center passes the tenant's usual method as ?method=
+        const methodSel = document.getElementById('method');
+        const suggested = urlParams.get('method') || '';
+        if (suggested && Array.from(methodSel.options).some((o) => o.value === suggested)) methodSel.value = suggested;
         return;
       }
 
