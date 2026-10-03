@@ -1253,6 +1253,10 @@ main.page h1 {
   color: var(--rg-navy) !important;
   margin-top: 4px !important;
 }
+.lease-item-wide { grid-column: 1 / -1; }
+.lease-pay-meta { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 6px; font-size: 0.82rem; color: var(--rg-muted); }
+.lease-pay-meta span { overflow-wrap: anywhere; }
+.lease-pay-meta b { color: var(--rg-text); font-weight: 600; }
 
 /* ── Attention queue ─────────────────────────────────────────────── */
 .attention-queue-card {
@@ -2309,6 +2313,11 @@ body.auth-guest #mobileLogoutContainer { display: none !important; }
           <div class="lease-k">💸 Late Fee</div>
           <div class="lease-v" id="leaseLateFee">—</div>
         </div>
+        <div class="lease-item lease-item-wide">
+          <div class="lease-k">💳 Payment</div>
+          <div class="lease-v" id="leasePayMethod">—</div>
+          <div class="lease-pay-meta" id="leasePayMeta"></div>
+        </div>
       </div>
 
       <div class="lease-empty" id="leaseEmpty" style="display:none; margin-top:12px; padding:12px; border:1px dashed #cbd5e1; border-radius:12px; color:#475569;">
@@ -3362,13 +3371,111 @@ const leaseQuery = client
 }
 
 
+/* -------------------------------------------------------------
+   How the tenant pays (Lease tab "Payment" item + payment modal default)
+   Stated preference (tenant portal) → else what their payments show.
+------------------------------------------------------------- */
+const LEASE_PAY_COLUMNS = "tenant_preferred_payment_method, pay_accepts_zelle, pay_accepts_venmo, pay_accepts_ach, pay_accepts_check, pay_accepts_cash, pay_accepts_bank_transfer";
+const LEASE_ACCEPTS = [
+  ["pay_accepts_zelle", "Zelle"],
+  ["pay_accepts_venmo", "Venmo"],
+  ["pay_accepts_ach", "ACH"],
+  ["pay_accepts_check", "Check"],
+  ["pay_accepts_cash", "Cash"],
+  ["pay_accepts_bank_transfer", "Bank Transfer"]
+];
+let payerAliasCache = { key: "", names: [] };
+let leasePayRenderSeq = 0;
+
+// The method most of the lease's last 12 payments used, or null.
+function getUsualPaymentMethod() {
+  const recent = (paymentRows || [])
+    .filter((r) => r && r.method)
+    .slice()
+    .sort((a, b) => String(b.date_paid || b.inserted_at || "").localeCompare(String(a.date_paid || a.inserted_at || "")))
+    .slice(0, 12);
+  if (!recent.length) return null;
+  const counts = new Map();
+  recent.forEach((r) => counts.set(r.method, (counts.get(r.method) || 0) + 1));
+  let best = null;
+  counts.forEach((n, m) => { if (!best || n > best.count) best = { method: m, count: n }; });
+  return { method: best.method, count: best.count, total: recent.length };
+}
+
+async function loadPayerAliases(lease) {
+  const companyId = getSelectedPropertyCompanyId();
+  if (!lease || !lease.property_id || !companyId) return [];
+  const key = companyId + "|" + lease.property_id;
+  if (payerAliasCache.key === key) return payerAliasCache.names;
+  const { data, error } = await client
+    .from("tenant_payer_aliases")
+    .select("payer_name_norm, tenant_name")
+    .eq("company_id", companyId)
+    .eq("property_id", lease.property_id);
+  if (error) { console.warn("Payer aliases load failed:", error); return []; }
+  const tenantNorm = String(lease.tenant_name || "").toLowerCase().replace(/[^a-z ]+/g, " ").trim();
+  const names = (data || [])
+    .filter((a) => a.payer_name_norm && a.payer_name_norm !== tenantNorm)
+    .map((a) => a.payer_name_norm.replace(/\b[a-z]/g, (c) => c.toUpperCase()));
+  payerAliasCache = { key, names };
+  return names;
+}
+
+function addPayMeta(wrap, label, value) {
+  const span = document.createElement("span");
+  const b = document.createElement("b");
+  b.textContent = label + " ";
+  span.appendChild(b);
+  span.appendChild(document.createTextNode(value));
+  wrap.appendChild(span);
+}
+
+async function renderLeasePaymentInfo() {
+  const elMain = document.getElementById("leasePayMethod");
+  const elMeta = document.getElementById("leasePayMeta");
+  if (!elMain || !elMeta) return;
+  const seq = ++leasePayRenderSeq;
+  elMeta.textContent = "";
+
+  const lease = currentProperty ? getLedgerLease() : null;
+  if (!lease) { elMain.textContent = "—"; return; }
+
+  const usual = getUsualPaymentMethod();
+  const preferred = lease.tenant_preferred_payment_method || "";
+  if (preferred) {
+    elMain.textContent = "Prefers " + preferred;
+  } else if (usual) {
+    elMain.textContent = "Usually " + usual.method;
+  } else {
+    elMain.textContent = "No payments yet";
+  }
+
+  if (usual) {
+    addPayMeta(elMeta, "History:", usual.method + " on " + usual.count + " of the last " + usual.total + " payment" + (usual.total === 1 ? "" : "s"));
+  }
+  const accepts = LEASE_ACCEPTS.filter(([col]) => lease[col] === true).map(([, label]) => label);
+  addPayMeta(elMeta, "You accept:", accepts.length ? accepts.join(", ") : "not set (Edit Lease)");
+
+  const aliases = await loadPayerAliases(lease);
+  if (aliases.length && seq === leasePayRenderSeq) {
+    addPayMeta(elMeta, "Pays as:", aliases.join(", "));
+  }
+}
+
+// Default for the payment modal: stated preference, then habit, then Zelle.
+function getDefaultPaymentMethod() {
+  const lease = getLedgerLease();
+  const usual = getUsualPaymentMethod();
+  return (lease && lease.tenant_preferred_payment_method) || (usual && usual.method) || "Zelle";
+}
+
 async function loadLatestLease() {
   currentLease = null;
   if (!currentProperty) return null;
 
   const { data: leases, error } = await client
     .from("leases")
-    .select("id, property_name, tenant_name, lease_start, lease_end, rent_amount, rent_due_day, due_day, status, lease_type, terminated_date, late_fee, late_fee_amount, grace_period, late_fee_grace_days")
+    .select("id, property_id, property_name, tenant_name, lease_start, lease_end, rent_amount, rent_due_day, due_day, status, lease_type, terminated_date, late_fee, late_fee_amount, grace_period, late_fee_grace_days, " + LEASE_PAY_COLUMNS)
     .eq("company_id", getSelectedPropertyCompanyId())
     .eq("property_name", currentProperty)
     .order("lease_start", { ascending: false })
@@ -3387,7 +3494,7 @@ async function loadLeaseHistory() {
   if (!currentProperty) return [];
   const { data, error } = await client
     .from("leases")
-    .select("id, property_name, tenant_name, lease_start, lease_end, rent_amount, rent_due_day, due_day, status, lease_type, terminated_date, late_fee, late_fee_amount, grace_period, late_fee_grace_days")
+    .select("id, property_id, property_name, tenant_name, lease_start, lease_end, rent_amount, rent_due_day, due_day, status, lease_type, terminated_date, late_fee, late_fee_amount, grace_period, late_fee_grace_days, " + LEASE_PAY_COLUMNS)
     .eq("company_id", getSelectedPropertyCompanyId())
     .eq("property_name", currentProperty)
     .order("lease_start", { ascending: false });
@@ -3517,6 +3624,7 @@ async function updateLeasePanel() {
     elDue.textContent = "—";
     elGrace.textContent = "—";
     elLate.textContent = "—";
+    renderLeasePaymentInfo().catch(() => {});
     return;
   }
 
@@ -3642,6 +3750,7 @@ async function updateLeasePanel() {
     elGrace.textContent = Number.isFinite(grace) ? `${grace} days` : "—";
     elLate.textContent = Number.isFinite(lateFee) ? formatMoney(lateFee) : "—";
   }
+  renderLeasePaymentInfo().catch((e) => console.warn("Lease payment info failed:", e));
 
   const hist = await loadLeaseHistory();
   if (!hist.length) {
@@ -3747,6 +3856,7 @@ async function loadPayments() {
       }
     }
   }
+  renderLeasePaymentInfo().catch((e) => console.warn("Lease payment info failed:", e));
 }
 
 async function updateQuickPeek() {
@@ -4367,7 +4477,9 @@ function openMarkPaidModal({ dueISO, tenant, rent, suggestedAmount }) {
   document.getElementById("mpTenantLabel").textContent = tenant || "—";
 
   document.getElementById("mpPaidDate").value = toISODateOnly(new Date());
-  document.getElementById("mpMethod").value = "Zelle";
+  const mpMethod = document.getElementById("mpMethod");
+  const defaultMethod = getDefaultPaymentMethod();
+  mpMethod.value = Array.from(mpMethod.options).some((o) => o.value === defaultMethod) ? defaultMethod : "Zelle";
   document.getElementById("mpNote").value = "";
 
   const amt = (Number(suggestedAmount) || 0) > 0 ? Number(suggestedAmount) : (Number(rent) || 0);
@@ -4569,7 +4681,7 @@ if (addPaymentBtn) {
     const meta = propertyMetaByName.get(currentProperty) || {};
     const pid = meta.id ? String(meta.id) : "";
     const cid = meta.company_id ? String(meta.company_id) : (activeCompanyId || "");
-    const url = `add-payment.html?property=${encodeURIComponent(currentProperty)}&property_id=${encodeURIComponent(pid)}&company_id=${encodeURIComponent(cid)}&embed=1`;
+    const url = `add-payment.html?property=${encodeURIComponent(currentProperty)}&property_id=${encodeURIComponent(pid)}&company_id=${encodeURIComponent(cid)}&method=${encodeURIComponent(getDefaultPaymentMethod())}&embed=1`;
     openPaymentDrawer(url, "➕ Add Payment");
   };
 }
