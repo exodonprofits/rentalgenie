@@ -48,6 +48,7 @@
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; }
   body {
+    overflow-x: hidden;
     font-family: 'DM Sans', -apple-system, sans-serif;
     background: var(--bg);
     color: var(--text);
@@ -162,7 +163,7 @@
   .hamburger:hover { background: rgba(255,255,255,.2); }
   @media(max-width:880px) {
     .nav-links { display: none; }
-    .umd-wrap { display: none; }
+    .umd-wrap { display: none !important; } /* boot sets display:flex inline */
     .hamburger { display: block; }
   }
 
@@ -302,6 +303,20 @@
   .pay-method-label { font-size: .74rem; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; color: var(--muted); }
   .pay-method-value { font-size: .98rem; font-weight: 700; color: var(--navy); margin-top: 1px; }
   .pay-method-note  { font-size: .8rem; color: var(--muted); margin-top: 2px; }
+
+  .pay-notes { padding: 12px 0; border-top: 1px solid var(--border); }
+  .pay-notes-text { font-size: .9rem; color: var(--navy); margin-top: 3px; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .pay-method-value, .pay-method-note { overflow-wrap: anywhere; }
+  .pay-pref-wrap { margin-top: 10px; padding-top: 14px; border-top: 1px solid var(--border); }
+  .pay-pref-label { display: block; font-size: .74rem; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; color: var(--muted); margin-bottom: 6px; }
+  .pay-pref-line { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .pay-pref-line select { flex: 1 1 180px; min-width: 0; max-width: 280px; }
+  .pay-pref-save {
+    border: none; border-radius: 999px; padding: 9px 18px; cursor: pointer;
+    background: var(--navy); color: #fff; font: inherit; font-size: .85rem; font-weight: 600;
+  }
+  .pay-pref-save:disabled { opacity: .6; cursor: default; }
+  .pay-pref-msg { display: block; margin-top: 6px; font-size: .8rem; color: var(--muted); min-height: 1em; }
 
   /* ── Filter bar ─────────────────────────────────────────────── */
   .filter-bar {
@@ -764,49 +779,150 @@
   }
 
   /* ── How to pay ─────────────────────────────────────────── */
-  function loadHowToPay(companyId) {
-    sb.from('payment_settings')
-      .select('venmo_handle, venmo_note, zelle_email, zelle_phone')
-      .eq('company_id', companyId)
-      .maybeSingle()
-      .then(function (res) {
-        var d = res && res.data;
-        if (!d || (!d.venmo_handle && !d.zelle_email)) return; // nothing configured — leave card hidden
+  // The lease's own instructions (set on the landlord's lease form) win; a lease with none
+  // falls back to the company-wide Zelle/Venmo settings.
+  var PAY_METHODS = ['Zelle', 'Venmo', 'ACH', 'Bank Transfer', 'Check', 'Cash', 'Other'];
+  var LEASE_PAY_SELECT = 'tenant_preferred_payment_method, pay_accepts_zelle, pay_accepts_venmo, pay_accepts_ach, pay_accepts_check, pay_accepts_cash, pay_accepts_bank_transfer, pay_venmo_handle, pay_zelle_recipient, pay_ach_bank_name, pay_ach_account_holder, pay_ach_routing_number, pay_ach_account_number, pay_ach_account_type, pay_check_payable_to, pay_check_mailing_address, pay_other_notes';
 
-        var parts = [];
-        if (d.venmo_handle) {
-          parts.push(
-            '<div class="pay-method-row"><div class="pay-method-icon">💵</div><div class="pay-method-info">' +
-            '<div class="pay-method-label">Venmo</div>' +
-            '<div class="pay-method-value">' + escHtml(d.venmo_handle) + '</div>' +
-            (d.venmo_note ? '<div class="pay-method-note">' + escHtml(d.venmo_note) + '</div>' : '') +
-            '</div></div>'
-          );
-        }
-        if (d.zelle_email || d.zelle_phone) {
-          var zelleValue = d.zelle_email || d.zelle_phone;
-          var zelleNote = (d.zelle_email && d.zelle_phone) ? ('or ' + escHtml(d.zelle_phone)) : '';
-          parts.push(
-            '<div class="pay-method-row"><div class="pay-method-icon">🏦</div><div class="pay-method-info">' +
-            '<div class="pay-method-label">Zelle</div>' +
-            '<div class="pay-method-value">' + escHtml(zelleValue) + '</div>' +
-            (zelleNote ? '<div class="pay-method-note">' + zelleNote + '</div>' : '') +
-            '</div></div>'
-          );
-        }
-
-        var body = $('howToPayBody');
-        var card = $('howToPayCard');
-        if (body) body.innerHTML = parts.join('');
-        if (card) card.style.display = 'block';
-      })
-      .catch(function (err) { console.error('How to pay load error:', err); });
+  function el(tag, cls, text) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text != null) e.textContent = text;
+    return e;
   }
 
-  function escHtml(s) {
-    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
-      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  function payRow(icon, label, value, notes) {
+    var row = el('div', 'pay-method-row');
+    row.appendChild(el('div', 'pay-method-icon', icon));
+    var info = el('div', 'pay-method-info');
+    info.appendChild(el('div', 'pay-method-label', label));
+    info.appendChild(el('div', 'pay-method-value', value || 'Accepted'));
+    (notes || []).forEach(function (n) { if (n) info.appendChild(el('div', 'pay-method-note', n)); });
+    row.appendChild(info);
+    return row;
+  }
+
+  function leaseAccepted(lease) {
+    if (!lease) return [];
+    var out = [];
+    if (lease.pay_accepts_zelle) out.push('Zelle');
+    if (lease.pay_accepts_venmo) out.push('Venmo');
+    if (lease.pay_accepts_ach) out.push('ACH');
+    if (lease.pay_accepts_bank_transfer) out.push('Bank Transfer');
+    if (lease.pay_accepts_check) out.push('Check');
+    if (lease.pay_accepts_cash) out.push('Cash');
+    return out;
+  }
+
+  function buildLeaseRows(lease, company) {
+    var rows = [];
+    var c = company || {};
+    var accepted = leaseAccepted(lease);
+    var ach = [
+      lease.pay_ach_account_holder ? 'Account holder: ' + lease.pay_ach_account_holder : '',
+      lease.pay_ach_routing_number ? 'Routing: ' + lease.pay_ach_routing_number : '',
+      lease.pay_ach_account_number ? 'Account: ' + lease.pay_ach_account_number + (lease.pay_ach_account_type ? ' (' + lease.pay_ach_account_type + ')' : '') : ''
+    ];
+    accepted.forEach(function (m) {
+      if (m === 'Zelle') rows.push(payRow('🏦', 'Zelle', lease.pay_zelle_recipient || c.zelle_email || c.zelle_phone));
+      if (m === 'Venmo') rows.push(payRow('💵', 'Venmo', lease.pay_venmo_handle || c.venmo_handle, [lease.pay_venmo_handle ? '' : c.venmo_note]));
+      if (m === 'ACH') rows.push(payRow('🔁', 'ACH', lease.pay_ach_bank_name, ach));
+      if (m === 'Bank Transfer') rows.push(payRow('🏛️', 'Bank Transfer', lease.pay_ach_bank_name, ach));
+      if (m === 'Check') rows.push(payRow('✉️', 'Check', lease.pay_check_payable_to ? 'Payable to ' + lease.pay_check_payable_to : null,
+        [lease.pay_check_mailing_address ? 'Mail to: ' + lease.pay_check_mailing_address : '']));
+      if (m === 'Cash') rows.push(payRow('💰', 'Cash', 'Accepted', ['Ask your landlord how to hand it over and get a receipt.']));
     });
+    return rows;
+  }
+
+  function buildCompanyRows(d) {
+    var rows = [];
+    if (!d) return rows;
+    if (d.venmo_handle) rows.push(payRow('💵', 'Venmo', d.venmo_handle, [d.venmo_note]));
+    if (d.zelle_email || d.zelle_phone) {
+      rows.push(payRow('🏦', 'Zelle', d.zelle_email || d.zelle_phone, [(d.zelle_email && d.zelle_phone) ? 'or ' + d.zelle_phone : '']));
+    }
+    return rows;
+  }
+
+  function buildPreferencePicker(lease, accepted) {
+    var wrap = el('div', 'pay-pref-wrap');
+    var lbl = el('label', 'pay-pref-label', 'I usually pay by');
+    lbl.setAttribute('for', 'payPrefSelect');
+    wrap.appendChild(lbl);
+
+    var line = el('div', 'pay-pref-line');
+    var sel = el('select', 'filter-select');
+    sel.id = 'payPrefSelect';
+    var none = el('option', null, 'Not set');
+    none.value = '';
+    sel.appendChild(none);
+    var choices = accepted.length ? accepted.concat(['Other']) : PAY_METHODS;
+    var current = lease.tenant_preferred_payment_method || '';
+    if (current && choices.indexOf(current) === -1) choices = choices.concat([current]);
+    choices.forEach(function (m) {
+      var o = el('option', null, m);
+      o.value = m;
+      sel.appendChild(o);
+    });
+    sel.value = current;
+
+    var btn = el('button', 'pay-pref-save', 'Save');
+    btn.type = 'button';
+    var msg = el('span', 'pay-pref-msg', '');
+
+    btn.addEventListener('click', function () {
+      btn.disabled = true;
+      msg.textContent = 'Saving…';
+      sb.rpc('tenant_set_preferred_payment_method', { p_lease_id: lease.id, p_method: sel.value || null })
+        .then(function (res) {
+          btn.disabled = false;
+          if (res.error) { console.error('Preferred method save error:', res.error); msg.textContent = 'Could not save. Try again.'; return; }
+          lease.tenant_preferred_payment_method = sel.value || null;
+          msg.textContent = sel.value ? 'Saved. Your landlord will see you pay by ' + sel.value + '.' : 'Cleared.';
+        });
+    });
+
+    line.appendChild(sel);
+    line.appendChild(btn);
+    wrap.appendChild(line);
+    wrap.appendChild(msg);
+    return wrap;
+  }
+
+  function loadHowToPay(lease) {
+    var companyQ = sb.from('payment_settings')
+      .select('venmo_handle, venmo_note, zelle_email, zelle_phone')
+      .eq('company_id', lease.company_id)
+      .maybeSingle()
+      .then(function (r) { return (r && r.data) || null; }, function () { return null; });
+    var leaseQ = sb.from('leases').select(LEASE_PAY_SELECT).eq('id', lease.id).maybeSingle()
+      .then(function (r) { return (r && r.data) || null; }, function () { return null; });
+
+    Promise.all([companyQ, leaseQ]).then(function (out) {
+      var company = out[0];
+      var payInfo = out[1] || {};
+      Object.keys(payInfo).forEach(function (k) { lease[k] = payInfo[k]; });
+
+      var accepted = leaseAccepted(lease);
+      var rows = accepted.length ? buildLeaseRows(lease, company) : buildCompanyRows(company);
+      var body = $('howToPayBody');
+      var card = $('howToPayCard');
+      if (!body || !card) return;
+      body.textContent = '';
+      rows.forEach(function (r) { body.appendChild(r); });
+      if (lease.pay_other_notes) {
+        var notes = el('div', 'pay-notes');
+        notes.appendChild(el('div', 'pay-method-label', 'Notes from your landlord'));
+        notes.appendChild(el('div', 'pay-notes-text', lease.pay_other_notes));
+        body.appendChild(notes);
+      }
+      if (!rows.length && !lease.pay_other_notes) {
+        body.appendChild(el('div', 'pay-method-note', 'Your landlord hasn\'t added payment instructions yet. Ask them how they\'d like to be paid.'));
+      }
+      body.appendChild(buildPreferencePicker(lease, accepted));
+      card.style.display = 'block';
+    }).catch(function (err) { console.error('How to pay load error:', err); });
   }
 
   /* ── Status banner ──────────────────────────────────────── */
@@ -1040,7 +1156,7 @@
       setText('currentMonthRent', rentAmount ? fmtMoney(rentAmount) : '—');
       setText('nextDueSub', nextDue ? 'Next due: ' + fmtDate(nextDue) : 'Due day not set');
 
-      if (lease && lease.company_id) loadHowToPay(lease.company_id);
+      if (lease && lease.company_id && lease.id) loadHowToPay(lease);
 
       /* Load payments */
       loadPayments(user, lease, tenant).then(function (rows) {
