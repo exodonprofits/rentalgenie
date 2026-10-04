@@ -1,8 +1,9 @@
 # Rental Genie's own Supabase project
 
-Project `xqmnaeujwumlcoyhgzuk` ("RentalGenie", us-east-1, Postgres 17). Rental Genie is moving here
-from the shared GenieSphere project (`pbojacnagutipfhcxltj`, "Exodon Profits"). Until cutover the
-pages still point at the shared project and `supabase/migrations/` stays its history.
+Project `xqmnaeujwumlcoyhgzuk` ("RentalGenie", us-east-1, Postgres 17). Rental Genie moved here from
+the shared GenieSphere project (`pbojacnagutipfhcxltj`, "Exodon Profits"); the live site has used it
+since the cutover on 2026-10-01. `supabase/migrations/` is the shared project's history and stays
+there; new Rental Genie database changes go in `migrations/` here.
 
 `migrations/` is this project's baseline, generated from the live shared project on 2026-09-28 and
 applied in order:
@@ -16,6 +17,15 @@ applied in order:
 - `rg_04_grants_storage` — the same grants as the source, the three private buckets and their
   storage policies.
 - `rg_05_hardening` — pg_net moved to `extensions`, search_path pinned on ten functions.
+- `rg_06_maintenance_webhook_secret` — the Vault secret the maintenance trigger and Edge Function share.
+
+Changes since the baseline, each applied to the project and tested in a rolled-back transaction:
+
+- `rg_07_tenant_preferred_payment` — `tenant_set_preferred_payment_method` accepts tenants linked by
+  `tenant_id`, skips archived leases, stores only known methods.
+- `rg_08_listing_application_mode` — per-listing application mode (`rental_genie` / `external` /
+  `contact`); applications only for public listings in `rental_genie` mode and only as plain
+  submissions; anon INSERT on the applicant columns (the public form had no insert grant at all).
 
 Moved: companies (the Rental Genie company only), company_members, properties, tenants, leases,
 rent_log, expenses, expense_recurring_rules, maintenance_requests, tenant_documents, tenant_messages,
@@ -37,9 +47,22 @@ checksum and `rg_rent_status` match the source exactly.
 Edge Functions deployed 2026-09-29 from `supabase/functions/` (unchanged source):
 `maintenance-acknowledgment` (verify_jwt off, checks the Vault secret `rg_maintenance_webhook_secret`,
 created by `rg_06`), `rental-genie-ai-proxy` and `rg-snap` (verify_jwt on). Tested: wrong webhook secret
-401, right secret 200, both AI functions 401 without a login. Secrets to set in the dashboard:
-`ANTHROPIC_API_KEY`, `RESEND_API_KEY`, `FROM_EMAIL`.
+401, right secret 200, both AI functions 401 without a login.
 
-Remaining steps: those secrets, auth settings (site URL, redirects, Google provider) and SMTP, page
-URL/key swap, n8n credentials, cutover. Anything entered in the old project
-after 2026-09-28 must be re-copied before cutover.
+Edge Function secrets (dashboard → Edge Functions → Secrets):
+
+- `ANTHROPIC_API_KEY` — both AI functions. Must be created inside a Claude Console workspace; an
+  organization-level key is refused with a 400 asking for `anthropic-workspace-id` (the functions
+  return 502). Set 2026-10-04; AI listing descriptions confirmed working that day.
+- `RESEND_API_KEY`, `FROM_EMAIL` — maintenance acknowledgment emails. Without them tenants still get
+  the in-app message, but no email.
+
+Cutover status (2026-10-04): done. Every page that uses Supabase and `shared/config.json` point here (landlord
+sign-in confirmed 2026-10-01), as does the workflow file `json/rental-genie-payment-inbox.n8n.json`.
+The old Rental Genie tables in the shared project are read-only
+(`supabase/migrations/20261002000000_lock_old_rental_genie_tables.sql`) and can be dropped from
+mid-October 2026.
+
+Not verified from the repo: that the copy of the payment-inbox workflow running in n8n Cloud uses this
+project's URL and service key, and that the auth settings (site URL, redirect URLs, Google provider,
+SMTP) match the old project's. Check those in n8n and in the dashboard before relying on them.
