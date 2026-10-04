@@ -69,7 +69,7 @@ rounded gradient modal/detail buttons at 12px).
 ## Database
 
 **Rental Genie has its own Supabase project:** `xqmnaeujwumlcoyhgzuk` ("RentalGenie", Postgres 17),
-since the Sept 30 2026 cutover. Its migrations live in `supabase/rentalgenie-project/migrations/`;
+since the Oct 1 2026 cutover. Its migrations live in `supabase/rentalgenie-project/migrations/`;
 `supabase/migrations/` is the history of the shared GenieSphere project (`pbojacnagutipfhcxltj`,
 "Exodon Profits"), which Rental Genie used before. Salon Genie, Arowana and the other products stay
 there. Don't point a Rental Genie page, function or workflow at the shared project again.
