@@ -4,9 +4,13 @@ Property management app for independent landlords. Static HTML/CSS/JS pages on S
 with n8n, hosted on Bluehost (Apache) at rentalgenieai.com. No build step: every page is a
 self-contained file that runs as-is.
 
-**Merging is not deploying.** The site changes only when the "Deploy to Bluehost" GitHub Action runs
-(`.github/workflows/deploy-bluehost.yml`): deploy to `staging` first, check it, then `production`.
-Until it existed, pages were uploaded by hand and the live site fell a month behind main.
+**Merging is deploying.** Every merge to main goes live through the "Deploy to Bluehost" GitHub
+Action (`.github/workflows/deploy-bluehost.yml`, gated by the repository variable `DEPLOY_ON_PUSH`),
+which checks that the site serves the merged commit (`rg-version.txt`). There is no staging copy: it
+would share the live database. So test before merging (screenshots at desktop and ~390px with a
+stubbed client, rolled-back transactions for database changes). A manual run of the Action redeploys
+main. The deploy never deletes files it didn't upload; the folder also holds Salon Genie and Voyage
+Genie pages, so never clear it wholesale.
 
 Read this before changing anything. The rules below come from bugs that already cost real debugging
 time.
@@ -90,6 +94,15 @@ a non-archived lease with that company (and property) — pages must send the le
 Tenants may only change `phone` on their own `tenants` row (`trg_tenants_limit_self_update`). Storage buckets are private; pages open files through signed links
 via the `rgFiles` helper, which accepts either a stored path or a legacy public URL.
 
+**Listings and applications:** `public_listings` (a view, readable by anon) exposes only public
+columns of properties with `is_public_listing`. Each listing has a `listing_application_mode`
+(`rental_genie`, `external` with an http(s) `listing_application_url`, or `contact`), set on
+`publish-listing.html` and followed by `listings.html`. Applications can be inserted only for a public,
+non-archived listing in `rental_genie` mode (`rg_listing_accepts_applications`), and only as a plain
+submission: status, screening and tenant fields keep their defaults. anon's INSERT grant covers the
+applicant columns only, so add a column there if the public form starts sending a new field.
+`auto_unpublish_listing` unlists an occupied property unless its available date is in the future.
+
 **Property identity is `property_id`.** Every table that references a property has a `property_id`
 with a foreign key; `property_name` is a display copy. Renaming a property updates every copy
 (`trg_rg_cascade_property_rename`), and fill triggers set `property_id` from `(company_id,
@@ -100,7 +113,9 @@ many existing pages still filter by name, which is safe only because the names a
 receipt (`kind: "receipt"`, bucket `receipts`, path `expenses/<company_id>/…`) or lease (`kind:
 "lease"`, bucket `tenant-documents`, path `<company_id>/…`) with the caller's JWT and returns a
 draft for the page to prefill. It never writes; the landlord saves. Used by `add-expense.html` and
-`lease-form.html`. Needs the `ANTHROPIC_API_KEY` secret. Expense categories in the function must
+`lease-form.html`. Needs the `ANTHROPIC_API_KEY` secret (shared with `rental-genie-ai-proxy`), which
+must be a key created inside a Claude Console workspace: an organization-level key gets a 400 asking
+for `anthropic-workspace-id`, which the functions surface as a 502. Expense categories in the function must
 match the page's `<option>` values.
 
 **Payment inbox:** `rg_ingest_payment_email` (service role only) queues forwarded payment alerts;
@@ -143,8 +158,8 @@ match the page's `<option>` values.
   removed along with the legacy duplicate pages (rent-log, rent-payments, manage-properties,
   lease-center, rental-tracker, tenant-history, submit-request, landing, rent-analyzer).
 - No plan limits are enforced anywhere; the pricing on the homepage is marketing copy only.
-- The old Rental Genie tables are still in the shared project, locked read-only, until they're
-  dropped after a few clean weeks on the new project. The shared project's RLS state (Sept 2026
+- The old Rental Genie tables are still in the shared project, locked read-only since 2026-10-02,
+  until they're dropped (not before mid-October 2026, two clean weeks after the Oct 1 cutover). The shared project's RLS state (Sept 2026
   audit): RLS on for every exposed table, views run as the caller, anon reads only public columns of
   `business_profiles`, `follow_up_requests` is service-role only.
 - When adding a policy, never add a `using (true)` catch-all: RLS grants access if any policy
