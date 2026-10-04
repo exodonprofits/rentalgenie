@@ -288,7 +288,7 @@ main {
 }
 .property-hero-name    { font-size: 1.4rem; font-weight: 700; color: #fff; letter-spacing: -.3px; margin-bottom: 4px; }
 .property-hero-address { font-size: .88rem; color: rgba(255,255,255,.65); font-weight: 500; }
-.property-hero-actions { display: flex; gap: 8px; flex-wrap: wrap; flex-shrink: 0; }
+.property-hero-actions { display: flex; gap: 8px; flex-wrap: wrap; flex-shrink: 1; min-width: 0; max-width: 100%; }
 .hero-action-btn {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 7px 14px; border-radius: 999px;
@@ -729,6 +729,7 @@ main {
         <div class="property-hero-actions">
           <button class="hero-action-btn" onclick="goLeaseRentCenter()">📄 Lease Rent Center</button>
           <button class="hero-action-btn" onclick="goMaintenance()">🛠 Maintenance</button>
+          <button class="hero-action-btn" id="heroListingBtn" onclick="goPublishListing()">📢 Publish Listing</button>
         </div>
       </div>
       <div class="property-hero-stats">
@@ -1080,6 +1081,7 @@ function goHoa()         { location.href = navUrl('hoa-info.html'); }
 function goPropertyTax() { location.href = navUrl('property-tax.html'); }
 function goReports()     { location.href = navUrl('reports-analytics.html'); }
 function goDocuments()   { location.href = navUrl('property-documents.html'); }
+function goPublishListing() { location.href = navUrl('publish-listing.html'); }
 
 /* ============================================================
    INVITE TENANT
@@ -1245,6 +1247,7 @@ function loadQuickPeekAndSnapshots() {
   setText('heroName',    currentPropertyData.name);
   setText('heroAddress', currentPropertyData.address || currentPropertyData.name);
   setText('heroType',    currentPropertyData.property_type || currentPropertyData.unit_type || '—');
+  setText('heroListingBtn', currentPropertyData.is_public_listing ? '🌐 Listed · Edit Listing' : '📢 Publish Listing');
 
   var mort = Number(currentPropertyData.monthly_payment || 0);
   setText('heroMortgage', mort ? money(mort) : '—');
