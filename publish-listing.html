@@ -20,7 +20,7 @@
   --header-grad: linear-gradient(135deg,#0c1e3a 0%,#1a3a6b 55%,#1e5799 100%);
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'DM Sans',-apple-system,sans-serif; background:var(--bg); color:var(--text);}
+body{font-family:'DM Sans',-apple-system,sans-serif; background:var(--bg); color:var(--text); overflow-x:hidden;}
 .header-container{position:sticky; top:0; z-index:1000; background:var(--header-grad); box-shadow:0 2px 20px rgba(12,30,58,.35);}
 .navbar{max-width:1200px; margin:0 auto; padding:0 22px; height:64px; display:flex; align-items:center; justify-content:space-between;}
 .brand-area{display:flex; align-items:center; gap:11px; text-decoration:none;}
@@ -50,7 +50,8 @@ h1{font-size:1.6rem; font-weight:800; color:var(--navy); margin-bottom:4px;}
 .notice.warn{background:var(--warn-bg); border:1px solid var(--warn-bdr); color:var(--warn-text);}
 .notice.info{background:#eff6ff; border:1px solid #bfdbfe; color:#1e40af;}
 
-.form-grid{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+.form-grid{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px;}
+@media(max-width:600px){ .form-grid{grid-template-columns:1fr;} }
 
 .facts-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:12px; margin-top:14px;}
 .fact-item{background:var(--bg); border-radius:10px; padding:10px 12px;}
@@ -67,9 +68,16 @@ h1{font-size:1.6rem; font-weight:800; color:var(--navy); margin-bottom:4px;}
 .field{display:flex; flex-direction:column; gap:5px;}
 .field.full{grid-column:1/-1;}
 .field label{font-size:.75rem; font-weight:700; text-transform:uppercase; color:#64748b; letter-spacing:.02em;}
-.field input, .field textarea{padding:9px 12px; border-radius:10px; border:1px solid #cbd5e1; font-family:'DM Sans',sans-serif; font-size:.9rem;}
+.field input, .field textarea{width:100%; min-width:0; box-sizing:border-box; padding:9px 12px; border-radius:10px; border:1px solid #cbd5e1; font-family:'DM Sans',sans-serif; font-size:.9rem;}
 .field textarea{min-height:100px; resize:vertical;}
 .field-hint{font-size:.75rem; color:var(--muted);}
+.apply-modes{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px;}
+@media(max-width:760px){ .apply-modes{grid-template-columns:1fr;} }
+.field .apply-mode{display:flex; gap:10px; align-items:flex-start; padding:12px; border:1px solid #cbd5e1; border-radius:12px; cursor:pointer; text-transform:none; letter-spacing:0; font-size:.9rem; font-weight:500; color:var(--text);}
+.apply-mode:has(input:checked){border-color:#2563eb; background:#eff6ff;}
+.field .apply-mode input[type="radio"]{width:auto; min-width:0; margin:3px 0 0; padding:0; flex:none; accent-color:#2563eb;}
+.apply-mode b{display:block; font-weight:700;}
+.apply-mode small{display:block; color:var(--muted); font-size:.78rem; font-weight:500; margin-top:2px;}
 
 .photo-row{display:flex; gap:8px; margin-bottom:8px;}
 .photo-row input{flex:1;}
@@ -182,6 +190,28 @@ h1{font-size:1.6rem; font-weight:800; color:var(--navy); margin-bottom:4px;}
         <div class="field-hint" style="margin-bottom:6px;">Paste image URLs (one per row). The first photo is used as the cover image.</div>
         <div id="photoRows"></div>
         <button type="button" class="add-photo-btn" id="addPhotoBtn">+ Add photo URL</button>
+      </div>
+
+      <div class="field full">
+        <label>How renters apply</label>
+        <div class="apply-modes" id="applyModes">
+          <label class="apply-mode">
+            <input type="radio" name="applyMode" value="rental_genie" checked />
+            <span><b>Rental Genie application</b><small>Renters fill in the form on your listing. Applications show up below.</small></span>
+          </label>
+          <label class="apply-mode">
+            <input type="radio" name="applyMode" value="external" />
+            <span><b>My own application link</b><small>The Apply button opens your form (Zillow, Apartments.com, your site…).</small></span>
+          </label>
+          <label class="apply-mode">
+            <input type="radio" name="applyMode" value="contact" />
+            <span><b>Contact me only</b><small>No application. Renters see your contact email and phone.</small></span>
+          </label>
+        </div>
+        <div id="applyUrlWrap" style="display:none; margin-top:10px;">
+          <input id="fApplyUrl" type="url" placeholder="https://…" />
+          <div class="field-hint">Must start with https:// (or http://).</div>
+        </div>
       </div>
     </div>
 
@@ -334,6 +364,17 @@ function safeUrl(u){
   } catch (e) { return null; }
 }
 
+function getApplyMode(){
+  const checked = document.querySelector('input[name="applyMode"]:checked');
+  return checked ? checked.value : "rental_genie";
+}
+function setApplyMode(mode){
+  const value = ["rental_genie", "external", "contact"].includes(mode) ? mode : "rental_genie";
+  document.querySelectorAll('input[name="applyMode"]').forEach(r => { r.checked = r.value === value; });
+  $("applyUrlWrap").style.display = value === "external" ? "" : "none";
+}
+document.querySelectorAll('input[name="applyMode"]').forEach(r => r.addEventListener("change", () => setApplyMode(getApplyMode())));
+
 function getPhotoUrls(){
   return Array.from(document.querySelectorAll(".photo-url"))
     .map(i => i.value.trim())
@@ -377,6 +418,8 @@ async function loadProperty(){
   $("fPetPolicy").value = p.listing_pet_policy ?? "";
   $("fContactEmail").value = p.listing_contact_email ?? "";
   $("fContactPhone").value = p.listing_contact_phone ?? "";
+  $("fApplyUrl").value = p.listing_application_url ?? "";
+  setApplyMode(p.listing_application_mode);
   $("fDescription").value = p.listing_description ?? "";
   if (!p.listing_description){
     $("aiSuggestBtn").textContent = "✨ Generate Description";
@@ -408,6 +451,20 @@ $("saveBtn").addEventListener("click", async () => {
     if (!proceed) return;
   }
 
+  const applyMode = getApplyMode();
+  const applyUrlRaw = $("fApplyUrl").value.trim();
+  const applyUrl = applyUrlRaw ? safeUrl(applyUrlRaw) : null;
+  if (applyMode === "external" && !applyUrl){
+    statusMsg.textContent = "❌ Add your application link (starting with https://), or pick another way to apply.";
+    statusMsg.className = "status-msg err";
+    return;
+  }
+  if (applyMode === "contact" && !$("fContactEmail").value.trim() && !$("fContactPhone").value.trim()){
+    statusMsg.textContent = "❌ \"Contact me only\" needs a contact email or phone so renters can reach you.";
+    statusMsg.className = "status-msg err";
+    return;
+  }
+
   const badPhoto = getPhotoUrls().find(u => !safeUrl(u));
   if (badPhoto){
     statusMsg.textContent = "❌ Photo links must start with https:// (or http://). Check: " + badPhoto;
@@ -428,6 +485,8 @@ $("saveBtn").addEventListener("click", async () => {
     listing_contact_phone: $("fContactPhone").value.trim() || null,
     listing_description: $("fDescription").value.trim() || null,
     listing_photos: getPhotoUrls(),
+    listing_application_mode: applyMode,
+    listing_application_url: applyMode === "external" ? applyUrl : (applyUrl || null),
   };
   if (isPublic) payload.listing_published_at = new Date().toISOString();
 

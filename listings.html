@@ -208,6 +208,11 @@ body{
   font-weight:700; font-size:.95rem; cursor:pointer;
 }
 .apply-btn:hover{opacity:.92;}
+a.apply-link{display:block; box-sizing:border-box; text-align:center; text-decoration:none;}
+.modal-contact{background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:12px 14px; margin-bottom:14px; font-size:.9rem; color:#334155;}
+.modal-contact-title{font-weight:700; color:var(--navy); margin-bottom:4px;}
+.modal-contact a{color:var(--sky); font-weight:600; text-decoration:none; overflow-wrap:anywhere;}
+.modal-contact div + div{margin-top:2px;}
 
 .apply-form{display:none; margin-top:18px; border-top:1px solid var(--border); padding-top:18px;}
 .apply-form.open{display:block;}
@@ -321,7 +326,10 @@ body{
         <div class="modal-meta" id="modalMeta"></div>
         <div class="modal-desc" id="modalDesc"></div>
 
+        <div class="modal-contact" id="modalContact" style="display:none"></div>
+
         <button class="apply-btn" id="applyToggleBtn">Apply Now</button>
+        <a class="apply-btn apply-link" id="applyExternalLink" href="#" target="_blank" rel="noopener noreferrer" style="display:none">Apply ↗</a>
 
         <div class="apply-form" id="applyForm">
           <div class="form-row">
@@ -554,9 +562,79 @@ function openModal(listing){
 
   document.getElementById("applyForm").classList.remove("open");
   resetApplyForm();
+  renderApplyOptions(listing);
 
   document.getElementById("modalOverlay").classList.add("open");
   history.replaceState(null, "", `?property_id=${encodeURIComponent(listing.id)}`);
+}
+
+// How renters apply is the landlord's choice per listing (publish-listing.html):
+// rental_genie → our form, external → their link, contact → email/phone only.
+function renderApplyOptions(listing){
+  const mode = listing.listing_application_mode || "rental_genie";
+  const toggle = document.getElementById("applyToggleBtn");
+  const ext = document.getElementById("applyExternalLink");
+  const contact = document.getElementById("modalContact");
+
+  let extUrl = null;
+  try {
+    const u = new URL(String(listing.listing_application_url || ""));
+    if (u.protocol === "https:" || u.protocol === "http:") extUrl = u;
+  } catch (e) {}
+
+  toggle.style.display = mode === "rental_genie" ? "" : "none";
+  if (mode === "external" && extUrl){
+    ext.href = extUrl.href;
+    ext.textContent = "Apply on " + extUrl.hostname.replace(/^www\./, "") + " ↗";
+    ext.style.display = "";
+  } else {
+    ext.style.display = "none";
+    ext.removeAttribute("href");
+  }
+
+  contact.textContent = "";
+  const email = String(listing.listing_contact_email || "").trim();
+  const phone = String(listing.listing_contact_phone || "").trim();
+  if (!email && !phone){
+    contact.style.display = "none";
+    if (mode === "contact" || (mode === "external" && !extUrl)) {
+      contact.appendChild(Object.assign(document.createElement("div"), { textContent: "This landlord isn't taking applications online yet." }));
+      contact.style.display = "";
+    }
+    return;
+  }
+  const title = document.createElement("div");
+  title.className = "modal-contact-title";
+  title.textContent = mode === "contact" ? "Interested? Contact the landlord" : "Questions? Contact the landlord";
+  contact.appendChild(title);
+  if (email){
+    const row = document.createElement("div");
+    row.appendChild(document.createTextNode("✉️ "));
+    if (/^[^\s@<>"']+@[^\s@<>"']+\.[^\s@<>"']+$/.test(email)){
+      const a = document.createElement("a");
+      a.href = "mailto:" + email;
+      a.textContent = email;
+      row.appendChild(a);
+    } else {
+      row.appendChild(document.createTextNode(email));
+    }
+    contact.appendChild(row);
+  }
+  if (phone){
+    const row = document.createElement("div");
+    row.appendChild(document.createTextNode("📞 "));
+    const digits = phone.replace(/[^0-9+]/g, "");
+    if (digits.length >= 7){
+      const a = document.createElement("a");
+      a.href = "tel:" + digits;
+      a.textContent = phone;
+      row.appendChild(a);
+    } else {
+      row.appendChild(document.createTextNode(phone));
+    }
+    contact.appendChild(row);
+  }
+  contact.style.display = "";
 }
 
 function closeModal(){
@@ -632,7 +710,9 @@ document.getElementById("apSubmitBtn").addEventListener("click", async () => {
   btn.textContent = "Submit Application";
 
   if (error){
-    statusEl.textContent = "Something went wrong: " + (error.message || "please try again.");
+    statusEl.textContent = error.code === "42501"
+      ? "This listing isn't taking applications here right now. Please contact the landlord."
+      : "Something went wrong: " + (error.message || "please try again.");
     statusEl.className = "form-status err";
     return;
   }
