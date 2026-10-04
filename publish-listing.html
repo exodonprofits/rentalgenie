@@ -20,7 +20,7 @@
   --header-grad: linear-gradient(135deg,#0c1e3a 0%,#1a3a6b 55%,#1e5799 100%);
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'DM Sans',-apple-system,sans-serif; background:var(--bg); color:var(--text);}
+body{font-family:'DM Sans',-apple-system,sans-serif; background:var(--bg); color:var(--text); overflow-x:hidden;}
 .header-container{position:sticky; top:0; z-index:1000; background:var(--header-grad); box-shadow:0 2px 20px rgba(12,30,58,.35);}
 .navbar{max-width:1200px; margin:0 auto; padding:0 22px; height:64px; display:flex; align-items:center; justify-content:space-between;}
 .brand-area{display:flex; align-items:center; gap:11px; text-decoration:none;}
@@ -50,7 +50,8 @@ h1{font-size:1.6rem; font-weight:800; color:var(--navy); margin-bottom:4px;}
 .notice.warn{background:var(--warn-bg); border:1px solid var(--warn-bdr); color:var(--warn-text);}
 .notice.info{background:#eff6ff; border:1px solid #bfdbfe; color:#1e40af;}
 
-.form-grid{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+.form-grid{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px;}
+@media(max-width:600px){ .form-grid{grid-template-columns:1fr;} }
 
 .facts-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:12px; margin-top:14px;}
 .fact-item{background:var(--bg); border-radius:10px; padding:10px 12px;}
@@ -67,7 +68,7 @@ h1{font-size:1.6rem; font-weight:800; color:var(--navy); margin-bottom:4px;}
 .field{display:flex; flex-direction:column; gap:5px;}
 .field.full{grid-column:1/-1;}
 .field label{font-size:.75rem; font-weight:700; text-transform:uppercase; color:#64748b; letter-spacing:.02em;}
-.field input, .field textarea{padding:9px 12px; border-radius:10px; border:1px solid #cbd5e1; font-family:'DM Sans',sans-serif; font-size:.9rem;}
+.field input, .field textarea{width:100%; min-width:0; box-sizing:border-box; padding:9px 12px; border-radius:10px; border:1px solid #cbd5e1; font-family:'DM Sans',sans-serif; font-size:.9rem;}
 .field textarea{min-height:100px; resize:vertical;}
 .field-hint{font-size:.75rem; color:var(--muted);}
 
