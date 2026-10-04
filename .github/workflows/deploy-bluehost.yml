@@ -1,9 +1,10 @@
-# Deploy the site to Bluehost over FTPS.
+# Deploy the site to Bluehost (rentalgenieai.com) over FTPS.
 #
-# Run it from the Actions tab ("Deploy to Bluehost" → Run workflow) and pick a target:
-#   staging     → <remote dir>/staging/   (test before going live)
-#   production  → <remote dir>/
-# Pushes to main also deploy to production once the repository variable DEPLOY_ON_PUSH is "true".
+# Every push to main deploys to production while the repository variable DEPLOY_ON_PUSH is "true".
+# Run it by hand from the Actions tab ("Deploy to Bluehost" → Run workflow) to redeploy the current
+# main, e.g. after a file was changed on the server by hand. There is no staging target: a copy of the
+# site would use the same live database, so it isn't a safe test environment. Pages are checked with
+# screenshots at desktop and phone widths before they're merged.
 #
 # Repository secrets (Settings → Secrets and variables → Actions):
 #   BLUEHOST_FTP_SERVER    e.g. ftp.rentalgenieai.com
@@ -14,29 +15,24 @@
 #                          root (that serves hhf.cbz.mybluehost.me); see Domains → rentalgenieai.com.
 #
 # Every deploy writes rg-version.txt (the commit SHA) and then fetches it back from
-# https://rentalgenieai.com[/staging]/rg-version.txt. If the site doesn't serve that SHA, the files went to
+# https://rentalgenieai.com/rg-version.txt. If the site doesn't serve that SHA, the files went to
 # the wrong folder and the run fails. A first run caught exactly that.
 #
 # Only the site goes up: every top-level .html page, images/ and shared/. Never supabase/, json/,
 # .github/ or the markdown notes. The action keeps a sync-state file on the server and uploads only
 # what changed; it removes files it uploaded earlier and that are gone from the repo, but never
-# touches files it didn't put there (the legacy pages from manual uploads stay until removed by hand).
+# touches files it didn't put there. The hand-uploaded legacy pages were removed on 2026-10-04; the
+# Salon and Voyage pages and landing.html / rent-analyzer.html in the same folder are left alone.
 
 name: Deploy to Bluehost
 
 on:
   workflow_dispatch:
-    inputs:
-      target:
-        description: "Where to deploy"
-        type: choice
-        options: [staging, production]
-        default: staging
   push:
     branches: [main]
 
 concurrency:
-  group: deploy-bluehost-${{ github.event.inputs.target || 'production' }}
+  group: deploy-bluehost-production
   cancel-in-progress: false
 
 permissions:
@@ -69,15 +65,13 @@ jobs:
         id: dir
         env:
           BASE: ${{ secrets.BLUEHOST_REMOTE_DIR }}
-          TARGET: ${{ github.event.inputs.target || 'production' }}
         run: |
           set -euo pipefail
           if [ -z "$BASE" ]; then echo "BLUEHOST_REMOTE_DIR is not set" >&2; exit 1; fi
           case "$BASE" in */) ;; *) BASE="$BASE/";; esac
-          if [ "$TARGET" = "staging" ]; then DIR="${BASE}staging/"; URL="https://rentalgenieai.com/staging/"; else DIR="$BASE"; URL="https://rentalgenieai.com/"; fi
-          echo "dir=$DIR" >> "$GITHUB_OUTPUT"
-          echo "url=$URL" >> "$GITHUB_OUTPUT"
-          echo "Deploying to: $DIR ($TARGET) → $URL"
+          echo "dir=$BASE" >> "$GITHUB_OUTPUT"
+          echo "url=https://rentalgenieai.com/" >> "$GITHUB_OUTPUT"
+          echo "Deploying to: $BASE → https://rentalgenieai.com/"
 
       - name: Upload over FTPS
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
