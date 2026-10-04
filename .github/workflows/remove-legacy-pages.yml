@@ -52,7 +52,8 @@ jobs:
             echo "set cmd:fail-exit no"
             for f in $FILES; do echo "get -O backup ${BASE}${f}"; done
           } > get.lftp
-          lftp -u "$FTP_USER" --env-password -f get.lftp "$HOST" || true
+          # lftp won't combine -f with connection options, so open inside -c.
+          lftp -c "open --env-password -u \"$FTP_USER\" \"$HOST\"; source get.lftp" || true
           echo "Backed up $(ls backup | wc -l) of $(echo $FILES | wc -w) files:"
           ls -l backup
 
@@ -60,13 +61,17 @@ jobs:
           missing=""
           for f in $FILES; do [ -s "backup/$f" ] || missing="$missing $f"; done
           if [ -n "$missing" ]; then echo "Not on the server (skipped):$missing"; fi
+          if [ "$(ls backup | wc -l)" -eq 0 ]; then
+            echo "Nothing could be downloaded (login or path problem); deleting nothing." >&2
+            exit 1
+          fi
 
           {
             echo "set ftp:ssl-force true; set ftp:ssl-protect-data true; set ssl:verify-certificate no"
             echo "set cmd:fail-exit no"
             for f in $FILES; do if [ -s "backup/$f" ]; then echo "rm ${BASE}${f}"; fi; done
           } > rm.lftp
-          lftp -u "$FTP_USER" --env-password -f rm.lftp "$HOST"
+          lftp -c "open --env-password -u \"$FTP_USER\" \"$HOST\"; source rm.lftp"
 
       - name: Keep the backup
         uses: actions/upload-artifact@v4
