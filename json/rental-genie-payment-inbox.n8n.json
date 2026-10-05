@@ -6,7 +6,8 @@
         "httpMethod": "POST",
         "path": "rg-payment-inbox",
         "responseMode": "onReceived",
-        "options": {}
+        "options": {},
+        "authentication": "basicAuth"
       },
       "id": "inbound-email",
       "name": "Inbound email",
@@ -16,7 +17,13 @@
         0,
         300
       ],
-      "webhookId": "rg-payment-inbox"
+      "webhookId": "rg-payment-inbox",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "",
+          "name": "Rental Genie inbox webhook (Postmark)"
+        }
+      }
     },
     {
       "parameters": {
@@ -80,7 +87,7 @@
         "nodeCredentialType": "anthropicApi",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 300, system: \"You read bank and payment-app notification emails for a landlord. Decide whether the email reports money RECEIVED by the account holder. Respond with only a JSON object, no prose and no code fences: {\\\"is_incoming_payment\\\": boolean, \\\"payer\\\": string or null, \\\"amount\\\": number or null, \\\"date\\\": \\\"YYYY-MM-DD\\\" or null, \\\"method\\\": \\\"Zelle\\\" | \\\"Venmo\\\" | \\\"ACH\\\" | \\\"Cash App\\\" | \\\"PayPal\\\" | \\\"Other\\\" | null, \\\"memo\\\": string or null, \\\"transaction_ref\\\": string or null}. Money the account holder sent, bills, statements, and promotions are not incoming payments.\", messages: [{ role: 'user', content: 'From: ' + $json.from + '\\nSubject: ' + $json.subject + '\\n\\n' + $json.text }] }) }}",
+        "jsonBody": "={{ JSON.stringify({ model: 'claude-haiku-4-5', max_tokens: 300, system: \"You read bank and payment-app notification emails for a landlord. Decide whether the email reports money RECEIVED by the account holder. Respond with only a JSON object, no prose and no code fences: {\\\"is_incoming_payment\\\": boolean, \\\"payer\\\": string or null, \\\"amount\\\": number or null, \\\"date\\\": \\\"YYYY-MM-DD\\\" or null, \\\"method\\\": \\\"Zelle\\\" | \\\"Venmo\\\" | \\\"ACH\\\" | \\\"Cash App\\\" | \\\"PayPal\\\" | \\\"Other\\\" | null, \\\"memo\\\": string or null, \\\"transaction_ref\\\": string or null}. Money the account holder sent, bills, statements, and promotions are not incoming payments.\", messages: [{ role: 'user', content: 'From: ' + $json.from + '\\nSubject: ' + $json.subject + '\\n\\n' + $json.text }] }) }}",
         "options": {},
         "sendHeaders": true,
         "headerParameters": {
