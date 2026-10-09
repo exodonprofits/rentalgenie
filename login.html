@@ -552,10 +552,17 @@ body {
   ============================================================ */
   var qs = new URLSearchParams(location.search);
   var raw = qs.get('returnTo') || qs.get('redirect') || qs.get('return_to') || '';
-  // Only allow same-origin relative paths — block open redirects
-  var returnTo = (raw && !raw.startsWith('http') && raw.startsWith('/') || (raw && !raw.includes('://')))
-    ? raw : 'dashboard.html';
-  if (!returnTo || returnTo === 'null' || returnTo === 'undefined') returnTo = 'dashboard.html';
+  // Same-origin pages only: blocks javascript: URLs and open redirects to other sites
+  function rgSafeReturn(value, fallback) {
+    if (!value || value === 'null' || value === 'undefined') return fallback;
+    try {
+      var u = new URL(value, location.href);
+      if (u.protocol !== 'https:' && u.protocol !== 'http:') return fallback;
+      if (u.origin !== location.origin) return fallback;
+      return u.href;
+    } catch (e) { return fallback; }
+  }
+  var returnTo = rgSafeReturn(raw, 'dashboard.html');
 
   /* ============================================================
      HELPERS

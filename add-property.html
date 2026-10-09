@@ -1296,6 +1296,42 @@ function filterPayload(payload, allowedKeys) {
   Object.keys(payload).forEach(function (k) { if (allowedKeys[k] !== undefined || allowedKeys.has && allowedKeys.has(k)) out[k] = payload[k]; });
   return out;
 }
+function isUuid(v) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(v || ''));
+}
+
+// Fill owner_id and company_id for a new property: company from the URL, then the remembered active
+// workspace, then the user's membership, then a company they own.
+async function resolveInsertOwnership(payload) {
+  var res = await sb.auth.getUser();
+  var user = res.data && res.data.user;
+  if (!user) throw new Error('Your session has expired. Please sign in again.');
+  payload.owner_id = user.id;
+
+  var cid = isUuid(payload.company_id) ? payload.company_id : null;
+  if (!cid) {
+    try { var cached = localStorage.getItem('rg_active_company_id'); if (isUuid(cached)) cid = cached; } catch (e) {}
+  }
+  if (cid) {
+    var check = await sb.from('companies').select('id').eq('id', cid).maybeSingle();
+    if (check.error || !check.data) cid = null; // stale or not this user's
+  }
+  if (!cid) {
+    var m = await sb.from('company_members').select('company_id').eq('user_id', user.id)
+      .order('created_at', { ascending: true }).limit(1);
+    if (!m.error && m.data && m.data.length) cid = m.data[0].company_id;
+  }
+  if (!cid) {
+    var c = await sb.from('companies').select('id').eq('owner_user_id', user.id)
+      .order('created_at', { ascending: true }).limit(1);
+    if (!c.error && c.data && c.data.length) cid = c.data[0].id;
+  }
+  if (!cid) throw new Error('Set up your workspace first: open Lease & Rent Center and click "Create my workspace", then add the property.');
+  payload.company_id = cid;
+  try { localStorage.setItem('rg_active_company_id', cid); } catch (e) {}
+  return payload;
+}
+
 function safeUpsertProperty(payload) {
   if (propertyId) {
     return sb.from('properties').select('*').eq('id', propertyId).single()
@@ -1566,7 +1602,11 @@ $('addPropertyForm').addEventListener('submit', function (e) {
   };
   if (companyId) payload.company_id = companyId;
 
-  safeUpsertProperty(payload).then(function (res) {
+  // New properties need owner_id (NOT NULL; must be the signed-in user for RLS) and a company_id
+  // the user belongs to (NOT NULL). Edits keep the existing owner and company.
+  var ready = propertyId ? Promise.resolve(payload) : resolveInsertOwnership(payload);
+
+  ready.then(function (p) { return safeUpsertProperty(p); }).then(function (res) {
     if (res.error) throw res.error;
     setStatus(propertyId ? '✅ Property updated!' : '✅ Property added!', 'ok');
     btn.textContent = '✅ Saved';
