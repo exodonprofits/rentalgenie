@@ -596,7 +596,17 @@ body {
   var propParam     = qp('property');
   var propIdParam   = qp('property_id');
   var companyId     = qp('company_id');
-  var redirectParam = qp('redirect');
+  // Same-origin pages only: blocks javascript: URLs and open redirects to other sites
+  function rgSafeReturn(value, fallback) {
+    if (!value || value === 'null' || value === 'undefined') return fallback;
+    try {
+      var u = new URL(value, location.href);
+      if (u.protocol !== 'https:' && u.protocol !== 'http:') return fallback;
+      if (u.origin !== location.origin) return fallback;
+      return u.href;
+    } catch (e) { return fallback; }
+  }
+  var redirectParam = rgSafeReturn(qp('redirect'), '');
   var lastEmail     = '';
 
   /* ── Helpers ────────────────────────────────────────────── */
