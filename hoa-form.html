@@ -269,7 +269,7 @@ var _property=_params.get('property')||'';
 function setupAuth(){
   db.auth.getUser().then(function(r){
     var u=r.data&&r.data.user;
-    if(!u)return;
+    if(!u){location.replace('login.html?returnTo='+encodeURIComponent(location.pathname+location.search));return}
     var name=(u.user_metadata&&(u.user_metadata.full_name||u.user_metadata.name))||(u.email?u.email.split('@')[0]:'User');
     var nl=$('nav-login');if(nl)nl.style.display='none';
     var um=$('userMenu');if(um)um.style.display='inline-block';
